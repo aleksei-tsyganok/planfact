@@ -418,9 +418,9 @@ async function initApp(){
     dbOk=false; ss('err');
     console.warn('DB:',e);
   }
-  // seed defaults — структура изменилась, принудительно
+  // seed defaults — только для новых пользователей
   if(!D.accounts.length) D.accounts=DEFAULT_ACCOUNTS;
-  D.items=DEFAULT_ITEMS;
+  if(!D.items.length) D.items=DEFAULT_ITEMS;
   D.settings=D.settings||{taxRate:7,taxBase:'all',taxDay:25};
   saveL();
   if(dbOk){try{await sUp('kp_data',[{key:'main',data:D}]);}catch(e){}}
