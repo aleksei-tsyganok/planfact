@@ -617,19 +617,19 @@ function buildDailyCF(year,month){
     }
   }
 
-  // salary: auto 5th & 25th from shiftCost
+  // salary: auto 5th & 20th from shiftCost
   const salaryItems=D.items.filter(i=>i.categoryKey==='zp'&&(Number(i.amount)||0)>0);
   if(salaryItems.length){
     let pm=month-1,py=year; if(pm<0){pm=11;py--;}
     const pmd=getDays(py,pm); // days in previous month
     const days5=pmd-15; // 16..last inclusive
-    const days25=15;    // 1..15 inclusive
+    const days20=15;    // 1..15 inclusive
     for(const item of salaryItems){
       const sc=Number(item.amount)||0;
       const pvzName=(PVZ_LIST.find(p=>p.key===item.pvzAddr)||{}).name||item.pvzAddr||'';
-      const d5=Math.min(5,days), d25=Math.min(25,days);
+      const d5=Math.min(5,days), d20=Math.min(20,days);
       if(d5<=days) events[d5].push({name:pvzName+' — аванс',amount:-Math.round(sc*days5),type:'expense',color:item.color,id:item.id});
-      if(d25<=days) events[d25].push({name:pvzName+' — зп',amount:-Math.round(sc*days25),type:'expense',color:item.color,id:item.id});
+      if(d20<=days) events[d20].push({name:pvzName+' — зп',amount:-Math.round(sc*days20),type:'expense',color:item.color,id:item.id});
     }
   }
 
