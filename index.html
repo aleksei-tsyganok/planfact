@@ -520,7 +520,7 @@ const DEFAULT_ITEMS=[
     }))
   ),
   // ── ОБЩИЕ РАСХОДЫ (без привязки к ПВЗ) ──
-  {id:'e_vvd', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное)', pvzAddr:null, amount:0, day:1, repeat:'monthly', taxable:false, color:'#e879f9'},
+  {id:'e_vvd', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное)', pvzAddr:null, amount:0, days:[1], repeat:'monthly', taxable:false, color:'#e879f9'},
 ];
 
 // ══════════════════════════════════
@@ -532,6 +532,7 @@ function getWd(y,m,d){return new Date(y,m,d).getDay();}
 function isWe(y,m,d){const w=getWd(y,m,d);return w===0||w===6;}
 function isToday(y,m,d){const t=new Date();return t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===d;}
 function workdays(y,m,f,t){let n=0;for(let d=f;d<=t;d++){const w=getWd(y,m,d);if(w>=1&&w<=5)n++;}return n;}
+function itemDays(item){return (item.days&&item.days.length)?item.days:[item.day||1];}
 function fmt(n,plus){
   if(n===null||n===undefined||n===0)return n===0?'0₽':'';
   const s=Math.abs(n).toLocaleString('ru-RU');
@@ -604,16 +605,18 @@ function buildDailyCF(year,month){
   // expense items — salary is handled separately
   const expenses=D.items.filter(i=>i.type==='expense'&&(Number(i.amount)||0)>0&&i.categoryKey!=='zp');
   for(const item of expenses){
-    const d=Math.min(parseInt(item.day)||1,days);
-    if(item.repeat==='weekly'){
-      const startDay2=Math.min(parseInt(item.day)||1,days);
-      for(let d2=startDay2;d2<=days;d2+=7){
-        events[d2].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
+    const dlist=itemDays(item);
+    for(const d0 of dlist){
+      const d=Math.min(d0,days);
+      if(item.repeat==='weekly'){
+        for(let d2=d;d2<=days;d2+=7){
+          events[d2].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
+        }
+      } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
+        events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
+      } else if(item.repeat==='quarterly'){
+        events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
       }
-    } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
-      events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
-    } else if(item.repeat==='quarterly'){
-      events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
     }
   }
 
@@ -972,24 +975,25 @@ document.addEventListener('click',function(e){
     return;
   }
   const dayEl=e.target.closest('.item-day-badge[data-id]');
-  if(dayEl&&!document.querySelector('.cal-popup')){
+  if(dayEl&&!document.querySelector('.cal-popup')&&!dayEl.querySelector('input')){
     const id=dayEl.dataset.id, item=D.items.find(x=>x.id===id);
     if(!item) return;
-    const rect=dayEl.getBoundingClientRect(), dim=getDays(curYear,curMonth), fd=getWd(curYear,curMonth,1);
-    let h=`<div class="cal-popup" style="top:${rect.bottom+4}px;left:${Math.min(rect.left+rect.width/2,document.documentElement.clientWidth-120)}px"><div class="cal-title">${MONTHS[curMonth]} ${curYear}</div><div class="cal-grid">`;
-    WD.forEach(w=>h+=`<div class="cal-wd">${w}</div>`);
-    for(let i=0;i<fd;i++) h+=`<div class="cal-emp"></div>`;
-    for(let d=1;d<=dim;d++) h+=`<div class="cal-day${d===item.day?' sel':''}" data-d="${d}">${d}</div>`;
-    h+=`</div></div>`;
-    const popup=document.createElement('div'); popup.innerHTML=h;
-    const cal=popup.firstElementChild;
-    document.body.appendChild(cal);
-    cal.addEventListener('click',function(ev){
-      const c=ev.target.closest('.cal-day'); if(!c) return;
-      item.day=parseInt(c.dataset.d); cal.remove(); pushData(); renderAll();
-    });
-    const close=ev=>{ if(!cal.contains(ev.target)){ cal.remove(); document.removeEventListener('click',close); }};
-    setTimeout(()=>document.addEventListener('click',close),0);
+    // multi-day: show text input with comma-separated values
+    const inp=document.createElement('input');
+    inp.className='ie-day';
+    inp.type='text';
+    inp.value=item.days?item.days.join(', '):(item.day||'1');
+    inp.style.width='80px';
+    dayEl.textContent=''; dayEl.appendChild(inp); inp.focus(); inp.select();
+    const save=()=>{
+      const raw=inp.value.trim();
+      const nums=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
+      if(nums.length){item.days=nums; delete item.day;}
+      else if(nums.length===1){item.days=nums;}
+      pushData(); renderAll();
+    };
+    inp.addEventListener('blur',save);
+    inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
     return;
   }
   const rep=e.target.closest('.item-repeat-badge[data-id]');
@@ -1012,7 +1016,7 @@ function itemRowHtml(item,type){
     <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
     <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
     <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-    <div class="item-day-badge" data-id="${item.id}">${item.day||'—'} числа</div>
+    <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')} числа</div>
     <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
     <button class="item-edit" onclick="openItemModal('${type}','${item.id}')">✎</button>
   </div>`;
@@ -1071,8 +1075,8 @@ function openItemModal(type,id){
       <div class="frow-grid">
         <div class="frow"><label class="flabel" id="mAmtLabel">${isEdit&&mo.categoryKey==='zp'?'Стоимость смены, ₽':'Сумма, ₽'}</label>
           <input class="finput" id="mAmount" type="number" value="${isEdit?(mo.amount||''):''}" placeholder="0"></div>
-        <div class="frow" id="mDayRow" style="display:${isEdit&&mo.categoryKey==='zp'?'none':'block'}"><label class="flabel">День месяца</label>
-          <input class="finput" id="mDay" type="number" min="1" max="31" value="${isEdit?(mo.day||1):1}" placeholder="1"></div>
+        <div class="frow" id="mDayRow" style="display:${isEdit&&mo.categoryKey==='zp'?'none':'block'}"><label class="flabel">Дни месяца</label>
+          <input class="finput" id="mDay" type="text" value="${isEdit?(mo.days?mo.days.join(', '):(mo.day||'1')):'1'}" placeholder="1, 15, 20"></div>
       </div>
       <div class="frow" id="mRepeatRow" style="display:${isEdit&&mo.categoryKey==='zp'?'none':'block'}"><label class="flabel">Повторение</label>
         <select class="fselect" id="mRepeat">
@@ -1149,7 +1153,8 @@ function saveItem(){
   const otherCat=document.getElementById('mOtherCat')?.value.trim();
   const pvzAddr=document.getElementById('mPvzAddr').value||null;
   const amount=parseFloat(document.getElementById('mAmount').value)||0;
-  const day=categoryKey==='zp'?null:(parseInt(document.getElementById('mDay').value)||1);
+  const daysRaw=document.getElementById('mDay').value.trim();
+  const days=categoryKey==='zp'?null:daysRaw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
   const repeat=document.getElementById('mRepeat').value;
   const taxableEl=document.getElementById('mTaxable');
   const taxable=taxableEl?taxableEl.value==='1':false;
@@ -1166,12 +1171,16 @@ function saveItem(){
     else{catName=categoryKey;catKey=categoryKey;}
   }
 
+  const itemData={category:catName,categoryKey:catKey,pvzAddr,amount,repeat,taxable,color:selColor};
+  if(categoryKey==='zp'){itemData.days=null;itemData.day=null;}
+  else if(days&&days.length) itemData.days=days;
+
   const tp=editingId?(D.items.find(x=>x.id===editingId)?.type||modalType):modalType;
   if(editingId){
     const it=D.items.find(x=>x.id===editingId);
-    if(it){Object.assign(it,{category:catName,categoryKey:catKey,pvzAddr,amount,day,repeat,taxable,color:selColor});}
+    if(it){Object.assign(it,itemData);}
   } else {
-    D.items.push({id:uid(),type:tp,category:catName,categoryKey:catKey,pvzAddr,amount,day,repeat,taxable,color:selColor});
+    D.items.push({id:uid(),type:tp,...itemData});
   }
   closeModal(); pushData(); renderAll(); showToast('✓ Сохранено');
 }
