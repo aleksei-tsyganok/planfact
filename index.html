@@ -120,8 +120,8 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .item-name{flex:1;font-size:14px;font-weight:500;color:var(--t1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item-amount{font-size:14px;font-weight:600;min-width:100px;text-align:right}
 .item-amount.inc{color:var(--grn)}.item-amount.exp{color:var(--red)}.item-amount.tax{color:var(--amber)}
-.item-day-badge{background:rgba(38,43,58,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--brd);border-radius:6px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--t2);white-space:nowrap;flex-shrink:0}
-.item-repeat-badge{background:rgba(129,140,248,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(129,140,248,.2);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--plan);white-space:nowrap;flex-shrink:0}
+.item-day-badge{background:rgba(38,43,58,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--brd);border-radius:6px;padding:3px 8px;font-size:12px;font-weight:600;color:var(--t2);white-space:nowrap;flex-shrink:0}
+.item-repeat-badge{background:rgba(129,140,248,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(129,140,248,.2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:600;color:var(--plan);white-space:nowrap;flex-shrink:0}
 .item-edit{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px;line-height:1;flex-shrink:0;font-family:var(--f);transition:color .1s}
 .item-edit:hover{color:var(--t1);background:var(--s4)}
 .auto-tag{background:var(--amber-d);border:1px solid rgba(251,191,36,.25);color:var(--amber);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap}
@@ -594,21 +594,23 @@ function buildDailyCF(year,month,startOverride){
   const incomes=D.items.filter(i=>i.type==='income'&&(Number(i.amount)||0)>0);
   for(const item of incomes){
     const amt=Number(item.amount);
-    if(item.repeat==='weekly'){
-      const startDay=Math.min(parseInt(item.day)||1,days);
-      for(let d=startDay;d<=days;d+=7){
+    const dlist=itemDays(item);
+    for(const d0 of dlist){
+      if(item.repeat==='weekly'){
+        for(let d2=d0;d2<=days;d2+=7){
+          events[d2].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
+          if(isTaxMonth&&item.taxable&&amt>0){
+            const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
+            if(taxOk) events[d2].push({name:'Налог',amount:-Math.round(amt*taxRate),type:'tax',color:'#fbbf24',auto:true});
+          }
+        }
+      } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
+        const d=Math.min(d0,days);
         events[d].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
         if(isTaxMonth&&item.taxable&&amt>0){
           const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
           if(taxOk) events[d].push({name:'Налог',amount:-Math.round(amt*taxRate),type:'tax',color:'#fbbf24',auto:true});
         }
-      }
-    } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
-      const d=Math.min(parseInt(item.day)||1,days);
-      events[d].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
-      if(isTaxMonth&&item.taxable&&amt>0){
-        const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
-        if(taxOk) events[d].push({name:'Налог',amount:-Math.round(amt*taxRate),type:'tax',color:'#fbbf24',auto:true});
       }
     }
   }
@@ -951,7 +953,7 @@ function renderSettings(){
           <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('income','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-          <div class="item-day-badge" data-id="${item.id}">${item.day} числа</div>
+          <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
           <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
           <button class="item-edit" onclick="openItemModal('income','${item.id}')">✎</button>
         </div>`;
@@ -995,7 +997,7 @@ function renderSettings(){
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           ${isSal?'<span style="font-size:9px;color:var(--t3);white-space:nowrap">смена</span>'
-            :`<div class="item-day-badge" data-id="${item.id}">${item.day} числа</div>
+            :`<div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
                <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>`}
           <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
         </div>`;
@@ -1073,7 +1075,7 @@ document.addEventListener('click',function(e){
   }
 });
 
-function repeatLabel(r){return {monthly:'Ежемесячно',weekly:'Еженедельно',quarterly:'Ежеквартально',once:'Один раз'}[r||'monthly']||'Ежемесячно'}
+function repeatLabel(r){return {monthly:'Мес.',weekly:'Нед.',quarterly:'Кв.',once:'Один'}[r||'monthly']||'Мес.'}
 
 function itemRowHtml(item,type){
   const amtCls=type==='income'?'inc':'exp';
@@ -1081,7 +1083,7 @@ function itemRowHtml(item,type){
     <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
     <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
     <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-    <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')} числа</div>
+    <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
     <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
     <button class="item-edit" onclick="openItemModal('${type}','${item.id}')">✎</button>
   </div>`;
@@ -1148,7 +1150,7 @@ function openItemModal(type,id){
           <option value="monthly" ${(!isEdit||mo.repeat==='monthly')?'selected':''}>Каждый месяц</option>
           <option value="weekly" ${isEdit&&mo.repeat==='weekly'?'selected':''}>Каждую неделю</option>
           <option value="quarterly" ${isEdit&&mo.repeat==='quarterly'?'selected':''}>Каждый квартал</option>
-          <option value="once" ${isEdit&&mo.repeat==='once'?'selected':''}>Один раз (этот месяц)</option>
+           <option value="once" ${isEdit&&mo.repeat==='once'?'selected':''}>Один</option>
         </select></div>
       ${isIncome?`
       <div class="frow"><label class="flabel">Налогооблагаемый доход (УСН)</label>
