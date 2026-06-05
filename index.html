@@ -124,8 +124,6 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .item-amount.inc{color:var(--grn)}.item-amount.exp{color:var(--red)}.item-amount.tax{color:var(--amber)}
 .item-day-badge{background:rgba(38,43,58,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--brd);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap;flex-shrink:0}
 .item-repeat-badge{background:rgba(129,140,248,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(129,140,248,.2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--plan);white-space:nowrap;flex-shrink:0}
-.item-del{background:none;border:none;color:var(--t4);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;line-height:1;flex-shrink:0;transition:color .1s}
-.item-del:hover{color:var(--red)}
 .item-edit{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px;line-height:1;flex-shrink:0;font-family:var(--f);transition:color .1s}
 .item-edit:hover{color:var(--t1);background:var(--s4)}
 .auto-tag{background:var(--amber-d);border:1px solid rgba(251,191,36,.25);color:var(--amber);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap}
@@ -185,7 +183,17 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .cat-body .item-row:hover{background:rgba(255,255,255,.02)}
 .ie-amt{background:var(--s3);border:1px solid var(--brd2);border-radius:4px;color:var(--t1);font-family:var(--f);font-size:inherit;width:80px;padding:2px 6px;outline:none;font-weight:600;text-align:right}
 .ie-rep{background:var(--plan-d);border:1px solid rgba(129,140,248,.2);border-radius:4px;color:var(--plan);font-family:var(--f);font-size:10px;padding:1px 4px;outline:none;font-weight:600}
-.item-amount[data-id],.item-repeat-badge[data-id]{cursor:pointer}
+.ie-day{background:var(--s3);border:1px solid var(--brd2);border-radius:4px;color:var(--t1);font-family:var(--f);font-size:inherit;width:50px;padding:2px 6px;outline:none;font-weight:600;text-align:center}
+.cal-popup{background:var(--s4);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--brd2);border-radius:14px;padding:10px;width:210px;position:fixed;z-index:300;transform:translateX(-50%);box-shadow:0 8px 40px rgba(0,0,0,.6)}
+.cal-title{font-size:11px;font-weight:700;text-align:center;color:var(--t1);margin-bottom:6px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-wd{font-size:8px;font-weight:700;text-align:center;color:var(--t3);padding:3px 0}
+.cal-emp{height:0}
+.cal-day{font-size:12px;font-weight:600;text-align:center;padding:5px 2px;border-radius:8px;cursor:pointer;color:var(--t2);transition:all .1s}
+.cal-day:hover{background:var(--s5);color:var(--t1)}
+.cal-day.sel{background:var(--acc);color:var(--bg);font-weight:800}
+.item-day-badge[data-id]{position:relative}
+.item-amount[data-id],.item-day-badge[data-id],.item-repeat-badge[data-id]{cursor:pointer}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--s5);border-radius:3px}
 @media(max-width:599px){
@@ -199,9 +207,12 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   .kpi-val{font-size:17px}
   .acct-card{padding:10px 12px}
   .acct-val{font-size:15px}
-  .item-row{padding:8px 12px}
+  .item-row{padding:8px 10px;gap:6px}
   .item-name{font-size:12px}
-  .item-amount{font-size:12px;min-width:70px}
+  .item-amount{font-size:12px;min-width:60px}
+  .item-day-badge{font-size:10px;padding:1px 5px}
+  .item-repeat-badge{font-size:9px;padding:1px 4px}
+  .cat-body .item-row{padding-left:10px}
   .modal{padding:16px 16px 28px}
   .finput,.fselect{font-size:14px;padding:10px 12px}
   .month-label{font-size:14px}
@@ -816,9 +827,8 @@ function renderSettings(){
     <div class="item-row">
       <div class="item-dot" style="background:${a.color}" onclick="openItemModal('account','${a.id}')"></div>
       <div class="item-name">${a.name}</div>
-      <div class="item-amount">${fmt(a.balance)||'0₽'}</div>
+      <div class="item-amount" data-id="${a.id}" data-acct>${fmt(a.balance)||'0₽'}</div>
       <button class="item-edit" onclick="openItemModal('account','${a.id}')">✎</button>
-      <button class="item-del" onclick="delItem('account','${a.id}')">×</button>
     </div>`).join('');
 
   // ── Доходы (категория → ПВЗ) ──
@@ -847,10 +857,9 @@ function renderSettings(){
           <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('income','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-          <div class="item-day-badge">${item.day} числа</div>
+          <div class="item-day-badge" data-id="${item.id}">${item.day} числа</div>
           <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
           <button class="item-edit" onclick="openItemModal('income','${item.id}')">✎</button>
-          <button class="item-del" onclick="delItem('item','${item.id}')">×</button>
         </div>`;
       }
 
@@ -890,10 +899,9 @@ function renderSettings(){
           <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('expense','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-          <div class="item-day-badge">${item.day} числа</div>
+          <div class="item-day-badge" data-id="${item.id}">${item.day} числа</div>
           <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
           <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
-          <button class="item-del" onclick="delItem('item','${item.id}')">×</button>
         </div>`;
       }
 
@@ -919,14 +927,41 @@ function toggleCat(el){
 document.addEventListener('click',function(e){
   const amt=e.target.closest('.item-amount[data-id]');
   if(amt&&!amt.querySelector('input')){
-    const id=amt.dataset.id, item=D.items.find(x=>x.id===id);
+    const id=amt.dataset.id, isAcct=amt.dataset.acct!==undefined;
+    const item=isAcct?D.accounts.find(x=>x.id===id):D.items.find(x=>x.id===id);
     if(!item) return;
-    amt.innerHTML=`<input class="ie-amt" type="number" value="${item.amount||0}" step="100">`;
+    const val=isAcct?item.balance:item.amount;
+    amt.innerHTML=`<input class="ie-amt" type="number" value="${val||0}" step="${isAcct?'1000':'100'}">`;
     const inp=amt.querySelector('input');
     inp.focus(); inp.select();
-    const save=()=>{ item.amount=parseFloat(inp.value)||0; pushData(); renderAll(); };
+    const save=()=>{
+      const v=parseFloat(inp.value)||0;
+      if(isAcct) item.balance=v; else item.amount=v;
+      pushData(); renderAll();
+    };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
+    return;
+  }
+  const dayEl=e.target.closest('.item-day-badge[data-id]');
+  if(dayEl&&!document.querySelector('.cal-popup')){
+    const id=dayEl.dataset.id, item=D.items.find(x=>x.id===id);
+    if(!item) return;
+    const rect=dayEl.getBoundingClientRect(), dim=getDays(curYear,curMonth), fd=getWd(curYear,curMonth,1);
+    let h=`<div class="cal-popup" style="top:${rect.bottom+4}px;left:${Math.min(rect.left+rect.width/2,document.documentElement.clientWidth-120)}px"><div class="cal-title">${MONTHS[curMonth]} ${curYear}</div><div class="cal-grid">`;
+    WD.forEach(w=>h+=`<div class="cal-wd">${w}</div>`);
+    for(let i=0;i<fd;i++) h+=`<div class="cal-emp"></div>`;
+    for(let d=1;d<=dim;d++) h+=`<div class="cal-day${d===item.day?' sel':''}" data-d="${d}">${d}</div>`;
+    h+=`</div></div>`;
+    const popup=document.createElement('div'); popup.innerHTML=h;
+    const cal=popup.firstElementChild;
+    document.body.appendChild(cal);
+    cal.addEventListener('click',function(ev){
+      const c=ev.target.closest('.cal-day'); if(!c) return;
+      item.day=parseInt(c.dataset.d); cal.remove(); pushData(); renderAll();
+    });
+    const close=ev=>{ if(!cal.contains(ev.target)){ cal.remove(); document.removeEventListener('click',close); }};
+    setTimeout(()=>document.addEventListener('click',close),0);
     return;
   }
   const rep=e.target.closest('.item-repeat-badge[data-id]');
@@ -949,10 +984,9 @@ function itemRowHtml(item,type){
     <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
     <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
     <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-    <div class="item-day-badge">${item.day||'—'} числа</div>
+    <div class="item-day-badge" data-id="${item.id}">${item.day||'—'} числа</div>
     <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
     <button class="item-edit" onclick="openItemModal('${type}','${item.id}')">✎</button>
-    <button class="item-del" onclick="delItem('item','${item.id}')">×</button>
   </div>`;
 }
 
