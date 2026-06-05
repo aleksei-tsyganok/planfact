@@ -194,6 +194,12 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .cal-day.sel{background:var(--acc);color:var(--bg);font-weight:800}
 .item-day-badge[data-id]{position:relative}
 .item-amount[data-id],.item-day-badge[data-id],.item-repeat-badge[data-id]{cursor:pointer}
+.tg{position:relative;display:inline-block;width:44px;height:26px;flex-shrink:0;cursor:pointer}
+.tg input{opacity:0;width:0;height:0}
+.tg-s{position:absolute;inset:0;background:var(--s5);border-radius:13px;transition:.25s}
+.tg-s::before{content:'';position:absolute;width:20px;height:20px;border-radius:50%;background:var(--t3);top:3px;left:3px;transition:.25s}
+.tg input:checked+.tg-s{background:var(--acc-d)}
+.tg input:checked+.tg-s::before{background:var(--acc);transform:translateX(18px)}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--s5);border-radius:3px}
 @media(max-width:599px){
@@ -285,6 +291,10 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
       <button class="ss-add-btn" onclick="openItemModal('account')">+ Добавить счёт</button>
     </div>
     <div id="settingAccounts"></div>
+    <div class="item-row" style="border-top:1px solid var(--brd)">
+      <div class="item-name" style="color:var(--t2);font-size:12px">Платежи за сегодня оплачены</div>
+      <label class="tg"><input type="checkbox" id="paidToday" onchange="togglePaid()"><span class="tg-s"></span></label>
+    </div>
   </div>
 
   <!-- Income -->
@@ -504,7 +514,8 @@ const DEFAULT_ITEMS=[
     PVZ_LIST.map(p=>({
       id:'e_'+cat.key+'_'+p.key, type:'expense',
       categoryKey:cat.key, category:cat.name,
-      pvzAddr:p.key, amount:0, day:cat.defaultDay,
+      pvzAddr:p.key, amount:0,
+      day:cat.key==='zp'?null:cat.defaultDay,
       repeat:'monthly', taxable:false, color:p.color,
     }))
   ),
@@ -520,6 +531,7 @@ function getDays(y,m){return new Date(y,m+1,0).getDate();}
 function getWd(y,m,d){return new Date(y,m,d).getDay();}
 function isWe(y,m,d){const w=getWd(y,m,d);return w===0||w===6;}
 function isToday(y,m,d){const t=new Date();return t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===d;}
+function workdays(y,m,f,t){let n=0;for(let d=f;d<=t;d++){const w=getWd(y,m,d);if(w>=1&&w<=5)n++;}return n;}
 function fmt(n,plus){
   if(n===null||n===undefined||n===0)return n===0?'0₽':'';
   const s=Math.abs(n).toLocaleString('ru-RU');
@@ -589,8 +601,8 @@ function buildDailyCF(year,month){
   }
   const taxAmount=Math.round(taxableIncome*taxRate);
 
-  // expense items
-  const expenses=D.items.filter(i=>i.type==='expense'&&(Number(i.amount)||0)>0);
+  // expense items — salary is handled separately
+  const expenses=D.items.filter(i=>i.type==='expense'&&(Number(i.amount)||0)>0&&i.categoryKey!=='zp');
   for(const item of expenses){
     const d=Math.min(parseInt(item.day)||1,days);
     if(item.repeat==='weekly'){
@@ -605,13 +617,30 @@ function buildDailyCF(year,month){
     }
   }
 
+  // salary: auto 5th & 25th from shiftCost
+  const salaryItems=D.items.filter(i=>i.categoryKey==='zp'&&(Number(i.amount)||0)>0);
+  if(salaryItems.length){
+    let pm=month-1,py=year; if(pm<0){pm=11;py--;}
+    const pmd=getDays(py,pm); // days in previous month
+    const days5=pmd-15; // 16..last inclusive
+    const days25=15;    // 1..15 inclusive
+    for(const item of salaryItems){
+      const sc=Number(item.amount)||0;
+      const pvzName=(PVZ_LIST.find(p=>p.key===item.pvzAddr)||{}).name||item.pvzAddr||'';
+      const d5=Math.min(5,days), d25=Math.min(25,days);
+      if(d5<=days) events[d5].push({name:pvzName+' — аванс',amount:-Math.round(sc*days5),type:'expense',color:item.color,id:item.id});
+      if(d25<=days) events[d25].push({name:pvzName+' — зп',amount:-Math.round(sc*days25),type:'expense',color:item.color,id:item.id});
+    }
+  }
+
   // build daily running balance
   const daily=[];
   let balance=startBalance;
   for(let d=1;d<=days;d++){
     const dayEvents=events[d];
     const dayIncome=dayEvents.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
-    const dayExpense=dayEvents.filter(e=>e.type!=='income').reduce((s,e)=>s+e.amount,0); // negative
+    let dayExpense=dayEvents.filter(e=>e.type!=='income').reduce((s,e)=>s+e.amount,0);
+    if(isToday(year,month,d)&&D.settings.paidToday) dayExpense=0;
     const dayNet=dayIncome+dayExpense;
     balance+=dayNet;
     daily.push({d,events:dayEvents,income:dayIncome,expense:dayExpense,net:dayNet,balance,we:isWe(year,month,d),tod:isToday(year,month,d)});
@@ -633,19 +662,20 @@ function renderAll(){
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
+  document.getElementById('paidToday').checked=D.settings.paidToday||false;
 }
 
 function renderKPI(){
   const {daily,startBalance,taxAmount,taxableIncome}=buildDailyCF(curYear,curMonth);
   const totalIncome=D.items.filter(i=>i.type==='income').reduce((s,i)=>s+(Number(i.amount)||0),0);
-  const totalExpense=D.items.filter(i=>i.type==='expense').reduce((s,i)=>s+(Number(i.amount)||0),0);
+  const totalExpense=daily.reduce((s,d)=>s+Math.abs(d.expense),0)+taxAmount;
   const endBalance=daily.length?daily[daily.length-1].balance:startBalance;
   const freeMoney=endBalance; // balance at end of month = free
 
   document.getElementById('kpiGrid').innerHTML=[
     {label:'Текущий баланс', val:fmtK(startBalance), cls:startBalance<0?'r':startBalance<50000?'am':'a'},
     {label:'Прогноз доходов', val:fmtK(totalIncome), cls:'g'},
-    {label:'Прогноз расходов', val:fmtK(totalExpense+taxAmount), cls:'r'},
+    {label:'Прогноз расходов', val:fmtK(totalExpense), cls:'r'},
     {label:'Налог '+((D.settings.taxRate)||7)+'%', val:fmtK(taxAmount), cls:'am'},
     {label:'Остаток конец мес.', val:fmtK(endBalance), cls:endBalance<0?'r':endBalance<30000?'am':'a'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val ${k.cls}">${k.val}</div></div>`).join('');
@@ -884,19 +914,21 @@ function renderSettings(){
 
       expHtml+=`<div class="cat-header exp" onclick="toggleCat(this)">
         <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${cat.name}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--red)">${catTotal?fmt(catTotal):'—'}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--red)">${catTotal?fmt(catTotal):'—'}${cat.key==='zp'?' <span style="font-size:9px;color:var(--t3);font-weight:400">/смена</span>':''}</div>
       </div>
       <div class="cat-body">`;
 
       for(const pvz of PVZ_LIST){
         const item=catItems.find(i=>i.pvzAddr===pvz.key);
         if(!item) continue;
+        const isSal=item.categoryKey==='zp';
         expHtml+=`<div class="item-row" style="padding-left:20px">
           <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('expense','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-          <div class="item-day-badge" data-id="${item.id}">${item.day} числа</div>
-          <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
+          ${isSal?'<span style="font-size:9px;color:var(--t3);white-space:nowrap">смена</span>'
+            :`<div class="item-day-badge" data-id="${item.id}">${item.day} числа</div>
+               <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>`}
           <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
         </div>`;
       }
@@ -1037,12 +1069,12 @@ function openItemModal(type,id){
           ${PVZ_LIST.map(p=>`<option value="${p.key}" ${isEdit&&mo.pvzAddr===p.key?'selected':''}>${p.name}</option>`).join('')}
         </select></div>
       <div class="frow-grid">
-        <div class="frow"><label class="flabel">Сумма, ₽</label>
+        <div class="frow"><label class="flabel" id="mAmtLabel">${isEdit&&mo.categoryKey==='zp'?'Стоимость смены, ₽':'Сумма, ₽'}</label>
           <input class="finput" id="mAmount" type="number" value="${isEdit?(mo.amount||''):''}" placeholder="0"></div>
-        <div class="frow"><label class="flabel">День месяца</label>
+        <div class="frow" id="mDayRow" style="display:${isEdit&&mo.categoryKey==='zp'?'none':'block'}"><label class="flabel">День месяца</label>
           <input class="finput" id="mDay" type="number" min="1" max="31" value="${isEdit?(mo.day||1):1}" placeholder="1"></div>
       </div>
-      <div class="frow"><label class="flabel">Повторение</label>
+      <div class="frow" id="mRepeatRow" style="display:${isEdit&&mo.categoryKey==='zp'?'none':'block'}"><label class="flabel">Повторение</label>
         <select class="fselect" id="mRepeat">
           <option value="monthly" ${(!isEdit||mo.repeat==='monthly')?'selected':''}>Каждый месяц</option>
           <option value="weekly" ${isEdit&&mo.repeat==='weekly'?'selected':''}>Каждую неделю</option>
@@ -1074,6 +1106,13 @@ function openItemModal(type,id){
     catSel.onchange=()=>{
       const row=document.getElementById('mOtherCatRow');
       if(row) row.style.display=catSel.value==='__other__'?'flex':'none';
+      const isZP=catSel.value==='zp';
+      const dr=document.getElementById('mDayRow');
+      const rr=document.getElementById('mRepeatRow');
+      const al=document.getElementById('mAmtLabel');
+      if(dr) dr.style.display=isZP?'none':'block';
+      if(rr) rr.style.display=isZP?'none':'block';
+      if(al) al.textContent=isZP?'Стоимость смены, ₽':'Сумма, ₽';
     };
   }
   document.getElementById('itemModal').classList.add('open');
@@ -1110,7 +1149,7 @@ function saveItem(){
   const otherCat=document.getElementById('mOtherCat')?.value.trim();
   const pvzAddr=document.getElementById('mPvzAddr').value||null;
   const amount=parseFloat(document.getElementById('mAmount').value)||0;
-  const day=parseInt(document.getElementById('mDay').value)||1;
+  const day=categoryKey==='zp'?null:(parseInt(document.getElementById('mDay').value)||1);
   const repeat=document.getElementById('mRepeat').value;
   const taxableEl=document.getElementById('mTaxable');
   const taxable=taxableEl?taxableEl.value==='1':false;
@@ -1152,6 +1191,8 @@ document.getElementById('itemModal').addEventListener('click',e=>{if(e.target===
 // ══════════════════════════════════
 function saveTaxRate(){D.settings.taxRate=parseFloat(document.getElementById('taxRate').value)||7;pushData();renderAll();}
 function saveTaxBase(){D.settings.taxBase=document.getElementById('taxBase').value;pushData();renderAll();}
+
+function togglePaid(){D.settings.paidToday=document.getElementById('paidToday').checked;pushData();renderAll();}
 
 // ══════════════════════════════════
 // NAV
