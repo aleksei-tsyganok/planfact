@@ -2,313 +2,801 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Платёжный календарь</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#090b0e; --s1:#0f1217; --s2:#151920; --s3:#1c2028; --s4:#212833;
-  --border:#1f2630; --border2:#2a3340;
-  --acc:#00e5a0; --acc-dim:rgba(0,229,160,0.07); --acc-mid:rgba(0,229,160,0.16);
-  --blue:#3b7fff; --blue-dim:rgba(59,127,255,0.08);
-  --red:#ff4545; --red-dim:rgba(255,69,69,0.07);
-  --green:#00c46e; --green-dim:rgba(0,196,110,0.07);
-  --amber:#f5a623; --amber-dim:rgba(245,166,35,0.1);
-  --plan-color:#5d7aff; --fact-color:#00c46e; --dev-pos:#00e5a0; --dev-neg:#ff4545;
-  --t1:#dde4ef; --t2:#5d6e82; --t3:#323d4a;
-  --font-head:'Unbounded',sans-serif; --font-mono:'JetBrains Mono',monospace;
+  --bg: #0d0f12;
+  --s1: #13161b;
+  --s2: #1a1e25;
+  --s3: #21262f;
+  --s4: #2a303c;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --acc: #34d399;
+  --acc-dim: rgba(52,211,153,0.1);
+  --acc-mid: rgba(52,211,153,0.2);
+  --blue: #60a5fa;
+  --blue-dim: rgba(96,165,250,0.1);
+  --red: #f87171;
+  --red-dim: rgba(248,113,113,0.1);
+  --green: #4ade80;
+  --green-dim: rgba(74,222,128,0.1);
+  --amber: #fbbf24;
+  --plan: #818cf8;
+  --plan-dim: rgba(129,140,248,0.12);
+  --fact: #34d399;
+  --fact-dim: rgba(52,211,153,0.1);
+  --t1: #f1f5f9;
+  --t2: #94a3b8;
+  --t3: #475569;
+  --t4: #2d3748;
+  --r: 14px;
+  --r-sm: 8px;
+  --font: 'Inter', -apple-system, sans-serif;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden}
-body{background:var(--bg);color:var(--t1);font-family:var(--font-mono);font-size:13px}
-
-/* HEADER */
-header{height:54px;display:flex;align-items:center;gap:14px;padding:0 18px;
-  border-bottom:1px solid var(--border);background:rgba(9,11,14,0.96);
-  backdrop-filter:blur(20px);position:relative;z-index:50;flex-shrink:0}
-.logo{font-family:var(--font-head);font-size:12px;font-weight:800;color:var(--acc);
-  letter-spacing:-.5px;white-space:nowrap}
-.logo em{color:var(--t3);font-style:normal}
-.month-nav{display:flex;align-items:center;gap:5px;margin-left:auto}
-.nav-btn{background:var(--s2);border:1px solid var(--border);color:var(--t1);
-  width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:11px;
-  display:flex;align-items:center;justify-content:center;transition:background .1s}
-.nav-btn:hover{background:var(--s3)}
-.month-label{font-family:var(--font-head);font-size:11px;font-weight:600;
-  min-width:136px;text-align:center}
-
-/* Mode toggle */
-.mode-toggle{display:flex;background:var(--s2);border:1px solid var(--border);
-  border-radius:7px;padding:2px;gap:2px}
-.mtbtn{padding:4px 11px;border-radius:5px;border:none;background:none;
-  color:var(--t2);font-family:var(--font-mono);font-size:10px;cursor:pointer;
-  transition:all .12s;white-space:nowrap}
-.mtbtn.active{background:var(--s4);color:var(--t1)}
-.mtbtn.plan.active{color:var(--plan-color)}
-.mtbtn.fact.active{color:var(--fact-color)}
-.mtbtn.both.active{color:var(--acc)}
-
-.header-actions{display:flex;gap:5px}
-.hbtn{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:6px;
-  border:1px solid var(--border);background:var(--s2);color:var(--t2);
-  font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .14s;white-space:nowrap}
-.hbtn:hover{background:var(--s3);color:var(--t1);border-color:var(--border2)}
-.hbtn.primary{background:var(--acc-dim);color:var(--acc);border-color:rgba(0,229,160,.25)}
-.hbtn.primary:hover{background:var(--acc-mid)}
-.icon{font-size:13px;line-height:1}
-
-/* LAYOUT */
-.app{display:flex;height:calc(100vh - 54px);overflow:hidden}
-
-/* SIDEBAR */
-.sidebar{width:204px;min-width:204px;border-right:1px solid var(--border);
-  display:flex;flex-direction:column;background:var(--s1);overflow:hidden}
-.sb-top{flex:1;overflow-y:auto;padding:10px 0}
-.sb-sec-title{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;
-  color:var(--t3);padding:4px 13px 5px}
-.sb-row{display:flex;align-items:center;gap:6px;padding:5px 13px;
-  cursor:pointer;border-left:2px solid transparent;transition:all .1s;position:relative}
-.sb-row:hover{background:var(--s2)}
-.sb-row.active{border-left-color:var(--acc);background:var(--acc-dim);color:var(--acc)}
-.sb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.sb-name{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb-del{display:none;background:none;border:none;color:var(--red);cursor:pointer;
-  font-size:14px;padding:0 3px;opacity:.6;line-height:1}
-.sb-del:hover{opacity:1}
-.sb-row:hover .sb-del{display:block}
-.sb-div{height:1px;background:var(--border);margin:6px 11px}
-.sb-bottom{padding:9px;border-top:1px solid var(--border);flex-shrink:0}
-.add-row-btn{width:100%;padding:7px;border-radius:6px;border:1px dashed var(--border2);
-  background:none;color:var(--t3);font-family:var(--font-mono);font-size:11px;
-  cursor:pointer;transition:all .14s;text-align:center}
-.add-row-btn:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-dim)}
-
-/* CONTENT */
-.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
-
-/* SUMMARY */
-.summary{display:grid;grid-template-columns:repeat(6,1fr);
-  border-bottom:1px solid var(--border);flex-shrink:0}
-.sum-card{padding:10px 14px;border-right:1px solid var(--border);background:var(--s1)}
-.sum-card:last-child{border-right:none}
-.sum-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:4px}
-.sum-val{font-family:var(--font-head);font-size:14px;font-weight:600}
-.sum-val.g{color:var(--green)} .sum-val.r{color:var(--red)}
-.sum-val.a{color:var(--acc)} .sum-val.b{color:var(--blue)}
-.sum-val.p{color:var(--plan-color)} .sum-val.am{color:var(--amber)}
-.sum-sub{font-size:9px;color:var(--t3);margin-top:2px}
-
-/* TABLE */
-.tbl-wrap{flex:1;overflow:auto}
-table{border-collapse:collapse;font-size:12px;min-width:100%}
-
-thead th{position:sticky;top:0;z-index:20;background:var(--s2);
-  border-bottom:1px solid var(--border);border-right:1px solid var(--border);
-  padding:6px 4px;white-space:nowrap;font-size:10px;font-weight:500;color:var(--t2);
-  text-align:center}
-thead th.row-head{position:sticky;left:0;z-index:30;background:var(--s3);
-  min-width:195px;text-align:left;padding:6px 10px;
-  font-family:var(--font-head);font-size:8px;letter-spacing:.3px}
-th.we{background:rgba(255,69,69,.06)!important;color:var(--red)!important;opacity:.8}
-th.tod{background:rgba(0,229,160,.1)!important;color:var(--acc)!important;
-  border-bottom:2px solid var(--acc)!important}
-
-tbody tr:hover td{background:rgba(255,255,255,.012)}
-tbody tr:hover td.sticky-col{background:var(--s2)}
-td{border-right:1px solid var(--border);border-bottom:1px solid rgba(31,38,48,.5);
-  padding:0;vertical-align:top;white-space:nowrap}
-td.sticky-col{position:sticky;left:0;z-index:10;background:var(--s1);
-  border-right:1px solid var(--border);min-width:195px;vertical-align:middle}
-td.we-col{background:rgba(255,69,69,.02)!important}
-td.tod-col{background:rgba(0,229,160,.025)!important;
-  border-left:1px solid rgba(0,229,160,.12)!important;
-  border-right:1px solid rgba(0,229,160,.12)!important}
-
-/* total rows */
-tr.tot-row td{background:rgba(0,229,160,.025)}
-tr.tot-row td.sticky-col{background:rgba(0,229,160,.04)}
-tr.tot-row td{border-top:1px solid rgba(0,229,160,.12)}
-
-/* row label */
-.row-label{display:flex;align-items:center;gap:6px;padding:5px 9px;min-height:42px}
-.row-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.row-name{font-size:11px;color:var(--t1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.row-actions{display:none;gap:3px;flex-shrink:0}
-td.sticky-col:hover .row-actions{display:flex}
-.ract{background:none;border:none;cursor:pointer;font-size:11px;padding:2px 3px;
-  border-radius:3px;color:var(--t3);line-height:1}
-.ract:hover{background:var(--s3);color:var(--t1)}
-.ract.del:hover{color:var(--red)}
-
-/* ── CELL DUAL (plan+fact) ── */
-.cell-dual{display:flex;flex-direction:column;width:100%;cursor:pointer;min-height:42px}
-.cell-plan-line,.cell-fact-line{
-  display:flex;align-items:center;justify-content:flex-end;
-  padding:0 7px;height:21px;font-family:var(--font-mono);font-size:11px;
-  font-weight:500;transition:background .1s;position:relative;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  background: var(--bg);
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
 }
-.cell-plan-line{border-bottom:1px solid rgba(31,38,48,.4)}
-.cell-plan-line:hover{background:rgba(93,122,255,.07)}
-.cell-fact-line:hover{background:rgba(0,196,110,.06)}
 
-/* plan line */
-.cell-plan-line.empty{color:var(--t3)}
-.cell-plan-line.has-val{color:var(--plan-color)}
-.cell-plan-line .line-tag{font-size:8px;opacity:.5;margin-right:4px;font-weight:300}
-
-/* fact line */
-.cell-fact-line.empty{color:var(--t3)}
-.cell-fact-line.has-val.inc{color:var(--green)}
-.cell-fact-line.has-val.exp{color:var(--red)}
-.cell-fact-line.has-val.note{color:var(--t2)}
-
-/* deviation badge */
-.dev-badge{
-  position:absolute;right:4px;top:1px;
-  font-size:7px;padding:0 3px;border-radius:2px;line-height:14px;
+/* ═══ LAYOUT ═══ */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  overflow: hidden;
 }
-.dev-badge.pos{background:rgba(0,229,160,.15);color:var(--dev-pos)}
-.dev-badge.neg{background:rgba(255,69,69,.15);color:var(--dev-neg)}
 
-/* single-mode cell */
-.cell-single{display:flex;align-items:center;justify-content:flex-end;
-  padding:0 8px;min-height:42px;cursor:pointer;
-  font-family:var(--font-mono);font-size:12px;font-weight:500;
-  color:var(--t3);transition:background .1s}
-.cell-single:hover{background:rgba(255,255,255,.03)}
-.cell-single.has-val.plan{color:var(--plan-color)}
-.cell-single.has-val.inc{color:var(--green)}
-.cell-single.has-val.exp{color:var(--red)}
-.cell-single.has-val.bal{color:var(--acc)}
-.cell-single.has-val.neg{color:var(--red)}
-.cell-single.has-val.cum{color:var(--blue)}
-.cell-single.has-val.cum-neg{color:var(--red)}
-.cell-single.has-val.note{color:var(--t2)}
+/* ═══ HEADER ═══ */
+.header {
+  flex-shrink: 0;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  padding: env(safe-area-inset-top, 0) 0 0;
+  z-index: 40;
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  height: 56px;
+}
+.logo {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--acc);
+  letter-spacing: -0.5px;
+}
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+.nav-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  color: var(--t1);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+.nav-btn:active { background: var(--s4); }
+.month-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--t1);
+  min-width: 130px;
+  text-align: center;
+}
+.add-btn {
+  width: 36px;
+  height: 36px;
+  background: var(--acc-dim);
+  border: 1px solid rgba(52,211,153,0.25);
+  color: var(--acc);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 20px;
+  font-weight: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.1s;
+  flex-shrink: 0;
+}
+.add-btn:active { background: var(--acc-mid); }
 
-/* input */
-.cell-input{width:100%;padding:0 8px;background:var(--acc-dim);border:none;
-  outline:2px solid var(--acc);color:var(--t1);font-family:var(--font-mono);
-  font-size:11px;text-align:right;height:21px}
-.cell-input.plan-input{background:var(--blue-dim);outline-color:var(--plan-color)}
-.cell-input.fact-input{background:var(--green-dim);outline-color:var(--fact-color)}
-.cell-input-full{width:100%;padding:0 8px;background:var(--acc-dim);border:none;
-  outline:2px solid var(--acc);color:var(--t1);font-family:var(--font-mono);
-  font-size:12px;text-align:right;min-height:42px}
-.cell-input-full.plan-input{background:var(--blue-dim);outline-color:var(--plan-color)}
-.cell-input-full.fact-input{background:var(--green-dim);outline-color:var(--fact-color)}
+/* sync strip */
+.sync-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 16px;
+  font-size: 11px;
+  font-weight: 500;
+  border-top: 1px solid var(--border);
+  transition: all 0.3s;
+}
+.sync-strip.ok     { color: var(--green); }
+.sync-strip.syncing{ color: var(--amber); }
+.sync-strip.err    { color: var(--red); }
+.sync-strip.offline{ color: var(--t3); }
+.sync-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: currentColor;
+}
+.sync-strip.syncing .sync-dot { animation: pulse 0.8s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:.25} }
 
-/* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.77);backdrop-filter:blur(6px);
-  z-index:100;display:none;align-items:center;justify-content:center}
-.overlay.open{display:flex}
-.modal{background:var(--s2);border:1px solid var(--border2);border-radius:13px;
-  width:420px;max-height:90vh;overflow-y:auto;
-  padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.6)}
-.modal-title{font-family:var(--font-head);font-size:13px;font-weight:600;margin-bottom:18px}
-.form-row{margin-bottom:13px}
-.form-label{font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
-.form-input,.form-select{width:100%;background:var(--s3);border:1px solid var(--border2);
-  border-radius:6px;padding:8px 11px;color:var(--t1);font-family:var(--font-mono);
-  font-size:12px;outline:none;transition:border .14s}
-.form-input:focus,.form-select:focus{border-color:var(--acc)}
-.form-select{cursor:pointer;-webkit-appearance:none}
-.color-row{display:flex;gap:7px;flex-wrap:wrap}
-.cswatch{width:22px;height:22px;border-radius:50%;cursor:pointer;
-  border:2px solid transparent;transition:transform .1s,border-color .1s}
-.cswatch:hover{transform:scale(1.15)}
-.cswatch.sel{border-color:var(--t1);transform:scale(1.12)}
-.modal-btns{display:flex;gap:7px;margin-top:18px;justify-content:flex-end}
-.mbtn{padding:7px 16px;border-radius:6px;border:1px solid var(--border2);
-  background:var(--s3);color:var(--t1);font-family:var(--font-mono);
-  font-size:11px;cursor:pointer;transition:all .14s}
-.mbtn:hover{background:var(--border2)}
-.mbtn.ok{background:var(--acc-dim);color:var(--acc);border-color:rgba(0,229,160,.3)}
-.mbtn.ok:hover{background:var(--acc-mid)}
-.mbtn.danger{background:var(--red-dim);color:var(--red);border-color:rgba(255,69,69,.2)}
+/* ═══ MODE TABS ═══ */
+.mode-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.mtab {
+  flex: 1;
+  padding: 8px 4px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--t3);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.mtab.active        { background: var(--s3); color: var(--t1); border-color: var(--border2); }
+.mtab.active.plan   { color: var(--plan); }
+.mtab.active.fact   { color: var(--fact); }
+.mtab.active.both   { color: var(--acc); }
 
-/* Legend strip */
-.legend{display:flex;align-items:center;gap:14px;padding:5px 14px;
-  border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;font-size:10px;color:var(--t2)}
-.leg-item{display:flex;align-items:center;gap:5px}
-.leg-dot{width:8px;height:8px;border-radius:2px}
+/* ═══ SUMMARY CARDS ═══ */
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sum-card {
+  background: var(--s1);
+  padding: 10px 12px;
+}
+.sum-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--t3);
+  margin-bottom: 4px;
+}
+.sum-val {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.sum-val.g { color: var(--green); }
+.sum-val.r { color: var(--red); }
+.sum-val.a { color: var(--acc); }
+.sum-val.p { color: var(--plan); }
+.sum-sub {
+  font-size: 11px;
+  color: var(--t3);
+  margin-top: 2px;
+  line-height: 1.3;
+}
 
-/* TOAST */
-.toast{position:fixed;bottom:20px;right:20px;z-index:200;background:var(--s3);
-  border:1px solid var(--border2);border-radius:7px;padding:9px 14px;
-  font-size:11px;color:var(--t1);transform:translateY(16px);opacity:0;
-  transition:all .18s;pointer-events:none}
-.toast.show{transform:translateY(0);opacity:1}
+/* ═══ SCROLL AREA ═══ */
+.scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  padding: 12px 16px 32px;
+  padding-bottom: calc(32px + env(safe-area-inset-bottom, 0));
+}
 
-::-webkit-scrollbar{width:4px;height:4px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+/* ═══ SECTION HEADERS ═══ */
+.section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--t3);
+  margin: 16px 0 8px;
+}
+.section-title:first-child { margin-top: 0; }
+
+/* ═══ ROW CARDS ═══ */
+.row-card {
+  background: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+.row-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  gap: 10px;
+}
+.row-card-header:active { background: var(--s3); }
+.row-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.row-color-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.row-name-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--t1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.row-totals {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.row-total-plan {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--plan);
+}
+.row-total-fact {
+  font-size: 13px;
+  font-weight: 600;
+}
+.row-total-fact.inc { color: var(--green); }
+.row-total-fact.exp { color: var(--red); }
+.row-total-fact.empty { color: var(--t3); }
+.row-expand-btn {
+  width: 28px;
+  height: 28px;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--t2);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.row-expand-btn.open { color: var(--acc); border-color: rgba(52,211,153,.3); background: var(--acc-dim); }
+.row-edit-btn {
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: none;
+  color: var(--t3);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  -webkit-tap-highlight-color: transparent;
+  border-radius: 6px;
+  padding: 0;
+}
+.row-edit-btn:active { background: var(--s3); }
+
+/* ═══ DAY GRID ═══ */
+.day-grid {
+  display: none;
+  padding: 0 14px 12px;
+  border-top: 1px solid var(--border);
+}
+.day-grid.open { display: block; }
+.day-grid-scroll {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 10px 0 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.day-grid-scroll::-webkit-scrollbar { display: none; }
+.day-cell {
+  flex-shrink: 0;
+  width: 58px;
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color 0.12s;
+}
+.day-cell:active { border-color: var(--border2); }
+.day-cell.is-today { border-color: var(--acc); }
+.day-cell.is-weekend { background: rgba(248,113,113,0.04); }
+.day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5px 4px 3px;
+  border-bottom: 1px solid var(--border);
+}
+.day-num {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t1);
+  line-height: 1;
+}
+.day-cell.is-today .day-num { color: var(--acc); }
+.day-cell.is-weekend .day-num { color: var(--red); opacity: 0.7; }
+.day-wd {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--t3);
+  letter-spacing: 0.3px;
+  margin-top: 1px;
+}
+.day-body { padding: 4px; }
+.day-plan-val, .day-fact-val {
+  font-size: 10px;
+  font-weight: 600;
+  text-align: center;
+  min-height: 15px;
+  line-height: 15px;
+  border-radius: 3px;
+  padding: 0 2px;
+}
+.day-plan-val { color: var(--plan); }
+.day-plan-val.empty { color: var(--t4); }
+.day-fact-val { color: var(--green); }
+.day-fact-val.exp { color: var(--red); }
+.day-fact-val.empty { color: var(--t4); }
+
+/* ═══ TOTAL CARDS ═══ */
+.totals-section {
+  background: rgba(52,211,153,0.04);
+  border: 1px solid rgba(52,211,153,0.12);
+  border-radius: var(--r);
+  padding: 12px 14px;
+  margin-top: 4px;
+}
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.total-row:last-child { border-bottom: none; }
+.total-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--t2);
+}
+.total-label .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.total-vals { display: flex; gap: 10px; align-items: center; }
+.tv-plan { font-size: 13px; font-weight: 600; color: var(--plan); }
+.tv-fact { font-size: 13px; font-weight: 600; }
+.tv-fact.g { color: var(--green); }
+.tv-fact.r { color: var(--red); }
+.tv-fact.a { color: var(--acc); }
+.tv-fact.b { color: var(--blue); }
+
+/* ═══ INLINE INPUT ═══ */
+.day-input {
+  width: 100%;
+  background: var(--s4);
+  border: 1px solid var(--acc);
+  border-radius: 3px;
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  padding: 1px 2px;
+  outline: none;
+  height: 15px;
+  line-height: 13px;
+}
+.day-input.plan-inp { border-color: var(--plan); }
+.day-input.fact-inp { border-color: var(--fact); }
+
+/* ═══ MODAL ═══ */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 0 env(safe-area-inset-bottom, 0);
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 600px;
+  padding: 20px 20px 32px;
+  max-height: 90dvh;
+  overflow-y: auto;
+}
+.modal-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--s4);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--t1);
+  margin-bottom: 20px;
+}
+.form-row { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--t3);
+  margin-bottom: 8px;
+}
+.form-input, .form-select {
+  width: 100%;
+  background: var(--s3);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 13px 14px;
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.form-input:focus, .form-select:focus { border-color: var(--acc); }
+.color-grid { display: flex; gap: 10px; flex-wrap: wrap; }
+.cswatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: transform 0.1s, border-color 0.1s;
+  -webkit-tap-highlight-color: transparent;
+}
+.cswatch:active { transform: scale(1.1); }
+.cswatch.sel { border-color: var(--t1); transform: scale(1.12); }
+.modal-btns { display: flex; gap: 8px; margin-top: 20px; }
+.mbtn {
+  flex: 1;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border2);
+  background: var(--s3);
+  color: var(--t1);
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s;
+}
+.mbtn:active { opacity: 0.8; }
+.mbtn.ok { background: var(--acc-dim); color: var(--acc); border-color: rgba(52,211,153,0.3); }
+.mbtn.danger { background: var(--red-dim); color: var(--red); border-color: rgba(248,113,113,0.2); }
+
+/* ═══ LOADING ═══ */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  transition: opacity 0.4s;
+}
+.loading-screen.done { opacity: 0; pointer-events: none; }
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 2.5px solid var(--s4);
+  border-top-color: var(--acc);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-size: 14px; color: var(--t3); font-weight: 500; }
+
+/* ═══ TOAST ═══ */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(12px);
+  background: var(--s3);
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--t1);
+  opacity: 0;
+  transition: all 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 300;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ═══ DESKTOP (≥ 600px) — restore table layout ═══ */
+@media (min-width: 600px) {
+  .mode-tabs { display: none; }
+  .summary { grid-template-columns: repeat(6, 1fr); }
+  .sum-val { font-size: 15px; }
+  .mobile-list { display: none !important; }
+  .desktop-table-wrap { display: block !important; }
+  .header-inner { height: 54px; }
+  .month-label { font-size: 13px; }
+}
+@media (max-width: 599px) {
+  .desktop-table-wrap { display: none !important; }
+  .mobile-list { display: block !important; }
+  .summary { grid-template-columns: 1fr 1fr 1fr; }
+}
+
+/* ═══ DESKTOP TABLE (reused from v4) ═══ */
+.desktop-table-wrap { overflow: auto; height: 100%; }
+table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
+thead th {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--s2);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  padding: 7px 4px;
+  white-space: nowrap;
+  font-size: 11px; font-weight: 600; color: var(--t2);
+  text-align: center;
+}
+thead th.row-head {
+  position: sticky; left: 0; z-index: 30;
+  background: var(--s3);
+  min-width: 185px; text-align: left;
+  padding: 7px 12px;
+  font-size: 10px; letter-spacing: 0.3px;
+  font-weight: 700;
+}
+th.we { background: rgba(248,113,113,.06)!important; color: var(--red)!important; opacity:.8 }
+th.tod { background: rgba(52,211,153,.1)!important; color: var(--acc)!important; border-bottom: 2px solid var(--acc)!important }
+tbody tr:hover td { background: rgba(255,255,255,.012); }
+tbody tr:hover td.sc { background: var(--s3); }
+td {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  padding: 0; vertical-align: top; white-space: nowrap;
+}
+td.sc {
+  position: sticky; left: 0; z-index: 10;
+  background: var(--s2);
+  border-right: 1px solid var(--border);
+  min-width: 185px; vertical-align: middle;
+}
+td.we-col { background: rgba(248,113,113,.02)!important }
+td.tod-col {
+  background: rgba(52,211,153,.03)!important;
+  border-left: 1px solid rgba(52,211,153,.12)!important;
+  border-right: 1px solid rgba(52,211,153,.12)!important;
+}
+tr.tot-row td { background: rgba(52,211,153,.025); }
+tr.tot-row td.sc { background: rgba(52,211,153,.04); }
+tr.tot-row td { border-top: 1px solid rgba(52,211,153,.1); }
+.rl { display: flex; align-items: center; gap: 7px; padding: 5px 10px; min-height: 40px; }
+.rdot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.rname { font-size: 12px; color: var(--t1); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ract-wrap { display: none; gap: 3px; flex-shrink: 0; }
+td.sc:hover .ract-wrap { display: flex; }
+.ract {
+  background: none; border: none; cursor: pointer;
+  font-size: 12px; padding: 2px 4px; border-radius: 4px;
+  color: var(--t3); line-height: 1;
+}
+.ract:hover { background: var(--s4); color: var(--t1); }
+.ract.del:hover { color: var(--red); }
+.cell-dual { display: flex; flex-direction: column; width: 100%; cursor: pointer; min-height: 40px; }
+.cpl, .cfl {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0 7px; height: 20px;
+  font-size: 11px; font-weight: 600;
+  transition: background .1s; position: relative;
+}
+.cpl { border-bottom: 1px solid rgba(255,255,255,.04); }
+.cpl:hover { background: rgba(129,140,248,.08); }
+.cfl:hover { background: rgba(52,211,153,.06); }
+.cpl.empty { color: var(--t4); }
+.cpl.hv { color: var(--plan); }
+.ltag { font-size: 8px; opacity: .4; margin-right: 4px; font-weight: 400; }
+.cfl.empty { color: var(--t4); }
+.cfl.hv.inc { color: var(--green); }
+.cfl.hv.exp { color: var(--red); }
+.dev-badge {
+  position: absolute; right: 4px; top: 1px;
+  font-size: 7px; padding: 0 3px; border-radius: 2px; line-height: 14px; font-weight: 700;
+}
+.dev-badge.pos { background: rgba(52,211,153,.15); color: var(--acc); }
+.dev-badge.neg { background: rgba(248,113,113,.15); color: var(--red); }
+.csi {
+  display: flex; align-items: center; justify-content: flex-end;
+  padding: 0 8px; min-height: 40px; cursor: pointer;
+  font-size: 12px; font-weight: 600; color: var(--t4); transition: background .1s;
+}
+.csi:hover { background: rgba(255,255,255,.025); }
+.csi.hv.plan { color: var(--plan); }
+.csi.hv.inc  { color: var(--green); }
+.csi.hv.exp  { color: var(--red); }
+.csi.hv.cum  { color: var(--blue); }
+.ci {
+  width: 100%; padding: 0 6px; background: rgba(52,211,153,.08);
+  border: none; outline: 1.5px solid var(--acc);
+  color: var(--t1); font-family: var(--font); font-size: 11px;
+  text-align: right; height: 20px;
+}
+.ci.pi { background: rgba(129,140,248,.1); outline-color: var(--plan); }
+.ci.fi { background: rgba(52,211,153,.08); outline-color: var(--fact); }
+.cif {
+  width: 100%; padding: 0 8px; background: rgba(52,211,153,.08);
+  border: none; outline: 1.5px solid var(--acc);
+  color: var(--t1); font-family: var(--font); font-size: 12px;
+  text-align: right; min-height: 40px;
+}
+.cif.pi { background: rgba(129,140,248,.1); outline-color: var(--plan); }
+.cif.fi { background: rgba(52,211,153,.08); outline-color: var(--fact); }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">ПК<em>—</em>CAL</div>
-  <div style="font-size:10px;color:var(--t3)">Платёжный календарь</div>
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Подключение…</div>
+</div>
 
-  <div class="month-nav">
-    <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
-    <div class="month-label" id="monthLabel"></div>
-    <button class="nav-btn" onclick="changeMonth(1)">▶</button>
+<div class="app">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-inner">
+      <div class="logo">ПК</div>
+      <div class="month-nav">
+        <button class="nav-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="month-label" id="monthLabel"></div>
+        <button class="nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <button class="add-btn" onclick="openAddRow()" title="Добавить строку">+</button>
+    </div>
+    <div class="sync-strip offline" id="syncStrip">
+      <div class="sync-dot"></div>
+      <span id="syncText">—</span>
+    </div>
   </div>
 
-  <div class="mode-toggle">
-    <button class="mtbtn plan" onclick="setMode('plan',this)">План</button>
-    <button class="mtbtn fact" onclick="setMode('fact',this)">Факт</button>
-    <button class="mtbtn both active" onclick="setMode('both',this)">План + Факт</button>
+  <!-- MODE TABS (mobile only) -->
+  <div class="mode-tabs">
+    <button class="mtab plan" onclick="setMode('plan',this)">План</button>
+    <button class="mtab fact" onclick="setMode('fact',this)">Факт</button>
+    <button class="mtab both active" onclick="setMode('both',this)">План + Факт</button>
   </div>
 
-  <div class="header-actions">
-    <button class="hbtn" onclick="clearMonth()"><span class="icon">⌫</span> Очистить</button>
-    <button class="hbtn" onclick="exportCSV()"><span class="icon">↓</span> CSV</button>
-    <button class="hbtn primary" onclick="openAddRow()"><span class="icon">＋</span> Строка</button>
-  </div>
-</header>
-
-<div style="display:flex;flex-direction:column;height:calc(100vh - 54px)">
+  <!-- SUMMARY -->
   <div class="summary" id="summary"></div>
-  <div class="app">
-    <div class="sidebar">
-      <div class="sb-top" id="sbList"></div>
-      <div class="sb-bottom">
-        <button class="add-row-btn" onclick="openAddRow()">＋ Новая строка</button>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll-area">
+
+    <!-- MOBILE LIST -->
+    <div class="mobile-list" id="mobileList" style="display:none"></div>
+
+    <!-- DESKTOP TABLE -->
+    <div class="desktop-table-wrap" id="desktopWrap" style="display:none">
+      <div style="display:flex;gap:6px;padding:8px 12px;border-bottom:1px solid var(--border);align-items:center;background:var(--s2)">
+        <button class="mbtn" style="padding:5px 12px;font-size:11px;flex:none" onclick="setMode('plan',document.querySelector('.mtab.plan'))">П</button>
+        <button class="mbtn" style="padding:5px 12px;font-size:11px;flex:none" onclick="setMode('fact',document.querySelector('.mtab.fact'))">Ф</button>
+        <button class="mbtn" style="padding:5px 14px;font-size:11px;flex:none" onclick="setMode('both',document.querySelector('.mtab.both'))">П+Ф</button>
+        <span style="font-size:10px;color:var(--t3);margin-left:auto">Клик → ввод · Enter → след. · Tab → переход</span>
+        <button class="mbtn" style="padding:5px 10px;font-size:11px;flex:none" onclick="clearMonth()">⌫</button>
+        <button class="mbtn" style="padding:5px 10px;font-size:11px;flex:none" onclick="exportCSV()">CSV</button>
       </div>
+      <table id="mainTable">
+        <thead id="tHead"></thead>
+        <tbody id="tBody"></tbody>
+      </table>
     </div>
-    <div class="content">
-      <div class="legend" id="legend"></div>
-      <div class="tbl-wrap">
-        <table id="mainTable">
-          <thead id="tHead"></thead>
-          <tbody id="tBody"></tbody>
-        </table>
-      </div>
-    </div>
+
   </div>
 </div>
 
 <!-- ADD ROW MODAL -->
 <div class="overlay" id="addRowModal">
   <div class="modal">
+    <div class="modal-handle"></div>
     <div class="modal-title" id="modalTitle">Новая строка</div>
     <div class="form-row">
-      <div class="form-label">Название</div>
+      <label class="form-label">Название</label>
       <input class="form-input" id="rowName" placeholder="Например: Аренда офиса" maxlength="50">
     </div>
     <div class="form-row">
-      <div class="form-label">Тип</div>
+      <label class="form-label">Тип</label>
       <select class="form-select" id="rowType">
-        <option value="income">📈 Доход</option>
-        <option value="expense">📉 Расход</option>
-        <option value="note">📝 Прочее</option>
+        <option value="income">Доход</option>
+        <option value="expense">Расход</option>
+        <option value="note">Прочее</option>
       </select>
     </div>
     <div class="form-row">
-      <div class="form-label">Цвет</div>
-      <div class="color-row" id="colorPicker"></div>
+      <label class="form-label">Цвет</label>
+      <div class="color-grid" id="colorPicker"></div>
     </div>
     <div class="modal-btns">
       <button class="mbtn" onclick="closeModal('addRowModal')">Отмена</button>
@@ -320,22 +808,23 @@ td.sticky-col:hover .row-actions{display:flex}
 <!-- EDIT ROW MODAL -->
 <div class="overlay" id="editRowModal">
   <div class="modal">
-    <div class="modal-title">Редактировать строку</div>
+    <div class="modal-handle"></div>
+    <div class="modal-title">Редактировать</div>
     <div class="form-row">
-      <div class="form-label">Название</div>
+      <label class="form-label">Название</label>
       <input class="form-input" id="editRowName" maxlength="50">
     </div>
     <div class="form-row">
-      <div class="form-label">Тип</div>
+      <label class="form-label">Тип</label>
       <select class="form-select" id="editRowType">
-        <option value="income">📈 Доход</option>
-        <option value="expense">📉 Расход</option>
-        <option value="note">📝 Прочее</option>
+        <option value="income">Доход</option>
+        <option value="expense">Расход</option>
+        <option value="note">Прочее</option>
       </select>
     </div>
     <div class="form-row">
-      <div class="form-label">Цвет</div>
-      <div class="color-row" id="editColorPicker"></div>
+      <label class="form-label">Цвет</label>
+      <div class="color-grid" id="editColorPicker"></div>
     </div>
     <div class="modal-btns">
       <button class="mbtn danger" onclick="deleteRow()">Удалить</button>
@@ -348,689 +837,640 @@ td.sticky-col:hover .row-actions{display:flex}
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// SUPABASE
+// ══════════════════════════════════════════════════
+const SB_URL='https://trmxmhdpyvdbsgxbvwxx.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRybXhtaGRweXZkYnNneGJ2d3h4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA2NTE1MTQsImV4cCI6MjA5NjIyNzUxNH0.Llpg7iajdvMoT34_u7HIoirtyL1popMAsyD86O3oLoM';
+const SBH={
+  'Content-Type':'application/json',
+  'apikey':SB_KEY,
+  'Authorization':'Bearer '+SB_KEY
+};
+const sbGet=(t,p='')=>fetch(`${SB_URL}/rest/v1/${t}?${p}`,{headers:SBH}).then(async r=>{if(!r.ok)throw new Error(await r.text());return r.json();});
+const sbUpsert=(t,b)=>fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...SBH,'Prefer':'resolution=merge-duplicates'},body:JSON.stringify(b)}).then(async r=>{if(!r.ok)throw new Error(await r.text());return r.status===204?null:r.json().catch(()=>null);});
+const sbDelete=(t,p)=>fetch(`${SB_URL}/rest/v1/${t}?${p}`,{method:'DELETE',headers:SBH}).then(async r=>{if(!r.ok)throw new Error(await r.text());});
+const sbPatch=(t,p,b)=>fetch(`${SB_URL}/rest/v1/${t}?${p}`,{method:'PATCH',headers:{...SBH,'Prefer':'return=minimal'},body:JSON.stringify(b)}).then(async r=>{if(!r.ok)throw new Error(await r.text());});
+
+// ══════════════════════════════════════════════════
 // CONSTANTS
-// ═══════════════════════════════════════════
-const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь',
-              'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+// ══════════════════════════════════════════════════
+const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const WD=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-const COLORS=['#00e5a0','#00c46e','#5d7aff','#ff4545','#f5a623',
-              '#a855f7','#ec4899','#06b6d4','#84cc16','#f97316',
-              '#e879f9','#facc15','#94a3b8','#fb923c','#38bdf8'];
-const STORAGE='pk_v4';
+const COLORS=['#34d399','#4ade80','#818cf8','#f87171','#fbbf24','#a78bfa','#f472b6','#38bdf8','#a3e635','#fb923c','#e879f9','#facc15','#94a3b8','#fb923c','#67e8f9'];
+const LS_KEY='pk_v5';
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // STATE
-// ═══════════════════════════════════════════
-let S = {
-  year: new Date().getFullYear(),
-  month: new Date().getMonth(),
-  mode: 'both',   // 'plan' | 'fact' | 'both'
-  filter: 'all',
-  rows: [],
-  // cells: { "rowId_y_m_d_plan": num, "rowId_y_m_d_fact": num }
-  cells: {},
+// ══════════════════════════════════════════════════
+let S={
+  year:new Date().getFullYear(),
+  month:new Date().getMonth(),
+  mode:'both',
+  filter:'all',
+  rows:[],
+  cells:{},
+  expanded:{}, // rowId -> bool
 };
+let dbOnline=false, pendingWrites=[], editingRowId=null;
+let selColor=COLORS[0], editSelColor=COLORS[0], activeInput=null, _st=null;
 
-let editingRowId = null;
-let selColor = COLORS[0];
-let editSelColor = COLORS[0];
-let activeInput = null; // { el, rowId, day, kind }
-
-// ═══════════════════════════════════════════
-// STORAGE
-// ═══════════════════════════════════════════
-function persist() {
-  localStorage.setItem(STORAGE, JSON.stringify({rows:S.rows, cells:S.cells}));
-}
-function hydrate() {
-  try {
-    const d = JSON.parse(localStorage.getItem(STORAGE)||'{}');
-    S.rows = d.rows||[];
-    S.cells = d.cells||{};
-  } catch(e){}
-  if (!S.rows.length) S.rows = [
-    {id:'r1',name:'ЗП / Зарплата',         type:'income', color:'#00c46e'},
-    {id:'r2',name:'Агентские вознагр.',     type:'income', color:'#5d7aff'},
-    {id:'r3',name:'ДОПы ПВЗ',              type:'income', color:'#a855f7'},
-    {id:'r4',name:'Дивиденды',              type:'income', color:'#f5a623'},
-    {id:'r5',name:'Аренда — Красноярская',  type:'expense',color:'#06b6d4'},
-    {id:'r6',name:'Аренда — Кецинского',    type:'expense',color:'#10b981'},
-    {id:'r7',name:'Оплата ЖКХ',            type:'expense',color:'#ff4545'},
-    {id:'r8',name:'Интернет',              type:'expense',color:'#38bdf8'},
-    {id:'r9',name:'ЕДА и Я',              type:'expense',color:'#ec4899'},
-    {id:'r10',name:'Хоз-во / Откладывать', type:'expense',color:'#84cc16'},
-  ];
+// ══════════════════════════════════════════════════
+// SYNC UI
+// ══════════════════════════════════════════════════
+function setSyncStatus(status,text){
+  const el=document.getElementById('syncStrip');
+  const sp=document.getElementById('syncText');
+  el.className='sync-strip '+status;
+  sp.textContent=text;
 }
 
-function ck(rowId, y, m, d, kind) { return `${rowId}_${y}_${m}_${d}_${kind}`; }
-function getV(rowId, y, m, d, kind) { return S.cells[ck(rowId,y,m,d,kind)]||0; }
-function setV(rowId, y, m, d, kind, val) {
-  const k = ck(rowId,y,m,d,kind);
-  if (!val) delete S.cells[k]; else S.cells[k]=val;
-  persist();
+// ══════════════════════════════════════════════════
+// LOCAL STORAGE
+// ══════════════════════════════════════════════════
+function saveLocal(){
+  try{localStorage.setItem(LS_KEY,JSON.stringify({rows:S.rows,cells:S.cells,pending:pendingWrites}));}catch(e){}
+}
+function loadLocal(){
+  try{const d=JSON.parse(localStorage.getItem(LS_KEY)||'{}');S.rows=d.rows||[];S.cells=d.cells||{};pendingWrites=d.pending||[];}catch(e){}
+}
+const ck=(rid,y,m,d,k)=>`${rid}_${y}_${m}_${d}_${k}`;
+const getV=(rid,y,m,d,k)=>S.cells[ck(rid,y,m,d,k)]||0;
+
+// ══════════════════════════════════════════════════
+// DEFAULT ROWS
+// ══════════════════════════════════════════════════
+const DEFAULT_ROWS=[
+  {id:'r1',name:'ЗП / Зарплата',        type:'income', color:'#4ade80',sort_order:0},
+  {id:'r2',name:'Агентские вознагр.',    type:'income', color:'#818cf8',sort_order:1},
+  {id:'r3',name:'ДОПы ПВЗ',             type:'income', color:'#a78bfa',sort_order:2},
+  {id:'r4',name:'Дивиденды',             type:'income', color:'#fbbf24',sort_order:3},
+  {id:'r5',name:'Аренда — Красноярская', type:'expense',color:'#38bdf8',sort_order:4},
+  {id:'r6',name:'Аренда — Кецинского',   type:'expense',color:'#34d399',sort_order:5},
+  {id:'r7',name:'Оплата ЖКХ',           type:'expense',color:'#f87171',sort_order:6},
+  {id:'r8',name:'Интернет',             type:'expense',color:'#67e8f9',sort_order:7},
+  {id:'r9',name:'ЕДА и Я',             type:'expense',color:'#f472b6',sort_order:8},
+  {id:'r10',name:'Хоз-во / Откладывать',type:'expense',color:'#a3e635',sort_order:9},
+];
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+async function initApp(){
+  setLT('Загрузка данных…');
+  loadLocal();
+  try{
+    const rows=await sbGet('rows','order=sort_order.asc');
+    if(rows.length===0){setLT('Первый запуск…');await sbUpsert('rows',DEFAULT_ROWS);S.rows=DEFAULT_ROWS;}
+    else S.rows=rows;
+    await loadMonthFromDB(S.year,S.month);
+    dbOnline=true;
+    setSyncStatus('ok','Синхронизировано');
+    if(pendingWrites.length){setLT(`Синхронизация ${pendingWrites.length} изм…`);await flushPending();}
+    saveLocal();
+  }catch(e){
+    dbOnline=false;
+    setSyncStatus('offline','Офлайн');
+    if(!S.rows.length)S.rows=DEFAULT_ROWS;
+  }
+  hideLoading();
+  detectLayout();
+  render();
+  setInterval(tryReconnect,30000);
+  window.addEventListener('resize',detectLayout);
 }
 
-// ═══════════════════════════════════════════
+async function loadMonthFromDB(y,m){
+  const cells=await sbGet('cells',`year=eq.${y}&month=eq.${m}&select=row_id,day,kind,value`);
+  for(const c of cells)S.cells[ck(c.row_id,y,m,c.day,c.kind)]=Number(c.value);
+}
+
+async function tryReconnect(){
+  if(dbOnline)return;
+  try{
+    await sbGet('rows','limit=1');
+    dbOnline=true; setSyncStatus('syncing','Восстановление…');
+    await flushPending(); await loadMonthFromDB(S.year,S.month);
+    saveLocal(); setSyncStatus('ok','Синхронизировано'); render();
+    showToast('✓ Соединение восстановлено');
+  }catch(e){}
+}
+
+async function flushPending(){
+  if(!pendingWrites.length)return;
+  const tf=[...pendingWrites]; pendingWrites=[];
+  for(const op of tf){
+    try{
+      if(op.type==='upsert_cell')await dbWriteCell(op.rowId,op.year,op.month,op.day,op.kind,op.val,false);
+      else if(op.type==='upsert_row')await sbUpsert('rows',[op.row]);
+      else if(op.type==='delete_row')await sbDelete('rows',`id=eq.${op.rowId}`);
+      else if(op.type==='patch_row')await sbPatch('rows',`id=eq.${op.rowId}`,op.data);
+    }catch(e){pendingWrites.push(op);}
+  }
+  saveLocal();
+}
+
+async function dbWriteCell(rowId,year,month,day,kind,val,queue=true){
+  if(!dbOnline){if(queue)pendingWrites.push({type:'upsert_cell',rowId,year,month,day,kind,val});return;}
+  setSyncStatus('syncing','Сохранение…'); clearTimeout(_st);
+  try{
+    if(val===0)await sbDelete('cells',`row_id=eq.${rowId}&year=eq.${year}&month=eq.${month}&day=eq.${day}&kind=eq.${kind}`);
+    else await sbUpsert('cells',[{row_id:rowId,year,month,day,kind,value:val}]);
+    _st=setTimeout(()=>setSyncStatus('ok','Сохранено'),600);
+  }catch(e){
+    setSyncStatus('err','Ошибка'); dbOnline=false;
+    pendingWrites.push({type:'upsert_cell',rowId,year,month,day,kind,val});
+    saveLocal(); showToast('⚠ Офлайн — сохранено локально');
+  }
+}
+
+function setV(rid,y,m,d,k,val){
+  const key=ck(rid,y,m,d,k);
+  if(!val)delete S.cells[key]; else S.cells[key]=val;
+  saveLocal(); dbWriteCell(rid,y,m,d,k,val);
+}
+
+// ══════════════════════════════════════════════════
+// LAYOUT DETECTION
+// ══════════════════════════════════════════════════
+let isMobile=true;
+function detectLayout(){
+  isMobile=window.innerWidth<600;
+  document.getElementById('mobileList').style.display=isMobile?'block':'none';
+  document.getElementById('desktopWrap').style.display=isMobile?'none':'block';
+}
+
+// ══════════════════════════════════════════════════
 // HELPERS
-// ═══════════════════════════════════════════
-const getDays = () => new Date(S.year, S.month+1, 0).getDate();
-const getWD   = d  => new Date(S.year, S.month, d).getDay();
-const isWE    = d  => { const w=getWD(d); return w===0||w===6; };
-const isToday = d  => {
-  const t=new Date();
-  return t.getFullYear()===S.year&&t.getMonth()===S.month&&t.getDate()===d;
-};
+// ══════════════════════════════════════════════════
+const getDays=()=>new Date(S.year,S.month+1,0).getDate();
+const getWD=d=>new Date(S.year,S.month,d).getDay();
+const isWE=d=>{const w=getWD(d);return w===0||w===6;};
+const isToday=d=>{const t=new Date();return t.getFullYear()===S.year&&t.getMonth()===S.month&&t.getDate()===d;};
+function fmt(n){if(!n)return'';return Math.abs(n).toLocaleString('ru-RU')+'₽';}
+function fmtS(n){if(!n)return'0₽';return(n>0?'+':'−')+Math.abs(n).toLocaleString('ru-RU')+'₽';}
+function setLT(t){document.getElementById('loadingText').textContent=t;}
+function hideLoading(){const e=document.getElementById('loadingScreen');e.classList.add('done');setTimeout(()=>e.style.display='none',500);}
 
-function fmt(n) {
-  if (!n) return '';
-  return Math.abs(n).toLocaleString('ru-RU')+'₽';
-}
-function fmtSign(n) {
-  if (!n) return '0₽';
-  return (n>0?'+':'−')+Math.abs(n).toLocaleString('ru-RU')+'₽';
-}
-function devClass(dev) { return dev>0?'pos':'neg'; }
-function devText(dev)  { return (dev>0?'+':'')+Math.round(dev)+'%'; }
-
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // AGGREGATES
-// ═══════════════════════════════════════════
-function dayAgg(d) {
+// ══════════════════════════════════════════════════
+function dayAgg(d){
   let pi=0,pe=0,fi=0,fe=0;
-  for (const r of S.rows) {
-    const p=getV(r.id,S.year,S.month,d,'plan');
-    const f=getV(r.id,S.year,S.month,d,'fact');
-    if (r.type==='income')  { pi+=p; fi+=f; }
-    if (r.type==='expense') { pe+=p; fe+=f; }
+  for(const r of S.rows){
+    const p=getV(r.id,S.year,S.month,d,'plan'), f=getV(r.id,S.year,S.month,d,'fact');
+    if(r.type==='income'){pi+=p;fi+=f;} if(r.type==='expense'){pe+=p;fe+=f;}
   }
-  return {pi,pe,fi,fe,pnet:pi-pe,fnet:fi-fe};
+  return{pi,pe,fi,fe,pnet:pi-pe,fnet:fi-fe};
 }
-function monthAgg() {
-  const days=getDays();
-  let pi=0,pe=0,fi=0,fe=0;
-  for (let d=1;d<=days;d++) {
-    const a=dayAgg(d);
-    pi+=a.pi; pe+=a.pe; fi+=a.fi; fe+=a.fe;
-  }
-  return {pi,pe,fi,fe,pnet:pi-pe,fnet:fi-fe};
+function monthAgg(){
+  const days=getDays();let pi=0,pe=0,fi=0,fe=0;
+  for(let d=1;d<=days;d++){const a=dayAgg(d);pi+=a.pi;pe+=a.pe;fi+=a.fi;fe+=a.fe;}
+  return{pi,pe,fi,fe,pnet:pi-pe,fnet:fi-fe};
 }
-function cumulatives() {
-  const days=getDays();
-  const out={};
-  let pcum=0, fcum=0;
-  for (let d=1;d<=days;d++) {
-    const a=dayAgg(d);
-    pcum+=a.pnet; fcum+=a.fnet;
-    out[d]={...a,pcum,fcum};
-  }
+function rowMonthTotal(rid,kind){
+  const days=getDays();let t=0;
+  for(let d=1;d<=days;d++)t+=getV(rid,S.year,S.month,d,kind);
+  return t;
+}
+function cumulatives(){
+  const days=getDays(),out={};let pc=0,fc=0;
+  for(let d=1;d<=days;d++){const a=dayAgg(d);pc+=a.pnet;fc+=a.fnet;out[d]={...a,pcum:pc,fcum:fc};}
   return out;
 }
+function devClass(d){return d>0?'pos':'neg';}
+function devText(d){return(d>0?'+':'')+Math.round(d)+'%';}
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // RENDER
-// ═══════════════════════════════════════════
-function render() {
+// ══════════════════════════════════════════════════
+function render(){
   document.getElementById('monthLabel').textContent=`${MONTHS[S.month]} ${S.year}`;
-  renderSidebar();
   renderSummary();
-  renderLegend();
-  renderTable();
+  if(isMobile)renderMobile(); else renderDesktop();
 }
 
-function renderLegend() {
-  const m = S.mode;
-  let h = '';
-  if (m==='both') {
-    h = `
-      <div class="leg-item"><div class="leg-dot" style="background:var(--plan-color)"></div>Верхняя строка — план</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--fact-color)"></div>Нижняя строка — факт</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--dev-pos)"></div>Отклонение ▲ положительное</div>
-      <div class="leg-item"><div class="leg-dot" style="background:var(--dev-neg)"></div>Отклонение ▼ отрицательное</div>
-      <div style="margin-left:auto;font-size:9px;opacity:.5">Клик по строке плана/факта для ввода · Enter — след. день · Tab — переход</div>`;
-  } else if (m==='plan') {
-    h = `<div class="leg-item"><div class="leg-dot" style="background:var(--plan-color)"></div>Режим: только план — кликните ячейку для ввода</div>`;
-  } else {
-    h = `<div class="leg-item"><div class="leg-dot" style="background:var(--fact-color)"></div>Режим: только факт — кликните ячейку для ввода</div>`;
-  }
-  document.getElementById('legend').innerHTML = h;
-}
-
-function renderSidebar() {
-  const el = document.getElementById('sbList');
-  const allCls = S.filter==='all'?'active':'';
-  let h = `<div class="sb-row ${allCls}" onclick="setFilter('all',this)">
-    <div class="sb-dot" style="background:var(--acc)"></div>
-    <div class="sb-name">Все строки</div></div>`;
-
-  const groups = [
-    {label:'Доходы',  rows: S.rows.filter(r=>r.type==='income')},
-    {label:'Расходы', rows: S.rows.filter(r=>r.type==='expense')},
-    {label:'Прочее',  rows: S.rows.filter(r=>r.type==='note')},
+// ── SUMMARY ──
+function renderSummary(){
+  const ma=monthAgg(),days=getDays(),cum=cumulatives(),lc=cum[days];
+  const iD=ma.pi?Math.round((ma.fi-ma.pi)/ma.pi*100):null;
+  const eD=ma.pe?Math.round((ma.fe-ma.pe)/ma.pe*100):null;
+  const cards=isMobile?[
+    {label:'Доходы',    val:fmt(ma.pi)||'—', cls:'p', sub:`факт ${fmt(ma.fi)||'—'}`, subClr:'var(--fact)'},
+    {label:'Расходы',   val:fmt(ma.pe)||'—', cls:'p', sub:`факт ${fmt(ma.fe)||'—'}`, subClr:'var(--red)'},
+    {label:'Баланс',    val:fmtS(ma.pnet),   cls:ma.pnet>=0?'a':'r', sub:`факт ${fmtS(ma.fnet)}`, subClr:ma.fnet>=0?'var(--acc)':'var(--red)'},
+  ]:[
+    {label:'Доходы план',val:fmt(ma.pi)||'—',cls:'p',sub:`факт ${fmt(ma.fi)||'—'}`,subClr:'var(--fact)'},
+    {label:'Расходы план',val:fmt(ma.pe)||'—',cls:'p',sub:`факт ${fmt(ma.fe)||'—'}`,subClr:'var(--red)'},
+    {label:'Баланс план',val:fmtS(ma.pnet),cls:ma.pnet>=0?'a':'r',sub:`факт ${fmtS(ma.fnet)}`,subClr:ma.fnet>=0?'var(--acc)':'var(--red)'},
+    {label:'Откл. доходов',val:iD===null?'—':(iD>=0?'+':'')+iD+'%',cls:iD===null?'':iD>=0?'g':'r',sub:fmt(ma.fi-ma.pi)||'нет данных'},
+    {label:'Откл. расходов',val:eD===null?'—':(eD>=0?'+':'')+eD+'%',cls:eD===null?'':eD<=0?'g':'r',sub:fmt(ma.fe-ma.pe)||'нет данных'},
+    {label:'Накопл. итог',val:'П: '+fmtS(lc.pcum),cls:lc.pcum>=0?'p':'r',sub:'Ф: '+fmtS(lc.fcum),subClr:lc.fcum>=0?'var(--acc)':'var(--red)'},
   ];
-  for (const g of groups) {
-    if (!g.rows.length) continue;
-    h += `<div class="sb-div"></div><div class="sb-sec-title">${g.label}</div>`;
-    for (const r of g.rows) {
-      const cls = S.filter===r.id?'active':'';
-      h += `<div class="sb-row ${cls}" onclick="setFilter('${r.id}',this)">
-        <div class="sb-dot" style="background:${r.color}"></div>
-        <div class="sb-name" title="${r.name}">${r.name}</div>
-        <button class="sb-del" onclick="event.stopPropagation();promptDelete('${r.id}')">×</button>
+  document.getElementById('summary').innerHTML=cards.map(c=>`
+    <div class="sum-card">
+      <div class="sum-label">${c.label}</div>
+      <div class="sum-val ${c.cls}">${c.val}</div>
+      <div class="sum-sub" ${c.subClr?`style="color:${c.subClr}"`:''}>${c.sub||''}</div>
+    </div>`).join('');
+}
+
+// ── MOBILE ──
+function renderMobile(){
+  const days=getDays(),isBoth=S.mode==='both',isPlan=S.mode==='plan';
+  const visRows=S.filter==='all'?S.rows:S.rows.filter(r=>r.id===S.filter);
+  const cum=cumulatives();
+  let h='';
+  const groups=[
+    {label:'Доходы',  rows:visRows.filter(r=>r.type==='income')},
+    {label:'Расходы', rows:visRows.filter(r=>r.type==='expense')},
+    {label:'Прочее',  rows:visRows.filter(r=>r.type==='note')},
+  ];
+  for(const g of groups){
+    if(!g.rows.length)continue;
+    h+=`<div class="section-title">${g.label}</div>`;
+    for(const row of g.rows){
+      const plan=rowMonthTotal(row.id,'plan');
+      const fact=rowMonthTotal(row.id,'fact');
+      const isExp=S.expanded[row.id];
+      const fc=fact?(row.type==='income'?'inc':'exp'):'empty';
+      h+=`<div class="row-card">
+        <div class="row-card-header">
+          <div class="row-info">
+            <div class="row-color-dot" style="background:${row.color}"></div>
+            <div class="row-name-text">${row.name}</div>
+          </div>
+          <div class="row-totals">
+            ${(isBoth||isPlan)?`<div class="row-total-plan">${fmt(plan)||'—'}</div>`:''}
+            ${(isBoth||!isPlan)?`<div class="row-total-fact ${fc}">${fact?fmt(fact):'—'}</div>`:''}
+          </div>
+          <button class="row-edit-btn" onclick="openEditRow('${row.id}')">✎</button>
+          <button class="row-expand-btn ${isExp?'open':''}" onclick="toggleExpand('${row.id}')">${isExp?'−':'+'}
+          </button>
+        </div>
+        <div class="day-grid ${isExp?'open':''}">
+          <div class="day-grid-scroll" id="grid_${row.id}">
+            ${renderDayCells(row,days,isBoth,isPlan)}
+          </div>
+        </div>
       </div>`;
     }
   }
-  el.innerHTML = h;
-}
-
-function renderSummary() {
-  const ma = monthAgg();
-  const days = getDays();
-  const cum = cumulatives();
-  const lastCum = cum[days];
-
-  // deviation %
-  const incDev  = ma.pi ? Math.round((ma.fi-ma.pi)/ma.pi*100) : null;
-  const expDev  = ma.pe ? Math.round((ma.fe-ma.pe)/ma.pe*100) : null;
-
-  const today=new Date();
-  const isCur=today.getFullYear()===S.year&&today.getMonth()===S.month;
-  const prog=isCur?Math.round(today.getDate()/days*100):100;
-
-  document.getElementById('summary').innerHTML=`
-    <div class="sum-card">
-      <div class="sum-label">Доходы план</div>
-      <div class="sum-val p">${fmt(ma.pi)||'—'}</div>
-      <div class="sum-sub" style="color:var(--fact-color)">факт ${fmt(ma.fi)||'—'}</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Расходы план</div>
-      <div class="sum-val p">${fmt(ma.pe)||'—'}</div>
-      <div class="sum-sub" style="color:var(--red)">факт ${fmt(ma.fe)||'—'}</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Баланс план</div>
-      <div class="sum-val ${ma.pnet>=0?'a':'r'}">${fmtSign(ma.pnet)}</div>
-      <div class="sum-sub" style="color:${ma.fnet>=0?'var(--acc)':'var(--red)'}">факт ${fmtSign(ma.fnet)}</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Откл. доходов</div>
-      <div class="sum-val ${incDev===null?'b':incDev>=0?'g':'r'}">${incDev===null?'—':(incDev>=0?'+':'')+incDev+'%'}</div>
-      <div class="sum-sub">${fmt(ma.fi-ma.pi)||'нет данных'}</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Откл. расходов</div>
-      <div class="sum-val ${expDev===null?'b':expDev<=0?'g':'r'}">${expDev===null?'—':(expDev>=0?'+':'')+expDev+'%'}</div>
-      <div class="sum-sub">${fmt(ma.fe-ma.pe)||'нет данных'}</div>
-    </div>
-    <div class="sum-card">
-      <div class="sum-label">Накопл. итог</div>
-      <div class="sum-val ${lastCum.pcum>=0?'p':'r'}" style="font-size:11px">П: ${fmtSign(lastCum.pcum)}</div>
-      <div class="sum-sub" style="color:${lastCum.fcum>=0?'var(--acc)':'var(--red)'}">Ф: ${fmtSign(lastCum.fcum)}</div>
+  // totals
+  if(S.filter==='all'){
+    const lc=cum[days];
+    h+=`<div class="section-title" style="margin-top:20px">Итоги месяца</div>
+    <div class="totals-section">
+      <div class="total-row">
+        <div class="total-label"><div class="dot" style="background:var(--green)"></div>Итого доходов</div>
+        <div class="total-vals">
+          ${isBoth||isPlan?`<span class="tv-plan">${fmt(monthAgg().pi)||'—'}</span>`:''}
+          ${isBoth||!isPlan?`<span class="tv-fact g">${fmt(monthAgg().fi)||'—'}</span>`:''}
+        </div>
+      </div>
+      <div class="total-row">
+        <div class="total-label"><div class="dot" style="background:var(--red)"></div>Итого расходов</div>
+        <div class="total-vals">
+          ${isBoth||isPlan?`<span class="tv-plan">${fmt(monthAgg().pe)||'—'}</span>`:''}
+          ${isBoth||!isPlan?`<span class="tv-fact r">${fmt(monthAgg().fe)||'—'}</span>`:''}
+        </div>
+      </div>
+      <div class="total-row">
+        <div class="total-label"><div class="dot" style="background:var(--acc)"></div>Баланс</div>
+        <div class="total-vals">
+          ${isBoth||isPlan?`<span class="tv-plan">${fmtS(monthAgg().pnet)}</span>`:''}
+          ${isBoth||!isPlan?`<span class="tv-fact ${monthAgg().fnet>=0?'a':'r'}">${fmtS(monthAgg().fnet)}</span>`:''}
+        </div>
+      </div>
+      <div class="total-row">
+        <div class="total-label"><div class="dot" style="background:var(--blue)"></div>Накопленным итогом</div>
+        <div class="total-vals">
+          ${isBoth||isPlan?`<span class="tv-plan">${fmtS(lc.pcum)}</span>`:''}
+          ${isBoth||!isPlan?`<span class="tv-fact ${lc.fcum>=0?'b':'r'}">${fmtS(lc.fcum)}</span>`:''}
+        </div>
+      </div>
     </div>`;
+  }
+  document.getElementById('mobileList').innerHTML=h;
+  // scroll today into view in each open grid
+  setTimeout(()=>{
+    document.querySelectorAll('.day-grid-scroll').forEach(g=>{
+      const tod=g.querySelector('.day-cell.is-today');
+      if(tod)tod.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    });
+  },100);
 }
 
-function renderTable() {
-  const days = getDays();
-  const cum  = cumulatives();
-  const visRows = S.filter==='all' ? S.rows : S.rows.filter(r=>r.id===S.filter);
-  const isBoth  = S.mode==='both';
-  const isPlan  = S.mode==='plan';
-  const isFact  = S.mode==='fact';
+function renderDayCells(row,days,isBoth,isPlan){
+  let h='';
+  for(let d=1;d<=days;d++){
+    const plan=getV(row.id,S.year,S.month,d,'plan');
+    const fact=getV(row.id,S.year,S.month,d,'fact');
+    const we=isWE(d), tod=isToday(d);
+    const planFmt=plan?fmt(plan):'—';
+    const factFmt=fact?fmt(fact):'—';
+    const fc=row.type==='income'?'':'exp';
+    h+=`<div class="day-cell ${tod?'is-today':''} ${we?'is-weekend':''}"
+      data-rid="${row.id}" data-day="${d}">
+      <div class="day-header">
+        <div class="day-num">${d}</div>
+        <div class="day-wd">${WD[getWD(d)]}</div>
+      </div>
+      <div class="day-body">
+        ${isBoth||isPlan?`<div class="day-plan-val ${plan?'':'empty'}" id="mp_${row.id}_${d}" onclick="startMobileEdit('${row.id}',${d},'plan')">${planFmt}</div>`:''}
+        ${isBoth||!isPlan?`<div class="day-fact-val ${fact?fc:'empty'}" id="mf_${row.id}_${d}" onclick="startMobileEdit('${row.id}',${d},'fact')">${factFmt}</div>`:''}
+      </div>
+    </div>`;
+  }
+  return h;
+}
 
-  // cell min-width
-  const cw = isBoth ? 88 : 68;
+function toggleExpand(rowId){
+  S.expanded[rowId]=!S.expanded[rowId];
+  renderMobile();
+}
 
-  // ── HEAD ──
-  let hh = `<tr><th class="row-head">Строка / День</th>`;
-  for (let d=1;d<=days;d++) {
-    let cls = isWE(d)?'we':'';
-    if (isToday(d)) cls='tod';
-    hh += `<th class="${cls}" style="min-width:${cw}px">
-      <div style="font-size:12px;font-weight:600">${d}</div>
-      <div style="font-size:9px;font-weight:400;opacity:.65;margin-top:1px">${WD[getWD(d)]}</div>
+// ── MOBILE CELL EDIT ──
+let mActiveInput=null;
+function startMobileEdit(rowId,day,kind){
+  if(mActiveInput)commitMobileEdit(mActiveInput,true);
+  const elId=(kind==='plan'?'mp_':'mf_')+rowId+'_'+day;
+  const el=document.getElementById(elId); if(!el)return;
+  const val=getV(rowId,S.year,S.month,day,kind);
+  const inp=document.createElement('input');
+  inp.type='number'; inp.min='0'; inp.value=val||''; inp.placeholder='0';
+  inp.className='day-input '+(kind==='plan'?'plan-inp':'fact-inp');
+  el.innerHTML=''; el.appendChild(inp);
+  inp.focus(); inp.select();
+  mActiveInput={inp,el,rowId,day,kind};
+  inp.addEventListener('blur',()=>{if(mActiveInput&&mActiveInput.inp===inp){commitMobileEdit(mActiveInput,true);mActiveInput=null;}});
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){commitMobileEdit(mActiveInput,true);mActiveInput=null;moveMobileEdit(rowId,day,kind,1);}
+    if(e.key==='Escape'){commitMobileEdit(mActiveInput,false);mActiveInput=null;}
+  });
+}
+function commitMobileEdit(ctx,doSave){
+  if(!ctx)return;
+  const{inp,el,rowId,day,kind}=ctx;
+  const val=inp.value.trim()===''?0:parseFloat(inp.value)||0;
+  if(doSave)setV(rowId,S.year,S.month,day,kind,val);
+  // restore cell
+  const row=S.rows.find(r=>r.id===rowId);
+  const v=getV(rowId,S.year,S.month,day,kind);
+  const fc=row&&row.type==='income'?'':'exp';
+  const isPlan=kind==='plan';
+  el.className=`${isPlan?'day-plan-val':'day-fact-val'} ${v?(isPlan?'':''+fc):'empty'}`;
+  el.textContent=v?fmt(v):'—';
+  el.onclick=()=>startMobileEdit(rowId,day,kind);
+  renderSummary();
+  // update row totals in card
+  const planT=rowMonthTotal(rowId,'plan'), factT=rowMonthTotal(rowId,'fact');
+  const planEl=document.querySelector(`.row-card [onclick*="openEditRow('${rowId}')"]`)?.closest('.row-card')?.querySelector('.row-total-plan');
+  const factEl=document.querySelector(`.row-card [onclick*="openEditRow('${rowId}')"]`)?.closest('.row-card')?.querySelector('.row-total-fact');
+  if(planEl)planEl.textContent=fmt(planT)||'—';
+  if(factEl){factEl.textContent=fact?fmt(factT):'—';}
+}
+function moveMobileEdit(rowId,day,kind,delta){
+  const nd=day+delta;
+  if(nd<1||nd>getDays())return;
+  setTimeout(()=>{startMobileEdit(rowId,nd,kind);},40);
+}
+
+// ── DESKTOP TABLE ──
+let dtActiveInput=null;
+function renderDesktop(){
+  const days=getDays(), cum=cumulatives();
+  const visRows=S.filter==='all'?S.rows:S.rows.filter(r=>r.id===S.filter);
+  const isBoth=S.mode==='both', isPlan=S.mode==='plan';
+  const cw=isBoth?86:66;
+  let hh=`<tr><th class="row-head">Строка / День</th>`;
+  for(let d=1;d<=days;d++){
+    let cl=isWE(d)?'we':''; if(isToday(d))cl='tod';
+    hh+=`<th class="${cl}" style="min-width:${cw}px">
+      <div style="font-size:13px;font-weight:700">${d}</div>
+      <div style="font-size:9px;font-weight:500;opacity:.55;margin-top:1px">${WD[getWD(d)]}</div>
     </th>`;
   }
-  hh += '</tr>';
-  document.getElementById('tHead').innerHTML = hh;
-
-  // ── BODY ──
-  let bh = '';
-
-  for (const row of visRows) {
-    bh += `<tr>
-      <td class="sticky-col">
-        <div class="row-label">
-          <div class="row-dot" style="background:${row.color}"></div>
-          <div class="row-name" title="${row.name}">${row.name}</div>
-          <div class="row-actions">
-            <button class="ract" onclick="openEditRow('${row.id}')">✎</button>
-            <button class="ract del" onclick="promptDelete('${row.id}')">×</button>
-          </div>
-        </div>
-      </td>`;
-
-    for (let d=1;d<=days;d++) {
-      const plan = getV(row.id, S.year, S.month, d, 'plan');
-      const fact = getV(row.id, S.year, S.month, d, 'fact');
-      let colCls = isWE(d)?' we-col':'';
-      if (isToday(d)) colCls+=' tod-col';
-
-      if (isBoth) {
-        // Deviation
-        let devHtml = '';
-        if (plan && fact) {
-          const dev = Math.round((fact-plan)/plan*100);
-          const dc  = row.type==='expense' ? (dev<=0?'pos':'neg') : devClass(dev);
-          devHtml = `<span class="dev-badge ${dc}">${devText(dev)}</span>`;
-        }
-        const factCls = fact ? (row.type==='income'?'inc':row.type==='expense'?'exp':'note') : '';
-        bh += `<td class="${colCls}" style="min-width:${cw}px">
+  hh+='</tr>';
+  document.getElementById('tHead').innerHTML=hh;
+  let bh='';
+  for(const row of visRows){
+    bh+=`<tr><td class="sc"><div class="rl">
+      <div class="rdot" style="background:${row.color}"></div>
+      <div class="rname">${row.name}</div>
+      <div class="ract-wrap">
+        <button class="ract" onclick="openEditRow('${row.id}')">✎</button>
+        <button class="ract del" onclick="promptDelete('${row.id}')">×</button>
+      </div></div></td>`;
+    for(let d=1;d<=days;d++){
+      const plan=getV(row.id,S.year,S.month,d,'plan');
+      const fact=getV(row.id,S.year,S.month,d,'fact');
+      let cc=isWE(d)?' we-col':''; if(isToday(d))cc+=' tod-col';
+      if(isBoth){
+        let dh='';
+        if(plan&&fact){const dev=Math.round((fact-plan)/plan*100);const dc=row.type==='expense'?(dev<=0?'pos':'neg'):devClass(dev);dh=`<span class="dev-badge ${dc}">${devText(dev)}</span>`;}
+        const fc=fact?(row.type==='income'?'inc':'exp'):'';
+        bh+=`<td class="${cc}" data-rid="${row.id}" data-day="${d}" style="min-width:${cw}px">
           <div class="cell-dual">
-            <div class="cell-plan-line ${plan?'has-val':'empty'}"
-                 onclick="startEdit(this,'${row.id}',${d},'plan')">
-              <span class="line-tag">П</span>${plan?fmt(plan):''}
-              ${devHtml}
-            </div>
-            <div class="cell-fact-line ${fact?'has-val '+factCls:'empty'}"
-                 onclick="startEdit(this,'${row.id}',${d},'fact')">
-              <span class="line-tag">Ф</span>${fact?fmt(fact):''}
-            </div>
-          </div>
-        </td>`;
-      } else {
-        const kind = isPlan ? 'plan' : 'fact';
-        const val  = isPlan ? plan : fact;
-        const valCls = val ? (isPlan?'plan':row.type==='income'?'inc':row.type==='expense'?'exp':'note') : '';
-        bh += `<td class="${colCls}" style="min-width:${cw}px">
-          <div class="cell-single ${val?'has-val '+valCls:''}"
-               onclick="startEdit(this,'${row.id}',${d},'${kind}')">
-            ${val?fmt(val):''}
-          </div>
-        </td>`;
+            <div class="cpl ${plan?'hv':'empty'}" onclick="startDt(this,'${row.id}',${d},'plan')"><span class="ltag">П</span>${plan?fmt(plan):''}${dh}</div>
+            <div class="cfl ${fact?'hv '+fc:'empty'}" onclick="startDt(this,'${row.id}',${d},'fact')"><span class="ltag">Ф</span>${fact?fmt(fact):''}</div>
+          </div></td>`;
+      }else{
+        const kind=isPlan?'plan':'fact', val=isPlan?plan:fact;
+        const vc=val?(isPlan?'plan':row.type==='income'?'inc':'exp'):'';
+        bh+=`<td class="${cc}" data-rid="${row.id}" data-day="${d}" style="min-width:${cw}px">
+          <div class="csi ${val?'hv '+vc:''}" onclick="startDt(this,'${row.id}',${d},'${kind}')">${val?fmt(val):''}</div></td>`;
       }
     }
-    bh += '</tr>';
+    bh+='</tr>';
   }
-
-  // ── TOTALS ──
-  if (S.filter==='all') {
-    const totalDefs = [
-      {label:'Итого доходов',  color:'var(--green)', getPlan:a=>a.pi, getFact:a=>a.fi, isFact:true},
-      {label:'Итого расходов', color:'var(--red)',   getPlan:a=>a.pe, getFact:a=>a.fe, isFact:true},
-      {label:'Баланс дня',     color:'var(--acc)',   getPlan:a=>a.pnet, getFact:a=>a.fnet, signed:true},
-      {label:'Накопл. итог',   color:'var(--blue)',  getPlan:a=>cum[a.d].pcum, getFact:a=>cum[a.d].fcum, signed:true},
+  if(S.filter==='all'){
+    const tdefs=[
+      {label:'Итого доходов',color:'var(--green)',gp:a=>a.pi,gf:a=>a.fi},
+      {label:'Итого расходов',color:'var(--red)',gp:a=>a.pe,gf:a=>a.fe},
+      {label:'Баланс дня',color:'var(--acc)',gp:a=>a.pnet,gf:a=>a.fnet,signed:true},
+      {label:'Накопл. итог',color:'var(--blue)',gp:a=>cum[a.d].pcum,gf:a=>cum[a.d].fcum,signed:true},
     ];
-
-    for (const td of totalDefs) {
-      bh += `<tr class="tot-row">
-        <td class="sticky-col">
-          <div class="row-label">
-            <div class="row-dot" style="background:${td.color}"></div>
-            <div class="row-name" style="color:${td.color};font-weight:500">${td.label}</div>
-          </div>
-        </td>`;
-
-      for (let d=1;d<=days;d++) {
-        const a  = {...dayAgg(d), d};
-        const pv = td.getPlan(a);
-        const fv = td.getFact(a);
-        let colCls = isWE(d)?' we-col':'';
-        if (isToday(d)) colCls+=' tod-col';
-
-        if (isBoth) {
-          const f = td.signed ? fmtSign : fmt;
-          const pShow = td.signed ? pv!==0 : !!pv;
-          const fShow = td.signed ? fv!==0 : !!fv;
-          bh += `<td class="${colCls}" style="min-width:${cw}px">
-            <div class="cell-dual">
-              <div class="cell-plan-line ${pShow?'has-val':'empty'}" style="cursor:default">
-                <span class="line-tag">П</span>${pShow?f(pv):''}
-              </div>
-              <div class="cell-fact-line ${fShow?'has-val fact':'empty'}" style="cursor:default;color:${td.color}">
-                <span class="line-tag">Ф</span>${fShow?f(fv):''}
-              </div>
-            </div>
-          </td>`;
-        } else {
-          const kind = isPlan?'plan':'fact';
-          const val  = isPlan?pv:fv;
-          const f    = td.signed ? fmtSign : fmt;
-          const show = td.signed ? val!==0 : !!val;
-          bh += `<td class="${colCls}" style="min-width:${cw}px">
-            <div class="cell-single ${show?'has-val cum':''}" style="color:${show?td.color:''}">
-              ${show?f(val):''}
-            </div>
-          </td>`;
+    for(const td of tdefs){
+      bh+=`<tr class="tot-row"><td class="sc"><div class="rl"><div class="rdot" style="background:${td.color}"></div><div class="rname" style="color:${td.color};font-weight:600">${td.label}</div></div></td>`;
+      for(let d=1;d<=days;d++){
+        const a={...dayAgg(d),d},pv=td.gp(a),fv=td.gf(a);
+        let cc=isWE(d)?' we-col':''; if(isToday(d))cc+=' tod-col';
+        const f=td.signed?fmtS:fmt;
+        if(isBoth){
+          const ps=td.signed?pv!==0:!!pv, fs=td.signed?fv!==0:!!fv;
+          bh+=`<td class="${cc}" style="min-width:${cw}px"><div class="cell-dual">
+            <div class="cpl ${ps?'hv':'empty'}" style="cursor:default"><span class="ltag">П</span>${ps?f(pv):''}</div>
+            <div class="cfl ${fs?'hv':'empty'}" style="cursor:default;color:${td.color}"><span class="ltag">Ф</span>${fs?f(fv):''}</div>
+          </div></td>`;
+        }else{
+          const val=isPlan?pv:fv, show=td.signed?val!==0:!!val;
+          bh+=`<td class="${cc}" style="min-width:${cw}px"><div class="csi ${show?'hv cum':''}" style="color:${show?td.color:''}">${show?f(val):''}</div></td>`;
         }
       }
-      bh += '</tr>';
+      bh+='</tr>';
     }
   }
-
-  document.getElementById('tBody').innerHTML = bh;
+  document.getElementById('tBody').innerHTML=bh;
+  setTimeout(()=>{const t=document.querySelector('th.tod');if(t)t.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});},150);
 }
 
-// ═══════════════════════════════════════════
-// CELL EDITING
-// ═══════════════════════════════════════════
-function startEdit(lineEl, rowId, day, kind) {
-  if (activeInput) commitEdit(activeInput, true);
-
-  const isBoth = S.mode==='both';
-  const val = getV(rowId, S.year, S.month, day, kind);
-
-  const inp = document.createElement('input');
-  inp.type='number'; inp.min='0';
-  inp.value = val||'';
-  inp.placeholder = '0';
-
-  if (isBoth) {
-    inp.className = `cell-input ${kind}-input`;
-    lineEl.innerHTML = '';
-    lineEl.appendChild(inp);
-  } else {
-    inp.className = `cell-input-full ${kind}-input`;
-    const parent = lineEl.parentElement;
-    parent.innerHTML = '';
-    parent.appendChild(inp);
-  }
-
+function startDt(lineEl,rowId,day,kind){
+  if(dtActiveInput)commitDt(dtActiveInput,true);
+  const val=getV(rowId,S.year,S.month,day,kind);
+  const isBoth=S.mode==='both';
+  const inp=document.createElement('input');
+  inp.type='number'; inp.min='0'; inp.value=val||''; inp.placeholder='0';
+  if(isBoth){inp.className='ci '+(kind==='plan'?'pi':'fi');lineEl.innerHTML='';lineEl.appendChild(inp);}
+  else{inp.className='cif '+(kind==='plan'?'pi':'fi');const p=lineEl.parentElement;p.innerHTML='';p.appendChild(inp);}
   inp.focus(); inp.select();
-  activeInput = { inp, lineEl, rowId, day, kind, isBoth };
-
-  inp.addEventListener('blur', () => {
-    if (activeInput && activeInput.inp===inp) commitEdit(activeInput, true);
-  });
-  inp.addEventListener('keydown', e => {
-    if (e.key==='Enter') {
-      commitEdit(activeInput, true);
-      activeInput = null;
-      moveEdit(rowId, day, kind, 1);
-    }
-    if (e.key==='Escape') {
-      commitEdit(activeInput, false);
-      activeInput = null;
-    }
-    if (e.key==='Tab') {
-      e.preventDefault();
-      commitEdit(activeInput, true);
-      activeInput = null;
-      moveEdit(rowId, day, kind, e.shiftKey?-1:1);
-    }
+  dtActiveInput={inp,lineEl,rowId,day,kind,isBoth};
+  inp.addEventListener('blur',()=>{if(dtActiveInput&&dtActiveInput.inp===inp){commitDt(dtActiveInput,true);dtActiveInput=null;}});
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){commitDt(dtActiveInput,true);dtActiveInput=null;moveDt(rowId,day,kind,1);}
+    if(e.key==='Escape'){commitDt(dtActiveInput,false);dtActiveInput=null;}
+    if(e.key==='Tab'){e.preventDefault();commitDt(dtActiveInput,true);dtActiveInput=null;moveDt(rowId,day,kind,e.shiftKey?-1:1);}
   });
 }
-
-function commitEdit(ctx, doSave) {
-  if (!ctx) return;
-  const {inp, rowId, day, kind, isBoth} = ctx;
-  const raw = inp.value.trim();
-  const val = raw===''?0:parseFloat(raw)||0;
-  if (doSave) setV(rowId, S.year, S.month, day, kind, val);
-
-  // Re-render just this cell
-  restoreCell(rowId, day);
-  renderSummary();
-
-  // Update totals
-  updateTotals();
+function commitDt(ctx,doSave){
+  if(!ctx)return;
+  const{inp,rowId,day,kind}=ctx;
+  const val=inp.value.trim()===''?0:parseFloat(inp.value)||0;
+  if(doSave)setV(rowId,S.year,S.month,day,kind,val);
+  renderDesktop(); renderSummary();
 }
-
-function restoreCell(rowId, day) {
-  const plan = getV(rowId, S.year, S.month, day, 'plan');
-  const fact  = getV(rowId, S.year, S.month, day, 'fact');
-  const row  = S.rows.find(r=>r.id===rowId);
-  if (!row) return;
-
-  // Find the td
-  const td = document.querySelector(`td[data-rid="${rowId}"][data-day="${day}"]`);
-  if (td) {
-    td.innerHTML = buildCellHTML(row, day, plan, fact);
-    return;
-  }
-  // fallback: full table re-render
-  renderTable();
-}
-
-function buildCellHTML(row, day, plan, fact) {
-  const isBoth = S.mode==='both';
-  const isPlan = S.mode==='plan';
-  const cw = isBoth?88:68;
-  if (isBoth) {
-    let devHtml='';
-    if (plan&&fact) {
-      const dev=Math.round((fact-plan)/plan*100);
-      const dc=row.type==='expense'?(dev<=0?'pos':'neg'):devClass(dev);
-      devHtml=`<span class="dev-badge ${dc}">${devText(dev)}</span>`;
-    }
-    const factCls=fact?(row.type==='income'?'inc':row.type==='expense'?'exp':'note'):'';
-    return `<div class="cell-dual">
-      <div class="cell-plan-line ${plan?'has-val':'empty'}" onclick="startEdit(this,'${row.id}',${day},'plan')">
-        <span class="line-tag">П</span>${plan?fmt(plan):''}${devHtml}
-      </div>
-      <div class="cell-fact-line ${fact?'has-val '+factCls:'empty'}" onclick="startEdit(this,'${fact?factCls:''}','${row.id}',${day},'fact')" onclick="startEdit(this,'${row.id}',${day},'fact')">
-        <span class="line-tag">Ф</span>${fact?fmt(fact):''}
-      </div>
-    </div>`;
-  } else {
-    const kind=isPlan?'plan':'fact';
-    const val=isPlan?plan:fact;
-    const valCls=val?(isPlan?'plan':row.type==='income'?'inc':row.type==='expense'?'exp':'note'):'';
-    return `<div class="cell-single ${val?'has-val '+valCls:''}" onclick="startEdit(this,'${row.id}',${day},'${kind}')">
-      ${val?fmt(val):''}
-    </div>`;
-  }
-}
-
-function moveEdit(rowId, day, kind, delta) {
-  const days = getDays();
-  const nd = day+delta;
-  if (nd<1||nd>days) return;
+function moveDt(rowId,day,kind,delta){
+  const nd=day+delta;
+  if(nd<1||nd>getDays())return;
   setTimeout(()=>{
-    const sel = S.mode==='both'
-      ? `td[data-rid="${rowId}"][data-day="${nd}"] .cell-${kind}-line`
-      : `td[data-rid="${rowId}"][data-day="${nd}"] .cell-single`;
-    const el = document.querySelector(sel);
-    if (el) el.click();
-  }, 40);
+    const sel=S.mode==='both'?`td[data-rid="${rowId}"][data-day="${nd}"] .c${kind==='plan'?'p':'f'}l`:`td[data-rid="${rowId}"][data-day="${nd}"] .csi`;
+    const el=document.querySelector(sel); if(el)el.click();
+  },40);
 }
 
-function updateTotals() {
-  // Re-render total rows by doing a selective update
-  // For simplicity in this build, we re-render the whole table body
-  renderTable();
-}
-
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // ROW MANAGEMENT
-// ═══════════════════════════════════════════
-function uid(){ return 'r'+Date.now()+Math.random().toString(36).slice(2,5); }
-
-function openAddRow() {
-  selColor = COLORS[Math.floor(Math.random()*COLORS.length)];
+// ══════════════════════════════════════════════════
+function uid(){return 'r'+Date.now()+Math.random().toString(36).slice(2,5);}
+function openAddRow(){
+  selColor=COLORS[Math.floor(Math.random()*COLORS.length)];
   document.getElementById('rowName').value='';
   document.getElementById('rowType').value='expense';
   document.getElementById('modalTitle').textContent='Новая строка';
-  buildColorPicker('colorPicker', selColor, c=>selColor=c);
+  buildCP('colorPicker',selColor,c=>selColor=c);
   document.getElementById('addRowModal').classList.add('open');
   setTimeout(()=>document.getElementById('rowName').focus(),80);
 }
-function saveRow() {
+async function saveRow(){
   const name=document.getElementById('rowName').value.trim();
-  if (!name){showToast('Введите название');return;}
-  S.rows.push({id:uid(), name, type:document.getElementById('rowType').value, color:selColor});
-  persist(); closeModal('addRowModal'); render(); showToast('✓ Строка добавлена');
+  if(!name){showToast('Введите название');return;}
+  const newRow={id:uid(),name,type:document.getElementById('rowType').value,color:selColor,sort_order:S.rows.length};
+  S.rows.push(newRow); saveLocal(); closeModal('addRowModal'); render(); showToast('✓ Строка добавлена');
+  if(dbOnline){try{await sbUpsert('rows',[newRow]);}catch(e){pendingWrites.push({type:'upsert_row',row:newRow});saveLocal();}}
+  else{pendingWrites.push({type:'upsert_row',row:newRow});saveLocal();}
 }
-function openEditRow(rowId) {
+function openEditRow(rowId){
   editingRowId=rowId;
   const r=S.rows.find(r=>r.id===rowId); if(!r)return;
   editSelColor=r.color;
   document.getElementById('editRowName').value=r.name;
   document.getElementById('editRowType').value=r.type;
-  buildColorPicker('editColorPicker', editSelColor, c=>editSelColor=c);
+  buildCP('editColorPicker',editSelColor,c=>editSelColor=c);
   document.getElementById('editRowModal').classList.add('open');
   setTimeout(()=>document.getElementById('editRowName').focus(),80);
 }
-function saveEditRow() {
+async function saveEditRow(){
   const name=document.getElementById('editRowName').value.trim();
-  if (!name){showToast('Введите название');return;}
+  if(!name){showToast('Введите название');return;}
   const r=S.rows.find(r=>r.id===editingRowId); if(!r)return;
   r.name=name; r.type=document.getElementById('editRowType').value; r.color=editSelColor;
-  persist(); closeModal('editRowModal'); render(); showToast('✓ Обновлено');
+  saveLocal(); closeModal('editRowModal'); render(); showToast('✓ Обновлено');
+  const data={name:r.name,type:r.type,color:r.color};
+  if(dbOnline){try{await sbPatch('rows',`id=eq.${r.id}`,data);}catch(e){pendingWrites.push({type:'patch_row',rowId:r.id,data});saveLocal();}}
+  else{pendingWrites.push({type:'patch_row',rowId:r.id,data});saveLocal();}
 }
-function deleteRow() {
-  if (!confirm('Удалить строку?')) return;
-  promptDelete(editingRowId,true); closeModal('editRowModal');
-}
-function promptDelete(rowId, skip) {
-  if (!skip&&!confirm('Удалить?')) return;
+function deleteRow(){if(!confirm('Удалить строку?'))return;promptDelete(editingRowId,true);closeModal('editRowModal');}
+async function promptDelete(rowId,skip){
+  if(!skip&&!confirm('Удалить?'))return;
   S.rows=S.rows.filter(r=>r.id!==rowId);
-  Object.keys(S.cells).forEach(k=>{ if(k.startsWith(rowId+'_')) delete S.cells[k]; });
-  if (S.filter===rowId) S.filter='all';
-  persist(); render(); showToast('Строка удалена');
+  Object.keys(S.cells).forEach(k=>{if(k.startsWith(rowId+'_'))delete S.cells[k];});
+  delete S.expanded[rowId];
+  if(S.filter===rowId)S.filter='all';
+  saveLocal(); render(); showToast('Строка удалена');
+  if(dbOnline){try{await sbDelete('rows',`id=eq.${rowId}`);}catch(e){pendingWrites.push({type:'delete_row',rowId});saveLocal();}}
+  else{pendingWrites.push({type:'delete_row',rowId});saveLocal();}
 }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // COLOR PICKER
-// ═══════════════════════════════════════════
-function buildColorPicker(id, selected, onChange) {
+// ══════════════════════════════════════════════════
+function buildCP(id,selected,cb){
   const el=document.getElementById(id);
-  el.innerHTML=COLORS.map(c=>`<div class="cswatch ${c===selected?'sel':''}"
-    style="background:${c}" onclick="pickC('${id}','${c}')"></div>`).join('');
-  el._cb=onChange;
+  el.innerHTML=COLORS.map(c=>`<div class="cswatch ${c===selected?'sel':''}" style="background:${c}" onclick="pickC('${id}','${c}')"></div>`).join('');
+  el._cb=cb;
 }
-function pickC(id, color) {
+function pickC(id,color){
   const el=document.getElementById(id);
   el.querySelectorAll('.cswatch').forEach(s=>s.classList.toggle('sel',s.style.background===color||s.style.backgroundColor===color));
-  if (id==='colorPicker') selColor=color; else editSelColor=color;
-  if (el._cb) el._cb(color);
+  if(id==='colorPicker')selColor=color; else editSelColor=color;
+  if(el._cb)el._cb(color);
 }
 
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
 // CONTROLS
-// ═══════════════════════════════════════════
-function changeMonth(d) {
-  S.month+=d;
-  if (S.month>11){S.month=0;S.year++;}
-  if (S.month<0){S.month=11;S.year--;}
+// ══════════════════════════════════════════════════
+async function changeMonth(delta){
+  S.month+=delta;
+  if(S.month>11){S.month=0;S.year++;} if(S.month<0){S.month=11;S.year--;}
+  if(dbOnline){setSyncStatus('syncing','Загрузка…');try{await loadMonthFromDB(S.year,S.month);setSyncStatus('ok','Загружено');}catch(e){setSyncStatus('err','Ошибка');}}
   render();
 }
-function setMode(m, btn) {
+function setMode(m,btn){
   S.mode=m;
-  document.querySelectorAll('.mtbtn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
+  document.querySelectorAll('.mtab').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
   render();
 }
-function setFilter(id) { S.filter=id; render(); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-
-document.querySelectorAll('.overlay').forEach(el=>{
-  el.addEventListener('click', e=>{ if(e.target===el) el.classList.remove('open'); });
-});
-
-function clearMonth() {
-  if (!confirm(`Очистить данные за ${MONTHS[S.month]} ${S.year}?`)) return;
-  const p=`_${S.year}_${S.month}_`;
-  Object.keys(S.cells).forEach(k=>{ if(k.includes(p)) delete S.cells[k]; });
-  persist(); render(); showToast('Месяц очищен');
+function setFilter(id){S.filter=id;render();}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.overlay').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');});});
+async function clearMonth(){
+  if(!confirm(`Очистить данные за ${MONTHS[S.month]} ${S.year}?`))return;
+  const y=S.year,m=S.month;
+  Object.keys(S.cells).forEach(k=>{if(k.includes(`_${y}_${m}_`))delete S.cells[k];});
+  saveLocal(); render(); showToast('Месяц очищен');
+  if(dbOnline){try{await sbDelete('cells',`year=eq.${y}&month=eq.${m}`);}catch(e){}}
 }
-
-function exportCSV() {
+function exportCSV(){
   const days=getDays();
   const header=['Строка','Тип',...Array.from({length:days},(_,i)=>`${i+1} план`),...Array.from({length:days},(_,i)=>`${i+1} факт`)];
   const csvRows=[header];
-  for (const r of S.rows) {
-    const plans=Array.from({length:days},(_,i)=>getV(r.id,S.year,S.month,i+1,'plan')||'');
-    const facts=Array.from({length:days},(_,i)=>getV(r.id,S.year,S.month,i+1,'fact')||'');
-    csvRows.push([r.name,r.type,...plans,...facts]);
+  for(const r of S.rows){
+    csvRows.push([r.name,r.type,...Array.from({length:days},(_,i)=>getV(r.id,S.year,S.month,i+1,'plan')||''),...Array.from({length:days},(_,i)=>getV(r.id,S.year,S.month,i+1,'fact')||'')]);
   }
-  const csv=csvRows.map(r=>r.join(';')).join('\n');
   const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
-  a.download=`pk_${S.year}_${S.month+1}.csv`;
-  a.click();
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+csvRows.map(r=>r.join(';')).join('\n')],{type:'text/csv;charset=utf-8'}));
+  a.download=`pk_${S.year}_${S.month+1}.csv`; a.click();
   showToast('✓ CSV экспортирован');
 }
 
-// ═══════════════════════════════════════════
-// TOAST
-// ═══════════════════════════════════════════
+// ══════════════════════════════════════════════════
+// TOAST & KEYBOARD
+// ══════════════════════════════════════════════════
 let _tt;
-function showToast(msg) {
+function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
-  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2200);
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2400);
 }
-
-// ═══════════════════════════════════════════
-// KEYBOARD
-// ═══════════════════════════════════════════
-document.addEventListener('keydown', e=>{
-  if (e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
-  if (e.key==='ArrowLeft')  changeMonth(-1);
-  if (e.key==='ArrowRight') changeMonth(1);
-  if (e.key==='n'||e.key==='N') openAddRow();
-  if (e.key==='1') setMode('plan', document.querySelector('.mtbtn.plan'));
-  if (e.key==='2') setMode('fact', document.querySelector('.mtbtn.fact'));
-  if (e.key==='3') setMode('both', document.querySelector('.mtbtn.both'));
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowLeft')changeMonth(-1);
+  if(e.key==='ArrowRight')changeMonth(1);
+  if(e.key==='n'||e.key==='N')openAddRow();
 });
 
-// ═══════════════════════════════════════════
-// INIT  — patch renderTable to set data-attrs
-// ═══════════════════════════════════════════
-const _origRenderTable = renderTable;
-// We need td[data-rid][data-day] for restoreCell — patch after build
-function renderTablePatched() {
-  _origRenderTable();
-  // add data attrs to all data tds
-  document.querySelectorAll('#tBody tr').forEach(tr=>{
-    const stickyTd = tr.querySelector('td.sticky-col');
-    if (!stickyTd) return;
-    const btn = stickyTd.querySelector('.ract');
-    if (!btn) return;
-    // extract rowId from onclick
-    const m = btn.getAttribute('onclick').match(/'([^']+)'/);
-    if (!m) return;
-    const rowId = m[1];
-    const dataTds = tr.querySelectorAll('td:not(.sticky-col)');
-    dataTds.forEach((td,i)=>{
-      td.setAttribute('data-rid', rowId);
-      td.setAttribute('data-day', i+1);
-    });
-  });
-}
-
-hydrate();
-renderTablePatched();
-renderSidebar();
-renderSummary();
-renderLegend();
-document.getElementById('monthLabel').textContent=`${MONTHS[S.month]} ${S.year}`;
-
-// Override render to also patch
-const _baseRender = render;
-window.render = function() {
-  _baseRender();
-  // patch data-attrs
-  document.querySelectorAll('#tBody tr').forEach(tr=>{
-    const stickyTd = tr.querySelector('td.sticky-col');
-    if (!stickyTd) return;
-    const btn = stickyTd.querySelector('[onclick*="openEditRow"]');
-    if (!btn) return;
-    const m = btn.getAttribute('onclick').match(/'([^']+)'/);
-    if (!m) return;
-    const rowId = m[1];
-    tr.querySelectorAll('td:not(.sticky-col)').forEach((td,i)=>{
-      td.setAttribute('data-rid', rowId);
-      td.setAttribute('data-day', i+1);
-    });
-  });
-};
-
-setTimeout(()=>{
-  const tod = document.querySelector('th.tod');
-  if (tod) tod.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
-},200);
+initApp();
 </script>
 </body>
 </html>
