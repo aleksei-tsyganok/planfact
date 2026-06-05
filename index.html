@@ -325,10 +325,6 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
         <option value="pvz_w">ПВЗ + W</option>
       </select>
     </div>
-    <div class="item-row">
-      <div class="item-name" style="color:var(--t2);font-size:12px">День уплаты (каждый квартал)</div>
-      <input class="finput small" type="number" id="taxDay" style="width:70px;text-align:right" min="1" max="28" value="25" onchange="saveTaxDay()">
-    </div>
   </div>
 
 </div>
@@ -373,7 +369,7 @@ const LS='kp_v1';
 let D = {
   accounts:[],  // {id,name,color,balance}
   items:[],     // {id,name,type('income'|'expense'),amount,day,repeat('monthly'|'once'|'quarterly'),taxable(bool),color,note}
-  settings:{taxRate:7, taxBase:'all', taxDay:25}
+  settings:{taxRate:7, taxBase:'all'}
 };
 let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
 let dbOk=false, editingId=null, modalType=null;
@@ -408,7 +404,7 @@ async function initApp(){
       // merge: prefer remote accounts/items, keep local settings if remote has none
       D.accounts=remote.accounts||D.accounts||[];
       D.items=remote.items||D.items||[];
-      D.settings=remote.settings||D.settings||{taxRate:7,taxBase:'all',taxDay:25};
+      D.settings=remote.settings||D.settings||{taxRate:7,taxBase:'all'};
     } else {
       // first time — push local defaults
       await sUp('kp_data',[{key:'main',data:D}]);
@@ -421,7 +417,7 @@ async function initApp(){
   // seed defaults — только для новых пользователей
   if(!D.accounts.length) D.accounts=DEFAULT_ACCOUNTS;
   if(!D.items.length) D.items=DEFAULT_ITEMS;
-  D.settings=D.settings||{taxRate:7,taxBase:'all',taxDay:25};
+  D.settings=D.settings||{taxRate:7,taxBase:'all'};
   saveL();
   if(dbOk){try{await sUp('kp_data',[{key:'main',data:D}]);}catch(e){}}
 
@@ -548,35 +544,42 @@ function buildDailyCF(year,month){
   const days=getDays(year,month);
   const taxRate=(D.settings.taxRate||7)/100;
   const taxBase=D.settings.taxBase||'all';
-  const taxDay=parseInt(D.settings.taxDay)||25;
 
-  // figure out which months are tax quarter-end
-  // quarters: Q1=Mar, Q2=Jun, Q3=Sep, Q4=Dec (pay by 25th of that month)
-  const taxMonths=[2,5,8,11]; // 0-indexed
+  // quarters: Q1=Mar, Q2=Jun, Q3=Sep, Q4=Dec
+  const taxMonths=[2,5,8,11];
   const isTaxMonth=taxMonths.includes(month);
 
-  // starting balance = sum of all accounts
+  // starting balance
   const startBalance=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
 
   // build day-level events
-  const events={}; // day -> [{name,amount,type}]
+  const events={};
   for(let d=1;d<=days;d++)events[d]=[];
 
   // income items
   const incomes=D.items.filter(i=>i.type==='income'&&(Number(i.amount)||0)>0);
   for(const item of incomes){
+    const amt=Number(item.amount);
     if(item.repeat==='weekly'){
       const startDay=Math.min(parseInt(item.day)||1,days);
       for(let d=startDay;d<=days;d+=7){
-        events[d].push({name:item.category,amount:Number(item.amount),type:'income',color:item.color,id:item.id});
+        events[d].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
+        if(isTaxMonth&&item.taxable&&amt>0){
+          const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
+          if(taxOk) events[d].push({name:'Налог',amount:-Math.round(amt*taxRate),type:'tax',color:'#fbbf24',auto:true});
+        }
       }
     } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
       const d=Math.min(parseInt(item.day)||1,days);
-      events[d].push({name:item.category,amount:Number(item.amount),type:'income',color:item.color,id:item.id});
+      events[d].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
+      if(isTaxMonth&&item.taxable&&amt>0){
+        const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
+        if(taxOk) events[d].push({name:'Налог',amount:-Math.round(amt*taxRate),type:'tax',color:'#fbbf24',auto:true});
+      }
     }
   }
 
-  // compute total taxable income for auto-tax
+  // compute total tax for KPI
   let taxableIncome=0;
   for(const item of incomes){
     if(!item.taxable)continue;
@@ -600,12 +603,6 @@ function buildDailyCF(year,month){
     } else if(item.repeat==='quarterly'){
       events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
     }
-  }
-
-  // auto tax — on taxDay if this is a tax month
-  if(isTaxMonth&&taxAmount>0){
-    const td=Math.min(taxDay,days);
-    events[td].push({name:'Налог УСН '+D.settings.taxRate+'%',amount:-taxAmount,type:'tax',color:'#fbbf24',auto:true});
   }
 
   // build daily running balance
@@ -636,7 +633,6 @@ function renderAll(){
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
-  document.getElementById('taxDay').value=D.settings.taxDay||25;
 }
 
 function renderKPI(){
@@ -692,7 +688,7 @@ function renderCashflow(){
 
   for(const day of daily){
     for(const ev of day.events){
-      if(ev.auto){taxDayMap[day.d]=Math.abs(ev.amount);}
+      if(ev.auto){taxDayMap[day.d]=(taxDayMap[day.d]||0)+Math.abs(ev.amount);}
       else if(ev.id){
         if(!itemDayMap[ev.id])itemDayMap[ev.id]={};
         itemDayMap[ev.id][day.d]=Math.abs(ev.amount);
@@ -1156,7 +1152,6 @@ document.getElementById('itemModal').addEventListener('click',e=>{if(e.target===
 // ══════════════════════════════════
 function saveTaxRate(){D.settings.taxRate=parseFloat(document.getElementById('taxRate').value)||7;pushData();renderAll();}
 function saveTaxBase(){D.settings.taxBase=document.getElementById('taxBase').value;pushData();renderAll();}
-function saveTaxDay(){D.settings.taxDay=parseInt(document.getElementById('taxDay').value)||25;pushData();renderAll();}
 
 // ══════════════════════════════════
 // NAV
