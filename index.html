@@ -3,946 +3,1034 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ПВЗ — Финансовый отчёт</title>
-<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;700&family=Geologica:wght@300;400;500;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<title>Платёжный календарь</title>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;600;800&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0b0d14; --bg2:#111420; --bg3:#171b2a;
-  --card:#1a1f30; --card2:#1f2538;
-  --border:#2a3050; --border2:#3a4468;
-  --accent:#7c6dfa; --accent2:#4e9eff; --accent3:#f5a623;
-  --green:#3ecf8e; --red:#ff4d6d;
-  --text:#e8eaf0; --text2:#a0a8c0; --text3:#606888;
-  --wb:#a855f7; --ozon:#3b82f6; --yams:#f59e0b;
-  --input-bg:#0f1220; --input-border:#2a3050; --input-focus:#7c6dfa;
+  --bg:#090b0e; --s1:#0f1217; --s2:#151920; --s3:#1c2028; --s4:#212833;
+  --border:#1f2630; --border2:#2a3340;
+  --acc:#00e5a0; --acc-dim:rgba(0,229,160,0.07); --acc-mid:rgba(0,229,160,0.16);
+  --blue:#3b7fff; --blue-dim:rgba(59,127,255,0.08);
+  --red:#ff4545; --red-dim:rgba(255,69,69,0.07);
+  --green:#00c46e; --green-dim:rgba(0,196,110,0.07);
+  --amber:#f5a623; --amber-dim:rgba(245,166,35,0.1);
+  --plan-color:#5d7aff; --fact-color:#00c46e; --dev-pos:#00e5a0; --dev-neg:#ff4545;
+  --t1:#dde4ef; --t2:#5d6e82; --t3:#323d4a;
+  --font-head:'Unbounded',sans-serif; --font-mono:'JetBrains Mono',monospace;
 }
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Geologica',sans-serif;font-size:13px;min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;opacity:.35;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--t1);font-family:var(--font-mono);font-size:13px}
 
 /* HEADER */
-.header{padding:24px 40px 20px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(124,109,250,.07) 0%,transparent 100%);position:relative;overflow:hidden;}
-.header::after{content:'';position:absolute;top:-60px;right:-60px;width:260px;height:260px;background:radial-gradient(circle,rgba(124,109,250,.1) 0%,transparent 70%);pointer-events:none;}
-.logo h1{font-family:'Unbounded',sans-serif;font-size:20px;font-weight:700;letter-spacing:-.5px;background:linear-gradient(135deg,#e8eaf0 0%,#a0a8c0 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-.logo p{font-size:11px;color:var(--text3);margin-top:3px;letter-spacing:.5px;text-transform:uppercase;}
-.hdr-stats{display:flex;gap:28px;align-items:center;}
-.hdr-stat .v{font-family:'Unbounded',sans-serif;font-size:17px;font-weight:600;text-align:right;}
-.hdr-stat .v.pos{color:var(--green);}
-.hdr-stat .v.neg{color:var(--red);}
-.hdr-stat .v.neu{color:var(--text);}
-.hdr-stat .l{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;text-align:right;}
+header{height:54px;display:flex;align-items:center;gap:14px;padding:0 18px;
+  border-bottom:1px solid var(--border);background:rgba(9,11,14,0.96);
+  backdrop-filter:blur(20px);position:relative;z-index:50;flex-shrink:0}
+.logo{font-family:var(--font-head);font-size:12px;font-weight:800;color:var(--acc);
+  letter-spacing:-.5px;white-space:nowrap}
+.logo em{color:var(--t3);font-style:normal}
+.month-nav{display:flex;align-items:center;gap:5px;margin-left:auto}
+.nav-btn{background:var(--s2);border:1px solid var(--border);color:var(--t1);
+  width:26px;height:26px;border-radius:5px;cursor:pointer;font-size:11px;
+  display:flex;align-items:center;justify-content:center;transition:background .1s}
+.nav-btn:hover{background:var(--s3)}
+.month-label{font-family:var(--font-head);font-size:11px;font-weight:600;
+  min-width:136px;text-align:center}
 
-/* NAV */
-.nav{display:flex;padding:0 40px;background:var(--bg2);border-bottom:1px solid var(--border);overflow-x:auto;gap:0;}
-.nav-btn{padding:14px 22px;font-family:'Geologica',sans-serif;font-size:12px;font-weight:500;color:var(--text3);background:none;border:none;cursor:pointer;position:relative;white-space:nowrap;transition:color .2s;letter-spacing:.3px;}
-.nav-btn::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--accent);transform:scaleX(0);transition:transform .2s;}
-.nav-btn:hover{color:var(--text2);}
-.nav-btn.active{color:var(--text);}
-.nav-btn.active::after{transform:scaleX(1);}
-.nav-btn.edit-mode-active{color:var(--accent);}
+/* Mode toggle */
+.mode-toggle{display:flex;background:var(--s2);border:1px solid var(--border);
+  border-radius:7px;padding:2px;gap:2px}
+.mtbtn{padding:4px 11px;border-radius:5px;border:none;background:none;
+  color:var(--t2);font-family:var(--font-mono);font-size:10px;cursor:pointer;
+  transition:all .12s;white-space:nowrap}
+.mtbtn.active{background:var(--s4);color:var(--t1)}
+.mtbtn.plan.active{color:var(--plan-color)}
+.mtbtn.fact.active{color:var(--fact-color)}
+.mtbtn.both.active{color:var(--acc)}
 
-/* MAIN */
-.main{padding:28px 40px;}
-.tab-content{display:none;}
-.tab-content.active{display:block;}
+.header-actions{display:flex;gap:5px}
+.hbtn{display:flex;align-items:center;gap:5px;padding:4px 11px;border-radius:6px;
+  border:1px solid var(--border);background:var(--s2);color:var(--t2);
+  font-family:var(--font-mono);font-size:11px;cursor:pointer;transition:all .14s;white-space:nowrap}
+.hbtn:hover{background:var(--s3);color:var(--t1);border-color:var(--border2)}
+.hbtn.primary{background:var(--acc-dim);color:var(--acc);border-color:rgba(0,229,160,.25)}
+.hbtn.primary:hover{background:var(--acc-mid)}
+.icon{font-size:13px;line-height:1}
 
-/* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
-.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;animation:fadeUp .4s ease both;}
-.kpi-card:hover{border-color:var(--border2);transform:translateY(-1px);}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
-.kpi-card.wb::before{background:var(--wb);}
-.kpi-card.oz::before{background:var(--ozon);}
-.kpi-card.ym::before{background:var(--yams);}
-.kpi-card.tot::before{background:linear-gradient(90deg,var(--accent),var(--accent2));}
-.kpi-card:nth-child(2){animation-delay:.05s;}
-.kpi-card:nth-child(3){animation-delay:.1s;}
-.kpi-card:nth-child(4){animation-delay:.15s;}
-.kpi-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-.kpi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.kpi-val{font-family:'Unbounded',sans-serif;font-size:18px;font-weight:600;letter-spacing:-.5px;}
-.kpi-val.pos{color:var(--green);}
-.kpi-val.neg{color:var(--red);}
-.kpi-val.neu{color:var(--text);}
-.kpi-sub{font-size:10px;color:var(--text3);margin-top:5px;}
+/* LAYOUT */
+.app{display:flex;height:calc(100vh - 54px);overflow:hidden}
 
-/* SECTION */
-.section{margin-bottom:24px;}
-.sec-title{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.5px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
-.sec-title::after{content:'';flex:1;height:1px;background:var(--border);}
+/* SIDEBAR */
+.sidebar{width:204px;min-width:204px;border-right:1px solid var(--border);
+  display:flex;flex-direction:column;background:var(--s1);overflow:hidden}
+.sb-top{flex:1;overflow-y:auto;padding:10px 0}
+.sb-sec-title{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;
+  color:var(--t3);padding:4px 13px 5px}
+.sb-row{display:flex;align-items:center;gap:6px;padding:5px 13px;
+  cursor:pointer;border-left:2px solid transparent;transition:all .1s;position:relative}
+.sb-row:hover{background:var(--s2)}
+.sb-row.active{border-left-color:var(--acc);background:var(--acc-dim);color:var(--acc)}
+.sb-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.sb-name{font-size:11px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-del{display:none;background:none;border:none;color:var(--red);cursor:pointer;
+  font-size:14px;padding:0 3px;opacity:.6;line-height:1}
+.sb-del:hover{opacity:1}
+.sb-row:hover .sb-del{display:block}
+.sb-div{height:1px;background:var(--border);margin:6px 11px}
+.sb-bottom{padding:9px;border-top:1px solid var(--border);flex-shrink:0}
+.add-row-btn{width:100%;padding:7px;border-radius:6px;border:1px dashed var(--border2);
+  background:none;color:var(--t3);font-family:var(--font-mono);font-size:11px;
+  cursor:pointer;transition:all .14s;text-align:center}
+.add-row-btn:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-dim)}
 
-/* CHART CARD */
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;}
-.chart-wrap{height:260px;position:relative;}
-.legend{display:flex;gap:18px;margin-top:12px;flex-wrap:wrap;}
-.leg-item{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text2);}
-.leg-dot{width:8px;height:8px;border-radius:2px;}
+/* CONTENT */
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column}
 
-/* PVZ GRID */
-.pvz-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-.pvz-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .2s;}
-.pvz-card:hover{border-color:var(--border2);}
-.pvz-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg3);}
-.pvz-name{font-family:'Unbounded',sans-serif;font-size:12px;font-weight:600;display:flex;align-items:center;gap:8px;}
-.pvz-pdot{width:9px;height:9px;border-radius:50%;}
-.pvz-profit{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:700;}
-.pvz-profit.pos{color:var(--green);}
-.pvz-profit.neg{color:var(--red);}
-.mini-bars{display:flex;align-items:flex-end;gap:2px;height:30px;padding:0 18px 12px;}
-.mini-bar{flex:1;border-radius:2px 2px 0 0;min-height:2px;cursor:pointer;transition:opacity .15s;}
-.mini-bar.pos{background:var(--green);opacity:.65;}
-.mini-bar.neg{background:var(--red);opacity:.65;}
-.mini-bar:hover{opacity:1;}
+/* SUMMARY */
+.summary{display:grid;grid-template-columns:repeat(6,1fr);
+  border-bottom:1px solid var(--border);flex-shrink:0}
+.sum-card{padding:10px 14px;border-right:1px solid var(--border);background:var(--s1)}
+.sum-card:last-child{border-right:none}
+.sum-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:4px}
+.sum-val{font-family:var(--font-head);font-size:14px;font-weight:600}
+.sum-val.g{color:var(--green)} .sum-val.r{color:var(--red)}
+.sum-val.a{color:var(--acc)} .sum-val.b{color:var(--blue)}
+.sum-val.p{color:var(--plan-color)} .sum-val.am{color:var(--amber)}
+.sum-sub{font-size:9px;color:var(--t3);margin-top:2px}
 
 /* TABLE */
-.tbl-wrap{overflow-x:auto;}
-.pvz-tbl{width:100%;border-collapse:collapse;min-width:700px;}
-.pvz-tbl th{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;font-weight:500;padding:9px 12px;text-align:right;border-bottom:1px solid var(--border);background:var(--bg3);white-space:nowrap;}
-.pvz-tbl th:first-child{text-align:left;}
-.pvz-tbl td{padding:8px 12px;font-size:11px;text-align:right;border-bottom:1px solid rgba(42,48,80,.4);color:var(--text2);white-space:nowrap;}
-.pvz-tbl td:first-child{text-align:left;color:var(--text3);}
-.pvz-tbl tr:last-child td{border-bottom:none;}
-.pvz-tbl tr.hl td{background:rgba(124,109,250,.06);font-weight:600;color:var(--text);}
-.pvz-tbl tr:hover td{background:rgba(255,255,255,.015);}
-.np{color:var(--green)!important;}
-.nn{color:var(--red)!important;}
-.nw{color:var(--text2)!important;}
+.tbl-wrap{flex:1;overflow:auto}
+table{border-collapse:collapse;font-size:12px;min-width:100%}
 
-/* ============================================================
-   EDITOR PANEL
-   ============================================================ */
-.editor-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-.editor-header{padding:18px 22px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:gap;}
-.editor-title{font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:10px;}
-.editor-actions{display:flex;gap:10px;align-items:center;}
+thead th{position:sticky;top:0;z-index:20;background:var(--s2);
+  border-bottom:1px solid var(--border);border-right:1px solid var(--border);
+  padding:6px 4px;white-space:nowrap;font-size:10px;font-weight:500;color:var(--t2);
+  text-align:center}
+thead th.row-head{position:sticky;left:0;z-index:30;background:var(--s3);
+  min-width:195px;text-align:left;padding:6px 10px;
+  font-family:var(--font-head);font-size:8px;letter-spacing:.3px}
+th.we{background:rgba(255,69,69,.06)!important;color:var(--red)!important;opacity:.8}
+th.tod{background:rgba(0,229,160,.1)!important;color:var(--acc)!important;
+  border-bottom:2px solid var(--acc)!important}
 
-/* PVZ selector tabs inside editor */
-.pvz-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);background:var(--bg3);}
-.pvz-tab{padding:11px 18px;font-size:11px;font-weight:500;color:var(--text3);background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:7px;white-space:nowrap;transition:color .15s;position:relative;}
-.pvz-tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;transform:scaleX(0);transition:transform .2s;}
-.pvz-tab.active{color:var(--text);}
-.pvz-tab.active::after{transform:scaleX(1);}
-.pvz-tab:hover{color:var(--text2);}
-.ptdot{width:7px;height:7px;border-radius:50%;}
+tbody tr:hover td{background:rgba(255,255,255,.012)}
+tbody tr:hover td.sticky-col{background:var(--s2)}
+td{border-right:1px solid var(--border);border-bottom:1px solid rgba(31,38,48,.5);
+  padding:0;vertical-align:top;white-space:nowrap}
+td.sticky-col{position:sticky;left:0;z-index:10;background:var(--s1);
+  border-right:1px solid var(--border);min-width:195px;vertical-align:middle}
+td.we-col{background:rgba(255,69,69,.02)!important}
+td.tod-col{background:rgba(0,229,160,.025)!important;
+  border-left:1px solid rgba(0,229,160,.12)!important;
+  border-right:1px solid rgba(0,229,160,.12)!important}
 
-/* Month selector */
-.month-selector{display:flex;gap:6px;padding:14px 20px;flex-wrap:wrap;border-bottom:1px solid var(--border);background:var(--bg2);}
-.mon-btn{padding:5px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--text3);cursor:pointer;transition:all .15s;font-family:'Geologica',sans-serif;}
-.mon-btn:hover{border-color:var(--border2);color:var(--text2);}
-.mon-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500;}
+/* total rows */
+tr.tot-row td{background:rgba(0,229,160,.025)}
+tr.tot-row td.sticky-col{background:rgba(0,229,160,.04)}
+tr.tot-row td{border-top:1px solid rgba(0,229,160,.12)}
 
-/* Entry form grid */
-.entry-form{padding:22px;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
-.form-col h3{font-family:'Unbounded',sans-serif;font-size:11px;font-weight:600;letter-spacing:.5px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
-.form-col.income-col h3{color:var(--green);}
-.form-col.expense-col h3{color:var(--red);}
-.field-group{display:flex;flex-direction:column;gap:10px;}
-.field-row{display:grid;grid-template-columns:1fr 130px;gap:8px;align-items:center;}
-.field-row label{font-size:11px;color:var(--text2);padding-left:2px;}
-.field-row input{background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:8px 12px;font-family:'Geologica',sans-serif;font-size:12px;color:var(--text);outline:none;transition:border-color .15s;text-align:right;width:100%;}
-.field-row input:focus{border-color:var(--input-focus);background:#0d1018;}
-.field-row input::placeholder{color:var(--text3);}
-.field-row input.has-val{border-color:rgba(124,109,250,.4);}
+/* row label */
+.row-label{display:flex;align-items:center;gap:6px;padding:5px 9px;min-height:42px}
+.row-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.row-name{font-size:11px;color:var(--t1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row-actions{display:none;gap:3px;flex-shrink:0}
+td.sticky-col:hover .row-actions{display:flex}
+.ract{background:none;border:none;cursor:pointer;font-size:11px;padding:2px 3px;
+  border-radius:3px;color:var(--t3);line-height:1}
+.ract:hover{background:var(--s3);color:var(--t1)}
+.ract.del:hover{color:var(--red)}
 
-/* Custom fields */
-.custom-fields{margin-top:12px;}
-.custom-field-row{display:grid;grid-template-columns:1fr 130px 28px;gap:6px;align-items:center;margin-bottom:8px;}
-.custom-field-row input[type=text]{background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:7px 10px;font-size:11px;color:var(--text);outline:none;font-family:'Geologica',sans-serif;transition:border-color .15s;}
-.custom-field-row input[type=text]:focus{border-color:var(--input-focus);}
-.custom-field-row input[type=number]{background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:7px 10px;font-size:11px;color:var(--text);outline:none;font-family:'Geologica',sans-serif;text-align:right;transition:border-color .15s;}
-.custom-field-row input[type=number]:focus{border-color:var(--input-focus);}
-.del-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:16px;line-height:1;transition:color .15s;padding:2px;}
-.del-btn:hover{color:var(--red);}
-.add-field-btn{background:none;border:1px dashed var(--border2);border-radius:8px;padding:7px 14px;font-size:11px;color:var(--text3);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;font-family:'Geologica',sans-serif;margin-top:4px;}
-.add-field-btn:hover{border-color:var(--accent);color:var(--accent);}
+/* ── CELL DUAL (plan+fact) ── */
+.cell-dual{display:flex;flex-direction:column;width:100%;cursor:pointer;min-height:42px}
+.cell-plan-line,.cell-fact-line{
+  display:flex;align-items:center;justify-content:flex-end;
+  padding:0 7px;height:21px;font-family:var(--font-mono);font-size:11px;
+  font-weight:500;transition:background .1s;position:relative;
+}
+.cell-plan-line{border-bottom:1px solid rgba(31,38,48,.4)}
+.cell-plan-line:hover{background:rgba(93,122,255,.07)}
+.cell-fact-line:hover{background:rgba(0,196,110,.06)}
 
-/* Summary bar inside form */
-.form-summary{margin-top:20px;padding:14px 16px;background:var(--bg3);border-radius:10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
-.sum-item .s-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
-.sum-item .s-val{font-family:'Unbounded',sans-serif;font-size:14px;font-weight:600;}
-.sum-item .s-val.pos{color:var(--green);}
-.sum-item .s-val.neg{color:var(--red);}
-.sum-item .s-val.neu{color:var(--text);}
+/* plan line */
+.cell-plan-line.empty{color:var(--t3)}
+.cell-plan-line.has-val{color:var(--plan-color)}
+.cell-plan-line .line-tag{font-size:8px;opacity:.5;margin-right:4px;font-weight:300}
 
-/* Buttons */
-.btn{padding:9px 18px;border-radius:9px;font-family:'Geologica',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;border:none;display:inline-flex;align-items:center;gap:7px;}
-.btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:hover{background:#6c5de8;transform:translateY(-1px);}
-.btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}
-.btn-ghost:hover{border-color:var(--border2);color:var(--text);}
-.btn-danger{background:rgba(255,77,109,.15);color:var(--red);border:1px solid rgba(255,77,109,.3);}
-.btn-danger:hover{background:rgba(255,77,109,.25);}
-.btn-sm{padding:6px 12px;font-size:11px;}
+/* fact line */
+.cell-fact-line.empty{color:var(--t3)}
+.cell-fact-line.has-val.inc{color:var(--green)}
+.cell-fact-line.has-val.exp{color:var(--red)}
+.cell-fact-line.has-val.note{color:var(--t2)}
 
-/* Toast */
-.toast{position:fixed;bottom:28px;right:28px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 18px;font-size:12px;color:var(--text);z-index:10000;transform:translateY(80px);opacity:0;transition:all .3s;display:flex;align-items:center;gap:10px;}
-.toast.show{transform:translateY(0);opacity:1;}
-.toast.success{border-color:rgba(62,207,142,.4);background:rgba(62,207,142,.08);}
-.toast.error{border-color:rgba(255,77,109,.4);background:rgba(255,77,109,.08);}
+/* deviation badge */
+.dev-badge{
+  position:absolute;right:4px;top:1px;
+  font-size:7px;padding:0 3px;border-radius:2px;line-height:14px;
+}
+.dev-badge.pos{background:rgba(0,229,160,.15);color:var(--dev-pos)}
+.dev-badge.neg{background:rgba(255,69,69,.15);color:var(--dev-neg)}
 
-/* Add PVZ modal */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;display:none;align-items:center;justify-content:center;}
-.modal-overlay.open{display:flex;}
-.modal{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;width:420px;max-width:calc(100vw - 40px);animation:fadeUp .25s ease;}
-.modal h2{font-family:'Unbounded',sans-serif;font-size:15px;font-weight:600;margin-bottom:6px;}
-.modal p{font-size:12px;color:var(--text3);margin-bottom:20px;}
-.modal-field{margin-bottom:14px;}
-.modal-field label{display:block;font-size:11px;color:var(--text2);margin-bottom:6px;}
-.modal-field input{width:100%;background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:10px 12px;font-family:'Geologica',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color .15s;}
-.modal-field input:focus{border-color:var(--input-focus);}
-.color-picker-row{display:flex;gap:8px;flex-wrap:wrap;}
-.cpick{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform .15s;}
-.cpick:hover,.cpick.sel{border-color:var(--text);transform:scale(1.15);}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;}
+/* single-mode cell */
+.cell-single{display:flex;align-items:center;justify-content:flex-end;
+  padding:0 8px;min-height:42px;cursor:pointer;
+  font-family:var(--font-mono);font-size:12px;font-weight:500;
+  color:var(--t3);transition:background .1s}
+.cell-single:hover{background:rgba(255,255,255,.03)}
+.cell-single.has-val.plan{color:var(--plan-color)}
+.cell-single.has-val.inc{color:var(--green)}
+.cell-single.has-val.exp{color:var(--red)}
+.cell-single.has-val.bal{color:var(--acc)}
+.cell-single.has-val.neg{color:var(--red)}
+.cell-single.has-val.cum{color:var(--blue)}
+.cell-single.has-val.cum-neg{color:var(--red)}
+.cell-single.has-val.note{color:var(--t2)}
 
-/* Manage months modal */
-.months-manage{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;}
-.month-manage-row{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg3);border-radius:8px;}
-.month-manage-row .m-name{font-size:12px;color:var(--text2);}
-.add-month-row{display:flex;gap:8px;margin-top:12px;}
-.add-month-row input{flex:1;background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;padding:8px 12px;font-family:'Geologica',sans-serif;font-size:12px;color:var(--text);outline:none;}
-.add-month-row input:focus{border-color:var(--input-focus);}
+/* input */
+.cell-input{width:100%;padding:0 8px;background:var(--acc-dim);border:none;
+  outline:2px solid var(--acc);color:var(--t1);font-family:var(--font-mono);
+  font-size:11px;text-align:right;height:21px}
+.cell-input.plan-input{background:var(--blue-dim);outline-color:var(--plan-color)}
+.cell-input.fact-input{background:var(--green-dim);outline-color:var(--fact-color)}
+.cell-input-full{width:100%;padding:0 8px;background:var(--acc-dim);border:none;
+  outline:2px solid var(--acc);color:var(--t1);font-family:var(--font-mono);
+  font-size:12px;text-align:right;min-height:42px}
+.cell-input-full.plan-input{background:var(--blue-dim);outline-color:var(--plan-color)}
+.cell-input-full.fact-input{background:var(--green-dim);outline-color:var(--fact-color)}
 
-/* Scrollbar */
-::-webkit-scrollbar{width:5px;height:5px;}
-::-webkit-scrollbar-track{background:var(--bg);}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+/* MODAL */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.77);backdrop-filter:blur(6px);
+  z-index:100;display:none;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--s2);border:1px solid var(--border2);border-radius:13px;
+  width:420px;max-height:90vh;overflow-y:auto;
+  padding:22px;box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.modal-title{font-family:var(--font-head);font-size:13px;font-weight:600;margin-bottom:18px}
+.form-row{margin-bottom:13px}
+.form-label{font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+.form-input,.form-select{width:100%;background:var(--s3);border:1px solid var(--border2);
+  border-radius:6px;padding:8px 11px;color:var(--t1);font-family:var(--font-mono);
+  font-size:12px;outline:none;transition:border .14s}
+.form-input:focus,.form-select:focus{border-color:var(--acc)}
+.form-select{cursor:pointer;-webkit-appearance:none}
+.color-row{display:flex;gap:7px;flex-wrap:wrap}
+.cswatch{width:22px;height:22px;border-radius:50%;cursor:pointer;
+  border:2px solid transparent;transition:transform .1s,border-color .1s}
+.cswatch:hover{transform:scale(1.15)}
+.cswatch.sel{border-color:var(--t1);transform:scale(1.12)}
+.modal-btns{display:flex;gap:7px;margin-top:18px;justify-content:flex-end}
+.mbtn{padding:7px 16px;border-radius:6px;border:1px solid var(--border2);
+  background:var(--s3);color:var(--t1);font-family:var(--font-mono);
+  font-size:11px;cursor:pointer;transition:all .14s}
+.mbtn:hover{background:var(--border2)}
+.mbtn.ok{background:var(--acc-dim);color:var(--acc);border-color:rgba(0,229,160,.3)}
+.mbtn.ok:hover{background:var(--acc-mid)}
+.mbtn.danger{background:var(--red-dim);color:var(--red);border-color:rgba(255,69,69,.2)}
 
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
-@media(max-width:1100px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.pvz-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}}
-@media(max-width:700px){.main{padding:20px 16px}.header{padding:18px 16px}.nav{padding:0 16px}.hdr-stats{display:none}}
+/* Legend strip */
+.legend{display:flex;align-items:center;gap:14px;padding:5px 14px;
+  border-bottom:1px solid var(--border);background:var(--s1);flex-shrink:0;font-size:10px;color:var(--t2)}
+.leg-item{display:flex;align-items:center;gap:5px}
+.leg-dot{width:8px;height:8px;border-radius:2px}
 
-/* number input arrows hide */
-input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;}
-input[type=number]{-moz-appearance:textfield;}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;z-index:200;background:var(--s3);
+  border:1px solid var(--border2);border-radius:7px;padding:9px 14px;
+  font-size:11px;color:var(--t1);transform:translateY(16px);opacity:0;
+  transition:all .18s;pointer-events:none}
+.toast.show{transform:translateY(0);opacity:1}
+
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
 </style>
 </head>
 <body>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<header>
+  <div class="logo">ПК<em>—</em>CAL</div>
+  <div style="font-size:10px;color:var(--t3)">Платёжный календарь</div>
 
-<!-- ADD PVZ MODAL -->
-<div class="modal-overlay" id="modalAddPvz">
-  <div class="modal">
-    <h2>Новый ПВЗ</h2>
-    <p>Добавьте пункт выдачи заказов в систему</p>
-    <div class="modal-field"><label>Название ПВЗ</label><input id="newPvzName" placeholder="Например: Садовая 12" /></div>
-    <div class="modal-field">
-      <label>Цвет</label>
-      <div class="color-picker-row" id="colorPicker">
-        <div class="cpick sel" style="background:#a855f7" data-color="#a855f7"></div>
-        <div class="cpick" style="background:#3b82f6" data-color="#3b82f6"></div>
-        <div class="cpick" style="background:#f59e0b" data-color="#f59e0b"></div>
-        <div class="cpick" style="background:#3ecf8e" data-color="#3ecf8e"></div>
-        <div class="cpick" style="background:#ef4444" data-color="#ef4444"></div>
-        <div class="cpick" style="background:#06b6d4" data-color="#06b6d4"></div>
-        <div class="cpick" style="background:#f97316" data-color="#f97316"></div>
-        <div class="cpick" style="background:#ec4899" data-color="#ec4899"></div>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('modalAddPvz')">Отмена</button>
-      <button class="btn btn-primary" onclick="addPvz()">Добавить ПВЗ</button>
-    </div>
+  <div class="month-nav">
+    <button class="nav-btn" onclick="changeMonth(-1)">◀</button>
+    <div class="month-label" id="monthLabel"></div>
+    <button class="nav-btn" onclick="changeMonth(1)">▶</button>
   </div>
-</div>
 
-<!-- MANAGE MONTHS MODAL -->
-<div class="modal-overlay" id="modalMonths">
-  <div class="modal">
-    <h2>Управление периодами</h2>
-    <p>Добавьте или удалите месяцы/периоды отчётности</p>
-    <div class="months-manage" id="monthsManageList"></div>
-    <div class="add-month-row">
-      <input id="newMonthName" placeholder="Например: Июль 2025" />
-      <button class="btn btn-primary btn-sm" onclick="addMonth()">Добавить</button>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal('modalMonths')">Закрыть</button>
-    </div>
+  <div class="mode-toggle">
+    <button class="mtbtn plan" onclick="setMode('plan',this)">План</button>
+    <button class="mtbtn fact" onclick="setMode('fact',this)">Факт</button>
+    <button class="mtbtn both active" onclick="setMode('both',this)">План + Факт</button>
   </div>
-</div>
 
-<!-- HEADER -->
-<header class="header">
-  <div class="logo">
-    <h1>ПВЗ · Финансы</h1>
-    <p>Пункты выдачи заказов — сводный отчёт</p>
-  </div>
-  <div class="hdr-stats">
-    <div class="hdr-stat">
-      <div class="v" id="hdr-total">— ₽</div>
-      <div class="l">Итого прибыль</div>
-    </div>
-    <div class="hdr-stat">
-      <div class="v neu" id="hdr-pvz-count">0 точек</div>
-      <div class="l">Активных ПВЗ</div>
-    </div>
+  <div class="header-actions">
+    <button class="hbtn" onclick="clearMonth()"><span class="icon">⌫</span> Очистить</button>
+    <button class="hbtn" onclick="exportCSV()"><span class="icon">↓</span> CSV</button>
+    <button class="hbtn primary" onclick="openAddRow()"><span class="icon">＋</span> Строка</button>
   </div>
 </header>
 
-<!-- NAV -->
-<nav class="nav" id="mainNav">
-  <button class="nav-btn active" onclick="showTab('overview',this)">Обзор</button>
-  <button class="nav-btn" onclick="showTab('editor',this)">✏️ Ввод данных</button>
-</nav>
-
-<!-- MAIN -->
-<main class="main">
-
-  <!-- OVERVIEW -->
-  <div class="tab-content active" id="tab-overview">
-    <div class="kpi-grid" id="kpiGrid"></div>
-    <div class="section">
-      <div class="sec-title">Прибыль по ПВЗ — помесячно</div>
-      <div class="chart-card">
-        <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
-        <div class="legend" id="mainLegend"></div>
+<div style="display:flex;flex-direction:column;height:calc(100vh - 54px)">
+  <div class="summary" id="summary"></div>
+  <div class="app">
+    <div class="sidebar">
+      <div class="sb-top" id="sbList"></div>
+      <div class="sb-bottom">
+        <button class="add-row-btn" onclick="openAddRow()">＋ Новая строка</button>
       </div>
     </div>
-    <div class="section">
-      <div class="sec-title">Сводка по точкам</div>
-      <div class="pvz-grid" id="pvzOverviewGrid"></div>
+    <div class="content">
+      <div class="legend" id="legend"></div>
+      <div class="tbl-wrap">
+        <table id="mainTable">
+          <thead id="tHead"></thead>
+          <tbody id="tBody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- EDITOR -->
-  <div class="tab-content" id="tab-editor">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:12px;">
-      <div>
-        <div style="font-family:'Unbounded',sans-serif;font-size:14px;font-weight:600;margin-bottom:4px;">Ввод данных</div>
-        <div style="font-size:11px;color:var(--text3);">Вводите доходы и расходы по каждому ПВЗ и периоду. Данные сохраняются автоматически.</div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <button class="btn btn-ghost btn-sm" onclick="openModal('modalMonths');renderMonthsManage()">📅 Периоды</button>
-        <button class="btn btn-ghost btn-sm" onclick="openModal('modalAddPvz')">＋ Добавить ПВЗ</button>
-        <button class="btn btn-danger btn-sm" onclick="confirmReset()">↺ Сброс</button>
-      </div>
+<!-- ADD ROW MODAL -->
+<div class="overlay" id="addRowModal">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Новая строка</div>
+    <div class="form-row">
+      <div class="form-label">Название</div>
+      <input class="form-input" id="rowName" placeholder="Например: Аренда офиса" maxlength="50">
     </div>
-
-    <div class="editor-panel">
-      <!-- PVZ tabs -->
-      <div class="pvz-tabs" id="editorPvzTabs"></div>
-
-      <!-- Month selector -->
-      <div class="month-selector" id="editorMonthSelector"></div>
-
-      <!-- Form -->
-      <div class="entry-form" id="entryForm"></div>
+    <div class="form-row">
+      <div class="form-label">Тип</div>
+      <select class="form-select" id="rowType">
+        <option value="income">📈 Доход</option>
+        <option value="expense">📉 Расход</option>
+        <option value="note">📝 Прочее</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-label">Цвет</div>
+      <div class="color-row" id="colorPicker"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="closeModal('addRowModal')">Отмена</button>
+      <button class="mbtn ok" onclick="saveRow()">Добавить</button>
     </div>
   </div>
+</div>
 
-</main>
+<!-- EDIT ROW MODAL -->
+<div class="overlay" id="editRowModal">
+  <div class="modal">
+    <div class="modal-title">Редактировать строку</div>
+    <div class="form-row">
+      <div class="form-label">Название</div>
+      <input class="form-input" id="editRowName" maxlength="50">
+    </div>
+    <div class="form-row">
+      <div class="form-label">Тип</div>
+      <select class="form-select" id="editRowType">
+        <option value="income">📈 Доход</option>
+        <option value="expense">📉 Расход</option>
+        <option value="note">📝 Прочее</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-label">Цвет</div>
+      <div class="color-row" id="editColorPicker"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn danger" onclick="deleteRow()">Удалить</button>
+      <button class="mbtn" onclick="closeModal('editRowModal')">Отмена</button>
+      <button class="mbtn ok" onclick="saveEditRow()">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
 
 <script>
-// ======================================================
+// ═══════════════════════════════════════════
+// CONSTANTS
+// ═══════════════════════════════════════════
+const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь',
+              'Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+const WD=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const COLORS=['#00e5a0','#00c46e','#5d7aff','#ff4545','#f5a623',
+              '#a855f7','#ec4899','#06b6d4','#84cc16','#f97316',
+              '#e879f9','#facc15','#94a3b8','#fb923c','#38bdf8'];
+const STORAGE='pk_v4';
+
+// ═══════════════════════════════════════════
 // STATE
-// ======================================================
+// ═══════════════════════════════════════════
+let S = {
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+  mode: 'both',   // 'plan' | 'fact' | 'both'
+  filter: 'all',
+  rows: [],
+  // cells: { "rowId_y_m_d_plan": num, "rowId_y_m_d_fact": num }
+  cells: {},
+};
 
-const DEFAULT_MONTHS = ['Июн 24','Июл 24','Авг 24','Сен 24','Окт 24','Ноя 24','Дек 24','Янв 25','Фев 25','Мар 25','Апр 25','Май 25'];
+let editingRowId = null;
+let selColor = COLORS[0];
+let editSelColor = COLORS[0];
+let activeInput = null; // { el, rowId, day, kind }
 
-const DEFAULT_INCOME_FIELDS = [
-  {key:'agent', label:'Агент. вознаграждение'},
-  {key:'market', label:'Я Маркет'},
-  {key:'brandland', label:'BrandLand'},
-  {key:'bonuses', label:'Бонусы'},
-  {key:'other_income', label:'Прочие доходы'},
-];
-
-const DEFAULT_EXPENSE_FIELDS = [
-  {key:'nalog', label:'Налог'},
-  {key:'arenda', label:'Аренда'},
-  {key:'zarplata', label:'Зарплата'},
-  {key:'internet', label:'Интернет + Камера'},
-  {key:'kanc', label:'Канцелярия / разное'},
-];
-
-const PVZ_COLORS = ['#a855f7','#3b82f6','#f59e0b','#3ecf8e','#ef4444','#06b6d4','#f97316','#ec4899'];
-
-// Load or init state
-function loadState() {
+// ═══════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════
+function persist() {
+  localStorage.setItem(STORAGE, JSON.stringify({rows:S.rows, cells:S.cells}));
+}
+function hydrate() {
   try {
-    const raw = localStorage.getItem('pvz_data_v3');
-    if (raw) return JSON.parse(raw);
-  } catch(e) {}
-  return initDefaultState();
+    const d = JSON.parse(localStorage.getItem(STORAGE)||'{}');
+    S.rows = d.rows||[];
+    S.cells = d.cells||{};
+  } catch(e){}
+  if (!S.rows.length) S.rows = [
+    {id:'r1',name:'ЗП / Зарплата',         type:'income', color:'#00c46e'},
+    {id:'r2',name:'Агентские вознагр.',     type:'income', color:'#5d7aff'},
+    {id:'r3',name:'ДОПы ПВЗ',              type:'income', color:'#a855f7'},
+    {id:'r4',name:'Дивиденды',              type:'income', color:'#f5a623'},
+    {id:'r5',name:'Аренда — Красноярская',  type:'expense',color:'#06b6d4'},
+    {id:'r6',name:'Аренда — Кецинского',    type:'expense',color:'#10b981'},
+    {id:'r7',name:'Оплата ЖКХ',            type:'expense',color:'#ff4545'},
+    {id:'r8',name:'Интернет',              type:'expense',color:'#38bdf8'},
+    {id:'r9',name:'ЕДА и Я',              type:'expense',color:'#ec4899'},
+    {id:'r10',name:'Хоз-во / Откладывать', type:'expense',color:'#84cc16'},
+  ];
 }
 
-function initDefaultState() {
-  return {
-    months: [...DEFAULT_MONTHS],
-    pvzList: [
-      { id: 'pvz1', name: 'Луна Искусства 35', color: '#a855f7',
-        incomeFields: JSON.parse(JSON.stringify(DEFAULT_INCOME_FIELDS)),
-        expenseFields: JSON.parse(JSON.stringify(DEFAULT_EXPENSE_FIELDS)),
-        data: {}
-      },
-      { id: 'pvz2', name: 'Розалина 46', color: '#ef4444',
-        incomeFields: JSON.parse(JSON.stringify(DEFAULT_INCOME_FIELDS)),
-        expenseFields: JSON.parse(JSON.stringify(DEFAULT_EXPENSE_FIELDS)),
-        data: {}
-      },
-      { id: 'pvz3', name: 'Краснодарская 37', color: '#f59e0b',
-        incomeFields: JSON.parse(JSON.stringify(DEFAULT_INCOME_FIELDS)),
-        expenseFields: JSON.parse(JSON.stringify(DEFAULT_EXPENSE_FIELDS)),
-        data: {}
-      },
-      { id: 'pvz4', name: 'Солнечная 36', color: '#3b82f6',
-        incomeFields: JSON.parse(JSON.stringify(DEFAULT_INCOME_FIELDS)),
-        expenseFields: JSON.parse(JSON.stringify(DEFAULT_EXPENSE_FIELDS)),
-        data: {}
-      },
-    ]
-  };
+function ck(rowId, y, m, d, kind) { return `${rowId}_${y}_${m}_${d}_${kind}`; }
+function getV(rowId, y, m, d, kind) { return S.cells[ck(rowId,y,m,d,kind)]||0; }
+function setV(rowId, y, m, d, kind, val) {
+  const k = ck(rowId,y,m,d,kind);
+  if (!val) delete S.cells[k]; else S.cells[k]=val;
+  persist();
 }
 
-let state = loadState();
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+const getDays = () => new Date(S.year, S.month+1, 0).getDate();
+const getWD   = d  => new Date(S.year, S.month, d).getDay();
+const isWE    = d  => { const w=getWD(d); return w===0||w===6; };
+const isToday = d  => {
+  const t=new Date();
+  return t.getFullYear()===S.year&&t.getMonth()===S.month&&t.getDate()===d;
+};
 
-function saveState() {
-  localStorage.setItem('pvz_data_v3', JSON.stringify(state));
+function fmt(n) {
+  if (!n) return '';
+  return Math.abs(n).toLocaleString('ru-RU')+'₽';
+}
+function fmtSign(n) {
+  if (!n) return '0₽';
+  return (n>0?'+':'−')+Math.abs(n).toLocaleString('ru-RU')+'₽';
+}
+function devClass(dev) { return dev>0?'pos':'neg'; }
+function devText(dev)  { return (dev>0?'+':'')+Math.round(dev)+'%'; }
+
+// ═══════════════════════════════════════════
+// AGGREGATES
+// ═══════════════════════════════════════════
+function dayAgg(d) {
+  let pi=0,pe=0,fi=0,fe=0;
+  for (const r of S.rows) {
+    const p=getV(r.id,S.year,S.month,d,'plan');
+    const f=getV(r.id,S.year,S.month,d,'fact');
+    if (r.type==='income')  { pi+=p; fi+=f; }
+    if (r.type==='expense') { pe+=p; fe+=f; }
+  }
+  return {pi,pe,fi,fe,pnet:pi-pe,fnet:fi-fe};
+}
+function monthAgg() {
+  const days=getDays();
+  let pi=0,pe=0,fi=0,fe=0;
+  for (let d=1;d<=days;d++) {
+    const a=dayAgg(d);
+    pi+=a.pi; pe+=a.pe; fi+=a.fi; fe+=a.fe;
+  }
+  return {pi,pe,fi,fe,pnet:pi-pe,fnet:fi-fe};
+}
+function cumulatives() {
+  const days=getDays();
+  const out={};
+  let pcum=0, fcum=0;
+  for (let d=1;d<=days;d++) {
+    const a=dayAgg(d);
+    pcum+=a.pnet; fcum+=a.fnet;
+    out[d]={...a,pcum,fcum};
+  }
+  return out;
 }
 
-// Editor state
-let editorPvzId = state.pvzList[0]?.id;
-let editorMonthIdx = 0;
-let mainChartInst = null;
-
-// ======================================================
-// CALCULATIONS
-// ======================================================
-
-function getVal(pvz, monthIdx, fieldKey) {
-  return Number(pvz.data?.[monthIdx]?.[fieldKey] || 0);
+// ═══════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════
+function render() {
+  document.getElementById('monthLabel').textContent=`${MONTHS[S.month]} ${S.year}`;
+  renderSidebar();
+  renderSummary();
+  renderLegend();
+  renderTable();
 }
 
-function calcMonthIncome(pvz, mIdx) {
-  return pvz.incomeFields.reduce((s,f) => s + getVal(pvz, mIdx, f.key), 0);
+function renderLegend() {
+  const m = S.mode;
+  let h = '';
+  if (m==='both') {
+    h = `
+      <div class="leg-item"><div class="leg-dot" style="background:var(--plan-color)"></div>Верхняя строка — план</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--fact-color)"></div>Нижняя строка — факт</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--dev-pos)"></div>Отклонение ▲ положительное</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--dev-neg)"></div>Отклонение ▼ отрицательное</div>
+      <div style="margin-left:auto;font-size:9px;opacity:.5">Клик по строке плана/факта для ввода · Enter — след. день · Tab — переход</div>`;
+  } else if (m==='plan') {
+    h = `<div class="leg-item"><div class="leg-dot" style="background:var(--plan-color)"></div>Режим: только план — кликните ячейку для ввода</div>`;
+  } else {
+    h = `<div class="leg-item"><div class="leg-dot" style="background:var(--fact-color)"></div>Режим: только факт — кликните ячейку для ввода</div>`;
+  }
+  document.getElementById('legend').innerHTML = h;
 }
 
-function calcMonthExpense(pvz, mIdx) {
-  return pvz.expenseFields.reduce((s,f) => s + getVal(pvz, mIdx, f.key), 0);
+function renderSidebar() {
+  const el = document.getElementById('sbList');
+  const allCls = S.filter==='all'?'active':'';
+  let h = `<div class="sb-row ${allCls}" onclick="setFilter('all',this)">
+    <div class="sb-dot" style="background:var(--acc)"></div>
+    <div class="sb-name">Все строки</div></div>`;
+
+  const groups = [
+    {label:'Доходы',  rows: S.rows.filter(r=>r.type==='income')},
+    {label:'Расходы', rows: S.rows.filter(r=>r.type==='expense')},
+    {label:'Прочее',  rows: S.rows.filter(r=>r.type==='note')},
+  ];
+  for (const g of groups) {
+    if (!g.rows.length) continue;
+    h += `<div class="sb-div"></div><div class="sb-sec-title">${g.label}</div>`;
+    for (const r of g.rows) {
+      const cls = S.filter===r.id?'active':'';
+      h += `<div class="sb-row ${cls}" onclick="setFilter('${r.id}',this)">
+        <div class="sb-dot" style="background:${r.color}"></div>
+        <div class="sb-name" title="${r.name}">${r.name}</div>
+        <button class="sb-del" onclick="event.stopPropagation();promptDelete('${r.id}')">×</button>
+      </div>`;
+    }
+  }
+  el.innerHTML = h;
 }
 
-function calcMonthProfit(pvz, mIdx) {
-  return calcMonthIncome(pvz, mIdx) - calcMonthExpense(pvz, mIdx);
+function renderSummary() {
+  const ma = monthAgg();
+  const days = getDays();
+  const cum = cumulatives();
+  const lastCum = cum[days];
+
+  // deviation %
+  const incDev  = ma.pi ? Math.round((ma.fi-ma.pi)/ma.pi*100) : null;
+  const expDev  = ma.pe ? Math.round((ma.fe-ma.pe)/ma.pe*100) : null;
+
+  const today=new Date();
+  const isCur=today.getFullYear()===S.year&&today.getMonth()===S.month;
+  const prog=isCur?Math.round(today.getDate()/days*100):100;
+
+  document.getElementById('summary').innerHTML=`
+    <div class="sum-card">
+      <div class="sum-label">Доходы план</div>
+      <div class="sum-val p">${fmt(ma.pi)||'—'}</div>
+      <div class="sum-sub" style="color:var(--fact-color)">факт ${fmt(ma.fi)||'—'}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Расходы план</div>
+      <div class="sum-val p">${fmt(ma.pe)||'—'}</div>
+      <div class="sum-sub" style="color:var(--red)">факт ${fmt(ma.fe)||'—'}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Баланс план</div>
+      <div class="sum-val ${ma.pnet>=0?'a':'r'}">${fmtSign(ma.pnet)}</div>
+      <div class="sum-sub" style="color:${ma.fnet>=0?'var(--acc)':'var(--red)'}">факт ${fmtSign(ma.fnet)}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Откл. доходов</div>
+      <div class="sum-val ${incDev===null?'b':incDev>=0?'g':'r'}">${incDev===null?'—':(incDev>=0?'+':'')+incDev+'%'}</div>
+      <div class="sum-sub">${fmt(ma.fi-ma.pi)||'нет данных'}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Откл. расходов</div>
+      <div class="sum-val ${expDev===null?'b':expDev<=0?'g':'r'}">${expDev===null?'—':(expDev>=0?'+':'')+expDev+'%'}</div>
+      <div class="sum-sub">${fmt(ma.fe-ma.pe)||'нет данных'}</div>
+    </div>
+    <div class="sum-card">
+      <div class="sum-label">Накопл. итог</div>
+      <div class="sum-val ${lastCum.pcum>=0?'p':'r'}" style="font-size:11px">П: ${fmtSign(lastCum.pcum)}</div>
+      <div class="sum-sub" style="color:${lastCum.fcum>=0?'var(--acc)':'var(--red)'}">Ф: ${fmtSign(lastCum.fcum)}</div>
+    </div>`;
 }
 
-function calcTotalProfit(pvz) {
-  return state.months.reduce((s,_,i) => s + calcMonthProfit(pvz, i), 0);
-}
+function renderTable() {
+  const days = getDays();
+  const cum  = cumulatives();
+  const visRows = S.filter==='all' ? S.rows : S.rows.filter(r=>r.id===S.filter);
+  const isBoth  = S.mode==='both';
+  const isPlan  = S.mode==='plan';
+  const isFact  = S.mode==='fact';
 
-function calcAllTotal() {
-  return state.pvzList.reduce((s, pvz) => s + calcTotalProfit(pvz), 0);
-}
+  // cell min-width
+  const cw = isBoth ? 88 : 68;
 
-// ======================================================
-// UTILS
-// ======================================================
+  // ── HEAD ──
+  let hh = `<tr><th class="row-head">Строка / День</th>`;
+  for (let d=1;d<=days;d++) {
+    let cls = isWE(d)?'we':'';
+    if (isToday(d)) cls='tod';
+    hh += `<th class="${cls}" style="min-width:${cw}px">
+      <div style="font-size:12px;font-weight:600">${d}</div>
+      <div style="font-size:9px;font-weight:400;opacity:.65;margin-top:1px">${WD[getWD(d)]}</div>
+    </th>`;
+  }
+  hh += '</tr>';
+  document.getElementById('tHead').innerHTML = hh;
 
-function fmtNum(n, sign=false) {
-  if (!n && n !== 0) return '—';
-  const abs = Math.abs(n);
-  let s;
-  if (abs >= 1e6) s = (n/1e6).toFixed(1) + 'М';
-  else if (abs >= 1e4) s = (n/1e3).toFixed(0) + ' тыс';
-  else s = Math.round(n).toLocaleString('ru');
-  return (sign && n > 0 ? '+' : '') + s + ' ₽';
-}
+  // ── BODY ──
+  let bh = '';
 
-function fmtFull(n) {
-  const s = n < 0 ? '−' : '';
-  return s + Math.abs(Math.round(n)).toLocaleString('ru') + ' ₽';
-}
+  for (const row of visRows) {
+    bh += `<tr>
+      <td class="sticky-col">
+        <div class="row-label">
+          <div class="row-dot" style="background:${row.color}"></div>
+          <div class="row-name" title="${row.name}">${row.name}</div>
+          <div class="row-actions">
+            <button class="ract" onclick="openEditRow('${row.id}')">✎</button>
+            <button class="ract del" onclick="promptDelete('${row.id}')">×</button>
+          </div>
+        </div>
+      </td>`;
 
-function numClass(n) { return n > 0 ? 'pos' : n < 0 ? 'neg' : 'neu'; }
+    for (let d=1;d<=days;d++) {
+      const plan = getV(row.id, S.year, S.month, d, 'plan');
+      const fact = getV(row.id, S.year, S.month, d, 'fact');
+      let colCls = isWE(d)?' we-col':'';
+      if (isToday(d)) colCls+=' tod-col';
 
-function uid() { return 'f_' + Math.random().toString(36).slice(2,8); }
-
-function toast(msg, type='success') {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.className = `toast ${type} show`;
-  clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove('show'), 2200);
-}
-
-// ======================================================
-// TABS
-// ======================================================
-
-function showTab(id, btn) {
-  document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(e => e.classList.remove('active'));
-  document.getElementById('tab-' + id).classList.add('active');
-  if (btn) btn.classList.add('active');
-  if (id === 'overview') renderOverview();
-  if (id === 'editor') renderEditor();
-}
-
-// ======================================================
-// OVERVIEW
-// ======================================================
-
-function renderOverview() {
-  renderKPI();
-  renderMainChart();
-  renderPvzOverview();
-  updateHeader();
-}
-
-function updateHeader() {
-  const total = calcAllTotal();
-  const el = document.getElementById('hdr-total');
-  el.textContent = (total >= 0 ? '+' : '') + fmtFull(total);
-  el.className = 'v ' + numClass(total);
-  document.getElementById('hdr-pvz-count').textContent = state.pvzList.length + ' точек';
-}
-
-function renderKPI() {
-  const grid = document.getElementById('kpiGrid');
-  const classes = ['wb','oz','ym','tot'];
-  const dots = ['#a855f7','#3b82f6','#f59e0b',''];
-  grid.innerHTML = '';
-
-  // Per-PVZ KPIs (first 3), then total
-  const show = state.pvzList.slice(0, 3);
-  show.forEach((pvz, i) => {
-    const total = calcTotalProfit(pvz);
-    const div = document.createElement('div');
-    div.className = 'kpi-card ' + (classes[i]||'tot');
-    div.style.cssText = `--before-bg:${pvz.color}`;
-    div.innerHTML = `<div class="kpi-lbl"><span class="kpi-dot" style="background:${pvz.color}"></span>${pvz.name}</div>
-      <div class="kpi-val ${numClass(total)}">${total >= 0 ? '+' : ''}${fmtFull(total)}</div>
-      <div class="kpi-sub">Итого прибыль</div>`;
-    grid.appendChild(div);
-  });
-
-  const allTotal = calcAllTotal();
-  const totDiv = document.createElement('div');
-  totDiv.className = 'kpi-card tot';
-  totDiv.innerHTML = `<div class="kpi-lbl">Общий итог</div>
-    <div class="kpi-val ${numClass(allTotal)}">${allTotal >= 0 ? '+' : ''}${fmtFull(allTotal)}</div>
-    <div class="kpi-sub">Все точки · ${state.pvzList.length} ПВЗ</div>`;
-  grid.appendChild(totDiv);
-}
-
-function renderMainChart() {
-  const ctx = document.getElementById('mainChart').getContext('2d');
-  if (mainChartInst) { mainChartInst.destroy(); mainChartInst = null; }
-
-  const datasets = state.pvzList.map(pvz => ({
-    label: pvz.name,
-    data: state.months.map((_,i) => calcMonthProfit(pvz, i)),
-    borderColor: pvz.color,
-    backgroundColor: pvz.color + '18',
-    pointBackgroundColor: pvz.color,
-    pointRadius: 4, pointHoverRadius: 6,
-    borderWidth: 2, tension: 0.3, fill: false,
-  }));
-
-  mainChartInst = new Chart(ctx, {
-    type: 'line',
-    data: { labels: state.months, datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          backgroundColor: '#1a1f30', borderColor: '#2a3050', borderWidth: 1,
-          titleColor: '#a0a8c0', bodyColor: '#e8eaf0', padding: 12,
-          callbacks: { label: c => ` ${c.dataset.label}: ${c.raw >= 0 ? '+' : ''}${fmtFull(c.raw)}` }
+      if (isBoth) {
+        // Deviation
+        let devHtml = '';
+        if (plan && fact) {
+          const dev = Math.round((fact-plan)/plan*100);
+          const dc  = row.type==='expense' ? (dev<=0?'pos':'neg') : devClass(dev);
+          devHtml = `<span class="dev-badge ${dc}">${devText(dev)}</span>`;
         }
-      },
-      scales: {
-        x: { grid: { color: 'rgba(42,48,80,.5)' }, ticks: { color: '#606888', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(42,48,80,.5)' }, ticks: { color: '#606888', font: { size: 10 },
-          callback: v => Math.abs(v) >= 1e6 ? (v/1e6).toFixed(1)+'М' : Math.abs(v) >= 1e3 ? (v/1e3).toFixed(0)+'К' : v
-        }}
+        const factCls = fact ? (row.type==='income'?'inc':row.type==='expense'?'exp':'note') : '';
+        bh += `<td class="${colCls}" style="min-width:${cw}px">
+          <div class="cell-dual">
+            <div class="cell-plan-line ${plan?'has-val':'empty'}"
+                 onclick="startEdit(this,'${row.id}',${d},'plan')">
+              <span class="line-tag">П</span>${plan?fmt(plan):''}
+              ${devHtml}
+            </div>
+            <div class="cell-fact-line ${fact?'has-val '+factCls:'empty'}"
+                 onclick="startEdit(this,'${row.id}',${d},'fact')">
+              <span class="line-tag">Ф</span>${fact?fmt(fact):''}
+            </div>
+          </div>
+        </td>`;
+      } else {
+        const kind = isPlan ? 'plan' : 'fact';
+        const val  = isPlan ? plan : fact;
+        const valCls = val ? (isPlan?'plan':row.type==='income'?'inc':row.type==='expense'?'exp':'note') : '';
+        bh += `<td class="${colCls}" style="min-width:${cw}px">
+          <div class="cell-single ${val?'has-val '+valCls:''}"
+               onclick="startEdit(this,'${row.id}',${d},'${kind}')">
+            ${val?fmt(val):''}
+          </div>
+        </td>`;
       }
     }
-  });
-
-  // Legend
-  document.getElementById('mainLegend').innerHTML = state.pvzList.map(pvz =>
-    `<div class="leg-item"><span class="leg-dot" style="background:${pvz.color}"></span>${pvz.name}</div>`
-  ).join('');
-}
-
-function renderPvzOverview() {
-  const grid = document.getElementById('pvzOverviewGrid');
-  if (!state.pvzList.length) {
-    grid.innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3);grid-column:1/-1">Нет ПВЗ. Добавьте точки во вкладке «Ввод данных».</div>`;
-    return;
+    bh += '</tr>';
   }
 
-  grid.innerHTML = state.pvzList.map(pvz => {
-    const profits = state.months.map((_,i) => calcMonthProfit(pvz, i));
-    const total = profits.reduce((a,b) => a+b, 0);
-    const maxAbs = Math.max(...profits.map(Math.abs), 1);
+  // ── TOTALS ──
+  if (S.filter==='all') {
+    const totalDefs = [
+      {label:'Итого доходов',  color:'var(--green)', getPlan:a=>a.pi, getFact:a=>a.fi, isFact:true},
+      {label:'Итого расходов', color:'var(--red)',   getPlan:a=>a.pe, getFact:a=>a.fe, isFact:true},
+      {label:'Баланс дня',     color:'var(--acc)',   getPlan:a=>a.pnet, getFact:a=>a.fnet, signed:true},
+      {label:'Накопл. итог',   color:'var(--blue)',  getPlan:a=>cum[a.d].pcum, getFact:a=>cum[a.d].fcum, signed:true},
+    ];
 
-    const bars = profits.map((v,i) => {
-      const h = Math.max(2, Math.round((Math.abs(v)/maxAbs)*28));
-      return `<div class="mini-bar ${v>=0?'pos':'neg'}" style="height:${h}px" title="${state.months[i]}: ${v>=0?'+':''}${fmtFull(v)}"></div>`;
-    }).join('');
+    for (const td of totalDefs) {
+      bh += `<tr class="tot-row">
+        <td class="sticky-col">
+          <div class="row-label">
+            <div class="row-dot" style="background:${td.color}"></div>
+            <div class="row-name" style="color:${td.color};font-weight:500">${td.label}</div>
+          </div>
+        </td>`;
 
-    const topRows = [...pvz.incomeFields.slice(0,1), ...pvz.expenseFields.slice(0,2)];
+      for (let d=1;d<=days;d++) {
+        const a  = {...dayAgg(d), d};
+        const pv = td.getPlan(a);
+        const fv = td.getFact(a);
+        let colCls = isWE(d)?' we-col':'';
+        if (isToday(d)) colCls+=' tod-col';
 
-    return `<div class="pvz-card">
-      <div class="pvz-head">
-        <div class="pvz-name"><div class="pvz-pdot" style="background:${pvz.color}"></div>${pvz.name}</div>
-        <div class="pvz-profit ${numClass(total)}">${total>=0?'+':''}${fmtFull(total)}</div>
-      </div>
-      <div class="mini-bars">${bars}</div>
-      <div class="tbl-wrap"><table class="pvz-tbl">
-        <thead><tr><th>Статья</th>${state.months.map(m=>`<th>${m}</th>`).join('')}<th>Итого</th></tr></thead>
-        <tbody>
-          <tr><td>Доходы</td>${state.months.map((_,i)=>{const v=calcMonthIncome(pvz,i);return `<td class="${v?'np':''}"> ${v?Math.round(v).toLocaleString('ru'):'—'}</td>`;}).join('')}<td class="np">${Math.round(state.months.reduce((_,__,i)=>_+calcMonthIncome(pvz,i),0)).toLocaleString('ru')}</td></tr>
-          <tr><td>Расходы</td>${state.months.map((_,i)=>{const v=calcMonthExpense(pvz,i);return `<td class="${v?'nn':''}"> ${v?Math.round(v).toLocaleString('ru'):'—'}</td>`;}).join('')}<td class="nn">${Math.round(state.months.reduce((_,__,i)=>_+calcMonthExpense(pvz,i),0)).toLocaleString('ru')}</td></tr>
-          <tr class="hl"><td>Прибыль</td>${profits.map(v=>`<td class="${v>0?'np':v<0?'nn':''}">${v!==0?(v>0?'+':'')+Math.round(v).toLocaleString('ru'):'—'}</td>`).join('')}<td class="${numClass(total)}">${total>=0?'+':''}${Math.round(total).toLocaleString('ru')}</td></tr>
-        </tbody>
-      </table></div>
-    </div>`;
-  }).join('');
-}
-
-// ======================================================
-// EDITOR
-// ======================================================
-
-function renderEditor() {
-  renderEditorTabs();
-  renderEditorMonths();
-  renderEntryForm();
-}
-
-function renderEditorTabs() {
-  const tabs = document.getElementById('editorPvzTabs');
-  tabs.innerHTML = state.pvzList.map(pvz =>
-    `<button class="pvz-tab ${pvz.id === editorPvzId ? 'active' : ''}"
-      style="--tab-color:${pvz.color}"
-      onclick="selectEditorPvz('${pvz.id}')">
-      <span class="ptdot" style="background:${pvz.color}"></span>${pvz.name}
-    </button>`
-  ).join('');
-
-  // Color the active tab underline
-  document.querySelectorAll('.pvz-tab').forEach(btn => {
-    btn.style.setProperty('--tab-color', btn.querySelector('.ptdot').style.background);
-    btn.querySelector('::after');
-  });
-  // Apply active color via inline style hack
-  const activeTabs = document.querySelectorAll('.pvz-tab.active');
-  activeTabs.forEach(t => {
-    t.style.color = 'var(--text)';
-    // inject after pseudo via CSS var trick
-  });
-}
-
-// Fix tab underline colors dynamically
-document.addEventListener('click', e => {
-  if (e.target.closest('.pvz-tab')) {
-    document.querySelectorAll('.pvz-tab').forEach(t => t.style.removeProperty('border-bottom-color'));
-  }
-});
-
-function selectEditorPvz(id) {
-  editorPvzId = id;
-  editorMonthIdx = 0;
-  renderEditorTabs();
-  renderEditorMonths();
-  renderEntryForm();
-}
-
-function renderEditorMonths() {
-  const sel = document.getElementById('editorMonthSelector');
-  sel.innerHTML = state.months.map((m,i) =>
-    `<button class="mon-btn ${i===editorMonthIdx?'active':''}" onclick="selectEditorMonth(${i})">${m}</button>`
-  ).join('');
-}
-
-function selectEditorMonth(idx) {
-  editorMonthIdx = idx;
-  renderEditorMonths();
-  renderEntryForm();
-}
-
-function getCurrentPvz() {
-  return state.pvzList.find(p => p.id === editorPvzId);
-}
-
-function renderEntryForm() {
-  const pvz = getCurrentPvz();
-  if (!pvz) {
-    document.getElementById('entryForm').innerHTML = `<div style="padding:40px;text-align:center;color:var(--text3)">Выберите ПВЗ</div>`;
-    return;
-  }
-
-  const mIdx = editorMonthIdx;
-  const mName = state.months[mIdx];
-  const income = calcMonthIncome(pvz, mIdx);
-  const expense = calcMonthExpense(pvz, mIdx);
-  const profit = income - expense;
-
-  const incRows = pvz.incomeFields.map(f => buildFieldRow(pvz, mIdx, f, 'income')).join('');
-  const expRows = pvz.expenseFields.map(f => buildFieldRow(pvz, mIdx, f, 'expense')).join('');
-
-  document.getElementById('entryForm').innerHTML = `
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
-      <div>
-        <div style="font-family:'Unbounded',sans-serif;font-size:13px;font-weight:600;">${pvz.name}</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:3px;">Период: ${mName}</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="clearMonthData('${pvz.id}',${mIdx})">✕ Очистить период</button>
-    </div>
-
-    <div class="form-grid">
-      <div class="form-col income-col">
-        <h3>▲ ДОХОДЫ</h3>
-        <div class="field-group" id="incomeFields">${incRows}</div>
-        <div class="custom-fields" id="incomeCustom"></div>
-        <button class="add-field-btn" onclick="addCustomField('income')">＋ Добавить строку дохода</button>
-      </div>
-      <div class="form-col expense-col">
-        <h3>▼ РАСХОДЫ</h3>
-        <div class="field-group" id="expenseFields">${expRows}</div>
-        <div class="custom-fields" id="expenseCustom"></div>
-        <button class="add-field-btn" onclick="addCustomField('expense')">＋ Добавить строку расхода</button>
-      </div>
-    </div>
-
-    <div class="form-summary" id="formSummary">
-      <div class="sum-item"><div class="s-lbl">Доходы</div><div class="s-val pos" id="sum-income">${fmtFull(income)}</div></div>
-      <div class="sum-item"><div class="s-lbl">Расходы</div><div class="s-val neg" id="sum-expense">${fmtFull(expense)}</div></div>
-      <div class="sum-item"><div class="s-lbl">Прибыль</div><div class="s-val ${numClass(profit)}" id="sum-profit">${profit>=0?'+':''}${fmtFull(profit)}</div></div>
-    </div>
-  `;
-}
-
-function buildFieldRow(pvz, mIdx, field, type) {
-  const v = getVal(pvz, mIdx, field.key);
-  const hasVal = v !== 0;
-  return `<div class="field-row" id="row-${field.key}">
-    <label>${field.label}</label>
-    <input type="number" class="${hasVal?'has-val':''}" value="${hasVal ? v : ''}" placeholder="0"
-      oninput="handleInput(this,'${pvz.id}',${mIdx},'${field.key}')"
-      onblur="onBlurSave()" />
-  </div>`;
-}
-
-function handleInput(input, pvzId, mIdx, key) {
-  const pvz = state.pvzList.find(p => p.id === pvzId);
-  if (!pvz) return;
-  if (!pvz.data[mIdx]) pvz.data[mIdx] = {};
-  const val = parseFloat(input.value) || 0;
-  pvz.data[mIdx][key] = val;
-  input.classList.toggle('has-val', val !== 0);
-  updateFormSummary(pvz, mIdx);
-}
-
-function onBlurSave() {
-  saveState();
-  updateHeader();
-  // Quietly refresh charts if overview was rendered
-  if (mainChartInst) {
-    const pvzList = state.pvzList;
-    mainChartInst.data.datasets.forEach((ds, i) => {
-      if (pvzList[i]) {
-        ds.data = state.months.map((_,mi) => calcMonthProfit(pvzList[i], mi));
+        if (isBoth) {
+          const f = td.signed ? fmtSign : fmt;
+          const pShow = td.signed ? pv!==0 : !!pv;
+          const fShow = td.signed ? fv!==0 : !!fv;
+          bh += `<td class="${colCls}" style="min-width:${cw}px">
+            <div class="cell-dual">
+              <div class="cell-plan-line ${pShow?'has-val':'empty'}" style="cursor:default">
+                <span class="line-tag">П</span>${pShow?f(pv):''}
+              </div>
+              <div class="cell-fact-line ${fShow?'has-val fact':'empty'}" style="cursor:default;color:${td.color}">
+                <span class="line-tag">Ф</span>${fShow?f(fv):''}
+              </div>
+            </div>
+          </td>`;
+        } else {
+          const kind = isPlan?'plan':'fact';
+          const val  = isPlan?pv:fv;
+          const f    = td.signed ? fmtSign : fmt;
+          const show = td.signed ? val!==0 : !!val;
+          bh += `<td class="${colCls}" style="min-width:${cw}px">
+            <div class="cell-single ${show?'has-val cum':''}" style="color:${show?td.color:''}">
+              ${show?f(val):''}
+            </div>
+          </td>`;
+        }
       }
-    });
-    mainChartInst.update('none');
+      bh += '</tr>';
+    }
+  }
+
+  document.getElementById('tBody').innerHTML = bh;
+}
+
+// ═══════════════════════════════════════════
+// CELL EDITING
+// ═══════════════════════════════════════════
+function startEdit(lineEl, rowId, day, kind) {
+  if (activeInput) commitEdit(activeInput, true);
+
+  const isBoth = S.mode==='both';
+  const val = getV(rowId, S.year, S.month, day, kind);
+
+  const inp = document.createElement('input');
+  inp.type='number'; inp.min='0';
+  inp.value = val||'';
+  inp.placeholder = '0';
+
+  if (isBoth) {
+    inp.className = `cell-input ${kind}-input`;
+    lineEl.innerHTML = '';
+    lineEl.appendChild(inp);
+  } else {
+    inp.className = `cell-input-full ${kind}-input`;
+    const parent = lineEl.parentElement;
+    parent.innerHTML = '';
+    parent.appendChild(inp);
+  }
+
+  inp.focus(); inp.select();
+  activeInput = { inp, lineEl, rowId, day, kind, isBoth };
+
+  inp.addEventListener('blur', () => {
+    if (activeInput && activeInput.inp===inp) commitEdit(activeInput, true);
+  });
+  inp.addEventListener('keydown', e => {
+    if (e.key==='Enter') {
+      commitEdit(activeInput, true);
+      activeInput = null;
+      moveEdit(rowId, day, kind, 1);
+    }
+    if (e.key==='Escape') {
+      commitEdit(activeInput, false);
+      activeInput = null;
+    }
+    if (e.key==='Tab') {
+      e.preventDefault();
+      commitEdit(activeInput, true);
+      activeInput = null;
+      moveEdit(rowId, day, kind, e.shiftKey?-1:1);
+    }
+  });
+}
+
+function commitEdit(ctx, doSave) {
+  if (!ctx) return;
+  const {inp, rowId, day, kind, isBoth} = ctx;
+  const raw = inp.value.trim();
+  const val = raw===''?0:parseFloat(raw)||0;
+  if (doSave) setV(rowId, S.year, S.month, day, kind, val);
+
+  // Re-render just this cell
+  restoreCell(rowId, day);
+  renderSummary();
+
+  // Update totals
+  updateTotals();
+}
+
+function restoreCell(rowId, day) {
+  const plan = getV(rowId, S.year, S.month, day, 'plan');
+  const fact  = getV(rowId, S.year, S.month, day, 'fact');
+  const row  = S.rows.find(r=>r.id===rowId);
+  if (!row) return;
+
+  // Find the td
+  const td = document.querySelector(`td[data-rid="${rowId}"][data-day="${day}"]`);
+  if (td) {
+    td.innerHTML = buildCellHTML(row, day, plan, fact);
+    return;
+  }
+  // fallback: full table re-render
+  renderTable();
+}
+
+function buildCellHTML(row, day, plan, fact) {
+  const isBoth = S.mode==='both';
+  const isPlan = S.mode==='plan';
+  const cw = isBoth?88:68;
+  if (isBoth) {
+    let devHtml='';
+    if (plan&&fact) {
+      const dev=Math.round((fact-plan)/plan*100);
+      const dc=row.type==='expense'?(dev<=0?'pos':'neg'):devClass(dev);
+      devHtml=`<span class="dev-badge ${dc}">${devText(dev)}</span>`;
+    }
+    const factCls=fact?(row.type==='income'?'inc':row.type==='expense'?'exp':'note'):'';
+    return `<div class="cell-dual">
+      <div class="cell-plan-line ${plan?'has-val':'empty'}" onclick="startEdit(this,'${row.id}',${day},'plan')">
+        <span class="line-tag">П</span>${plan?fmt(plan):''}${devHtml}
+      </div>
+      <div class="cell-fact-line ${fact?'has-val '+factCls:'empty'}" onclick="startEdit(this,'${fact?factCls:''}','${row.id}',${day},'fact')" onclick="startEdit(this,'${row.id}',${day},'fact')">
+        <span class="line-tag">Ф</span>${fact?fmt(fact):''}
+      </div>
+    </div>`;
+  } else {
+    const kind=isPlan?'plan':'fact';
+    const val=isPlan?plan:fact;
+    const valCls=val?(isPlan?'plan':row.type==='income'?'inc':row.type==='expense'?'exp':'note'):'';
+    return `<div class="cell-single ${val?'has-val '+valCls:''}" onclick="startEdit(this,'${row.id}',${day},'${kind}')">
+      ${val?fmt(val):''}
+    </div>`;
   }
 }
 
-function updateFormSummary(pvz, mIdx) {
-  const income = calcMonthIncome(pvz, mIdx);
-  const expense = calcMonthExpense(pvz, mIdx);
-  const profit = income - expense;
-  const si = document.getElementById('sum-income');
-  const se = document.getElementById('sum-expense');
-  const sp = document.getElementById('sum-profit');
-  if (si) si.textContent = fmtFull(income);
-  if (se) se.textContent = fmtFull(expense);
-  if (sp) {
-    sp.textContent = (profit >= 0 ? '+' : '') + fmtFull(profit);
-    sp.className = 's-val ' + numClass(profit);
+function moveEdit(rowId, day, kind, delta) {
+  const days = getDays();
+  const nd = day+delta;
+  if (nd<1||nd>days) return;
+  setTimeout(()=>{
+    const sel = S.mode==='both'
+      ? `td[data-rid="${rowId}"][data-day="${nd}"] .cell-${kind}-line`
+      : `td[data-rid="${rowId}"][data-day="${nd}"] .cell-single`;
+    const el = document.querySelector(sel);
+    if (el) el.click();
+  }, 40);
+}
+
+function updateTotals() {
+  // Re-render total rows by doing a selective update
+  // For simplicity in this build, we re-render the whole table body
+  renderTable();
+}
+
+// ═══════════════════════════════════════════
+// ROW MANAGEMENT
+// ═══════════════════════════════════════════
+function uid(){ return 'r'+Date.now()+Math.random().toString(36).slice(2,5); }
+
+function openAddRow() {
+  selColor = COLORS[Math.floor(Math.random()*COLORS.length)];
+  document.getElementById('rowName').value='';
+  document.getElementById('rowType').value='expense';
+  document.getElementById('modalTitle').textContent='Новая строка';
+  buildColorPicker('colorPicker', selColor, c=>selColor=c);
+  document.getElementById('addRowModal').classList.add('open');
+  setTimeout(()=>document.getElementById('rowName').focus(),80);
+}
+function saveRow() {
+  const name=document.getElementById('rowName').value.trim();
+  if (!name){showToast('Введите название');return;}
+  S.rows.push({id:uid(), name, type:document.getElementById('rowType').value, color:selColor});
+  persist(); closeModal('addRowModal'); render(); showToast('✓ Строка добавлена');
+}
+function openEditRow(rowId) {
+  editingRowId=rowId;
+  const r=S.rows.find(r=>r.id===rowId); if(!r)return;
+  editSelColor=r.color;
+  document.getElementById('editRowName').value=r.name;
+  document.getElementById('editRowType').value=r.type;
+  buildColorPicker('editColorPicker', editSelColor, c=>editSelColor=c);
+  document.getElementById('editRowModal').classList.add('open');
+  setTimeout(()=>document.getElementById('editRowName').focus(),80);
+}
+function saveEditRow() {
+  const name=document.getElementById('editRowName').value.trim();
+  if (!name){showToast('Введите название');return;}
+  const r=S.rows.find(r=>r.id===editingRowId); if(!r)return;
+  r.name=name; r.type=document.getElementById('editRowType').value; r.color=editSelColor;
+  persist(); closeModal('editRowModal'); render(); showToast('✓ Обновлено');
+}
+function deleteRow() {
+  if (!confirm('Удалить строку?')) return;
+  promptDelete(editingRowId,true); closeModal('editRowModal');
+}
+function promptDelete(rowId, skip) {
+  if (!skip&&!confirm('Удалить?')) return;
+  S.rows=S.rows.filter(r=>r.id!==rowId);
+  Object.keys(S.cells).forEach(k=>{ if(k.startsWith(rowId+'_')) delete S.cells[k]; });
+  if (S.filter===rowId) S.filter='all';
+  persist(); render(); showToast('Строка удалена');
+}
+
+// ═══════════════════════════════════════════
+// COLOR PICKER
+// ═══════════════════════════════════════════
+function buildColorPicker(id, selected, onChange) {
+  const el=document.getElementById(id);
+  el.innerHTML=COLORS.map(c=>`<div class="cswatch ${c===selected?'sel':''}"
+    style="background:${c}" onclick="pickC('${id}','${c}')"></div>`).join('');
+  el._cb=onChange;
+}
+function pickC(id, color) {
+  const el=document.getElementById(id);
+  el.querySelectorAll('.cswatch').forEach(s=>s.classList.toggle('sel',s.style.background===color||s.style.backgroundColor===color));
+  if (id==='colorPicker') selColor=color; else editSelColor=color;
+  if (el._cb) el._cb(color);
+}
+
+// ═══════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════
+function changeMonth(d) {
+  S.month+=d;
+  if (S.month>11){S.month=0;S.year++;}
+  if (S.month<0){S.month=11;S.year--;}
+  render();
+}
+function setMode(m, btn) {
+  S.mode=m;
+  document.querySelectorAll('.mtbtn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+function setFilter(id) { S.filter=id; render(); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.overlay').forEach(el=>{
+  el.addEventListener('click', e=>{ if(e.target===el) el.classList.remove('open'); });
+});
+
+function clearMonth() {
+  if (!confirm(`Очистить данные за ${MONTHS[S.month]} ${S.year}?`)) return;
+  const p=`_${S.year}_${S.month}_`;
+  Object.keys(S.cells).forEach(k=>{ if(k.includes(p)) delete S.cells[k]; });
+  persist(); render(); showToast('Месяц очищен');
+}
+
+function exportCSV() {
+  const days=getDays();
+  const header=['Строка','Тип',...Array.from({length:days},(_,i)=>`${i+1} план`),...Array.from({length:days},(_,i)=>`${i+1} факт`)];
+  const csvRows=[header];
+  for (const r of S.rows) {
+    const plans=Array.from({length:days},(_,i)=>getV(r.id,S.year,S.month,i+1,'plan')||'');
+    const facts=Array.from({length:days},(_,i)=>getV(r.id,S.year,S.month,i+1,'fact')||'');
+    csvRows.push([r.name,r.type,...plans,...facts]);
   }
+  const csv=csvRows.map(r=>r.join(';')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`pk_${S.year}_${S.month+1}.csv`;
+  a.click();
+  showToast('✓ CSV экспортирован');
 }
 
-function addCustomField(type) {
-  const pvz = getCurrentPvz();
-  if (!pvz) return;
-  const key = uid();
-  const fieldObj = { key, label: '' };
-  if (type === 'income') pvz.incomeFields.push(fieldObj);
-  else pvz.expenseFields.push(fieldObj);
-  saveState();
-
-  const container = document.getElementById(type === 'income' ? 'incomeCustom' : 'expenseCustom');
-  if (!container) return;
-  const mIdx = editorMonthIdx;
-  const div = document.createElement('div');
-  div.className = 'custom-field-row';
-  div.id = 'custom-' + key;
-  div.innerHTML = `
-    <input type="text" placeholder="Название статьи" value=""
-      oninput="updateFieldLabel(this,'${pvz.id}','${key}','${type}')" />
-    <input type="number" placeholder="0"
-      oninput="handleInput(this,'${pvz.id}',${mIdx},'${key}')"
-      onblur="onBlurSave()" />
-    <button class="del-btn" onclick="removeField('${pvz.id}','${key}','${type}')">×</button>`;
-  container.appendChild(div);
-  div.querySelector('input[type=text]').focus();
+// ═══════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════
+let _tt;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>t.classList.remove('show'),2200);
 }
 
-function updateFieldLabel(input, pvzId, key, type) {
-  const pvz = state.pvzList.find(p => p.id === pvzId);
-  if (!pvz) return;
-  const fields = type === 'income' ? pvz.incomeFields : pvz.expenseFields;
-  const f = fields.find(f => f.key === key);
-  if (f) { f.label = input.value; saveState(); }
-}
-
-function removeField(pvzId, key, type) {
-  const pvz = state.pvzList.find(p => p.id === pvzId);
-  if (!pvz) return;
-  if (type === 'income') pvz.incomeFields = pvz.incomeFields.filter(f => f.key !== key);
-  else pvz.expenseFields = pvz.expenseFields.filter(f => f.key !== key);
-  // Also remove data for this key
-  Object.values(pvz.data).forEach(m => delete m[key]);
-  saveState();
-  const row = document.getElementById('custom-' + key) || document.getElementById('row-' + key);
-  if (row) row.remove();
-  updateFormSummary(pvz, editorMonthIdx);
-  toast('Строка удалена');
-}
-
-function clearMonthData(pvzId, mIdx) {
-  const pvz = state.pvzList.find(p => p.id === pvzId);
-  if (!pvz) return;
-  if (!confirm(`Очистить данные за ${state.months[mIdx]}?`)) return;
-  pvz.data[mIdx] = {};
-  saveState();
-  renderEntryForm();
-  toast('Данные периода очищены');
-}
-
-// ======================================================
-// PVZ MANAGEMENT
-// ======================================================
-
-let selectedColor = '#a855f7';
-
-document.getElementById('colorPicker').addEventListener('click', e => {
-  const cp = e.target.closest('.cpick');
-  if (!cp) return;
-  document.querySelectorAll('.cpick').forEach(c => c.classList.remove('sel'));
-  cp.classList.add('sel');
-  selectedColor = cp.dataset.color;
+// ═══════════════════════════════════════════
+// KEYBOARD
+// ═══════════════════════════════════════════
+document.addEventListener('keydown', e=>{
+  if (e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  if (e.key==='ArrowLeft')  changeMonth(-1);
+  if (e.key==='ArrowRight') changeMonth(1);
+  if (e.key==='n'||e.key==='N') openAddRow();
+  if (e.key==='1') setMode('plan', document.querySelector('.mtbtn.plan'));
+  if (e.key==='2') setMode('fact', document.querySelector('.mtbtn.fact'));
+  if (e.key==='3') setMode('both', document.querySelector('.mtbtn.both'));
 });
 
-function addPvz() {
-  const name = document.getElementById('newPvzName').value.trim();
-  if (!name) { toast('Введите название', 'error'); return; }
-  const id = 'pvz_' + Date.now();
-  state.pvzList.push({
-    id, name, color: selectedColor,
-    incomeFields: JSON.parse(JSON.stringify(DEFAULT_INCOME_FIELDS)),
-    expenseFields: JSON.parse(JSON.stringify(DEFAULT_EXPENSE_FIELDS)),
-    data: {}
-  });
-  saveState();
-  editorPvzId = id;
-  closeModal('modalAddPvz');
-  document.getElementById('newPvzName').value = '';
-  toast(`Добавлен ПВЗ: ${name}`);
-  renderEditor();
-  renderOverview();
-}
-
-function confirmReset() {
-  if (!confirm('Сбросить ВСЕ данные и вернуть демо-состояние?')) return;
-  localStorage.removeItem('pvz_data_v3');
-  state = initDefaultState();
-  editorPvzId = state.pvzList[0].id;
-  editorMonthIdx = 0;
-  mainChartInst = null;
-  renderOverview();
-  renderEditor();
-  toast('Данные сброшены');
-}
-
-// ======================================================
-// MONTH MANAGEMENT
-// ======================================================
-
-function renderMonthsManage() {
-  const list = document.getElementById('monthsManageList');
-  list.innerHTML = state.months.map((m, i) =>
-    `<div class="month-manage-row">
-      <span class="m-name">${m}</span>
-      ${state.months.length > 1 ? `<button class="btn btn-danger btn-sm" onclick="removeMonth(${i})">Удалить</button>` : ''}
-    </div>`
-  ).join('');
-}
-
-function addMonth() {
-  const input = document.getElementById('newMonthName');
-  const name = input.value.trim();
-  if (!name) { toast('Введите название периода', 'error'); return; }
-  state.months.push(name);
-  saveState();
-  input.value = '';
-  renderMonthsManage();
-  toast(`Добавлен период: ${name}`);
-}
-
-function removeMonth(idx) {
-  if (state.months.length <= 1) { toast('Нельзя удалить последний период', 'error'); return; }
-  const name = state.months[idx];
-  if (!confirm(`Удалить период "${name}"? Все данные за него будут потеряны.`)) return;
-  state.months.splice(idx, 1);
-  // Re-index data
-  state.pvzList.forEach(pvz => {
-    const newData = {};
-    Object.entries(pvz.data).forEach(([k, v]) => {
-      const ki = parseInt(k);
-      if (ki < idx) newData[ki] = v;
-      else if (ki > idx) newData[ki - 1] = v;
+// ═══════════════════════════════════════════
+// INIT  — patch renderTable to set data-attrs
+// ═══════════════════════════════════════════
+const _origRenderTable = renderTable;
+// We need td[data-rid][data-day] for restoreCell — patch after build
+function renderTablePatched() {
+  _origRenderTable();
+  // add data attrs to all data tds
+  document.querySelectorAll('#tBody tr').forEach(tr=>{
+    const stickyTd = tr.querySelector('td.sticky-col');
+    if (!stickyTd) return;
+    const btn = stickyTd.querySelector('.ract');
+    if (!btn) return;
+    // extract rowId from onclick
+    const m = btn.getAttribute('onclick').match(/'([^']+)'/);
+    if (!m) return;
+    const rowId = m[1];
+    const dataTds = tr.querySelectorAll('td:not(.sticky-col)');
+    dataTds.forEach((td,i)=>{
+      td.setAttribute('data-rid', rowId);
+      td.setAttribute('data-day', i+1);
     });
-    pvz.data = newData;
   });
-  saveState();
-  if (editorMonthIdx >= state.months.length) editorMonthIdx = state.months.length - 1;
-  renderMonthsManage();
-  renderEditorMonths();
-  toast(`Период "${name}" удалён`);
 }
 
-// ======================================================
-// MODALS
-// ======================================================
+hydrate();
+renderTablePatched();
+renderSidebar();
+renderSummary();
+renderLegend();
+document.getElementById('monthLabel').textContent=`${MONTHS[S.month]} ${S.year}`;
 
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+// Override render to also patch
+const _baseRender = render;
+window.render = function() {
+  _baseRender();
+  // patch data-attrs
+  document.querySelectorAll('#tBody tr').forEach(tr=>{
+    const stickyTd = tr.querySelector('td.sticky-col');
+    if (!stickyTd) return;
+    const btn = stickyTd.querySelector('[onclick*="openEditRow"]');
+    if (!btn) return;
+    const m = btn.getAttribute('onclick').match(/'([^']+)'/);
+    if (!m) return;
+    const rowId = m[1];
+    tr.querySelectorAll('td:not(.sticky-col)').forEach((td,i)=>{
+      td.setAttribute('data-rid', rowId);
+      td.setAttribute('data-day', i+1);
+    });
+  });
+};
 
-document.querySelectorAll('.modal-overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) closeModal(el.id); });
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(el => closeModal(el.id));
-});
-
-// ======================================================
-// INIT
-// ======================================================
-
-renderOverview();
+setTimeout(()=>{
+  const tod = document.querySelector('th.tod');
+  if (tod) tod.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+},200);
 </script>
 </body>
 </html>
