@@ -427,6 +427,17 @@ async function initApp(){
   // seed defaults — только для новых пользователей
   if(!D.accounts.length) D.accounts=DEFAULT_ACCOUNTS;
   if(!D.items.length) D.items=DEFAULT_ITEMS;
+  // migrate old single vvd to 3 separate items
+  const oldIdx=D.items.findIndex(i=>i.id==='e_vvd');
+  if(oldIdx>=0){
+    const old=D.items[oldIdx];
+    const amt=Math.round((Number(old.amount)||0)/3);
+    D.items.splice(oldIdx,1,
+      {id:'e_vvd1', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 1', pvzAddr:null, amount:amt, day:1, repeat:'monthly', taxable:false, color:old.color||'#e879f9'},
+      {id:'e_vvd2', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 2', pvzAddr:null, amount:amt, day:10, repeat:'monthly', taxable:false, color:old.color||'#e879f9'},
+      {id:'e_vvd3', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 3', pvzAddr:null, amount:amt, day:20, repeat:'monthly', taxable:false, color:old.color||'#e879f9'}
+    );
+  }
   D.settings=D.settings||{taxRate:7,taxBase:'all'};
   saveL();
   if(dbOk){try{await sUp('kp_data',[{key:'main',data:D}]);}catch(e){}}
@@ -520,7 +531,9 @@ const DEFAULT_ITEMS=[
     }))
   ),
   // ── ОБЩИЕ РАСХОДЫ (без привязки к ПВЗ) ──
-  {id:'e_vvd', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное)', pvzAddr:null, amount:0, days:[1], repeat:'monthly', taxable:false, color:'#e879f9'},
+  {id:'e_vvd1', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 1', pvzAddr:null, amount:0, day:1, repeat:'monthly', taxable:false, color:'#e879f9'},
+  {id:'e_vvd2', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 2', pvzAddr:null, amount:0, day:10, repeat:'monthly', taxable:false, color:'#e879f9'},
+  {id:'e_vvd3', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 3', pvzAddr:null, amount:0, day:20, repeat:'monthly', taxable:false, color:'#e879f9'},
 ];
 
 // ══════════════════════════════════
@@ -553,7 +566,7 @@ function showToast(m){const t=document.getElementById('toast');t.textContent=m;t
 // ══════════════════════════════════
 // CASHFLOW LOGIC
 // ══════════════════════════════════
-function buildDailyCF(year,month){
+function buildDailyCF(year,month,startOverride){
   const days=getDays(year,month);
   const taxRate=(D.settings.taxRate||7)/100;
   const taxBase=D.settings.taxBase||'all';
@@ -562,8 +575,9 @@ function buildDailyCF(year,month){
   const taxMonths=[2,5,8,11];
   const isTaxMonth=taxMonths.includes(month);
 
-  // starting balance
-  const startBalance=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+  // starting balance — use override if given, else current accounts sum
+  const rawBalance=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+  const startBalance=startOverride!==undefined?startOverride:rawBalance;
 
   // build day-level events
   const events={};
@@ -649,7 +663,50 @@ function buildDailyCF(year,month){
     daily.push({d,events:dayEvents,income:dayIncome,expense:dayExpense,net:dayNet,balance,we:isWe(year,month,d),tod:isToday(year,month,d)});
   }
 
-  return {daily,startBalance,taxAmount,taxableIncome,isTaxMonth};
+  return {daily,startBalance:rawBalance,taxAmount,taxableIncome,isTaxMonth};
+}
+
+// compute projected balance at day 1 of (year,month)
+function getMonthStartBalance(year,month){
+  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
+  const current=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+
+  // same month → undo events from day 1 to yesterday
+  if(year===cy&&month===cm){
+    const cf=buildDailyCF(year,month,0);
+    let net=0;
+    for(let d=1;d<cd;d++) net+=cf.daily[d-1]?.net||0;
+    return current-net;
+  }
+
+  // past month → undo all events from target day 1 to today
+  if(year<cy||(year===cy&&month<cm)){
+    let net=0, y=year, m=month;
+    while(y<cy||(y===cy&&m<=cm)){
+      const cf=buildDailyCF(y,m,0);
+      const dim=getDays(y,m);
+      for(let d=1;d<=dim;d++){
+        if(y===year&&m===month&&d===1) continue;
+        if(y===cy&&m===cm&&d>cd) break;
+        net+=cf.daily[d-1]?.net||0;
+      }
+      m++; if(m>11){m=0;y++;}
+    }
+    return current-net;
+  }
+
+  // future month → add events from today to end of prev month
+  let net=0, y=cy, m=cm;
+  while(y<year||(y===year&&m<month)){
+    const cf=buildDailyCF(y,m,0);
+    const dim=getDays(y,m);
+    for(let d=1;d<=dim;d++){
+      if(y===cy&&m===cm&&d<cd) continue;
+      net+=cf.daily[d-1]?.net||0;
+    }
+    m++; if(m>11){m=0;y++;}
+  }
+  return current+net;
 }
 
 // ══════════════════════════════════
@@ -658,9 +715,10 @@ function buildDailyCF(year,month){
 function renderAll(){
   document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
   document.getElementById('monthSub').textContent='';
-  renderKPI();
+  const msb=getMonthStartBalance(curYear,curMonth);
+  renderKPI(msb);
   renderAccounts();
-  renderCashflow();
+  renderCashflow(msb);
   renderSettings();
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
@@ -668,8 +726,8 @@ function renderAll(){
   document.getElementById('paidToday').checked=D.settings.paidToday||false;
 }
 
-function renderKPI(){
-  const {daily,startBalance,taxAmount,taxableIncome}=buildDailyCF(curYear,curMonth);
+function renderKPI(msb){
+  const {daily,startBalance,taxAmount,taxableIncome}=buildDailyCF(curYear,curMonth,msb);
   const totalIncome=D.items.filter(i=>i.type==='income').reduce((s,i)=>s+(Number(i.amount)||0),0);
   const totalExpense=daily.reduce((s,d)=>s+Math.abs(d.expense),0)+taxAmount;
   const endBalance=daily.length?daily[daily.length-1].balance:startBalance;
@@ -711,8 +769,8 @@ function renderAccounts(){
     </div>`;
 }
 
-function renderCashflow(){
-  const {daily}=buildDailyCF(curYear,curMonth);
+function renderCashflow(msb){
+  const {daily}=buildDailyCF(curYear,curMonth,msb);
   const incomeItems=D.items.filter(i=>i.type==='income'&&(Number(i.amount)||0)>0);
   const expItems=D.items.filter(i=>i.type==='expense'&&(Number(i.amount)||0)>0);
 
