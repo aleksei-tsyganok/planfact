@@ -7,27 +7,27 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0a0c10;--s1:#111418;--s2:#181c23;--s3:#1f242d;--s4:#272d38;--s5:#2f3644;
-  --brd:rgba(255,255,255,0.07);--brd2:rgba(255,255,255,0.13);
-  --acc:#34d399;--acc-d:rgba(52,211,153,0.1);--acc-m:rgba(52,211,153,0.2);
-  --blue:#60a5fa;--blue-d:rgba(96,165,250,0.1);
-  --red:#f87171;--red-d:rgba(248,113,113,0.1);
-  --amber:#fbbf24;--amber-d:rgba(251,191,36,0.1);
-  --grn:#4ade80;--grn-d:rgba(74,222,128,0.1);
-  --plan:#818cf8;--plan-d:rgba(129,140,248,0.1);
+  --bg:#080b12;--s1:rgba(18,22,32,0.88);--s2:rgba(24,28,40,0.78);--s3:rgba(30,35,48,0.66);--s4:rgba(38,43,58,0.54);--s5:rgba(46,52,68,0.44);
+  --brd:rgba(255,255,255,0.06);--brd2:rgba(255,255,255,0.10);
+  --acc:#34d399;--acc-d:rgba(52,211,153,0.12);--acc-m:rgba(52,211,153,0.22);
+  --blue:#60a5fa;--blue-d:rgba(96,165,250,0.12);
+  --red:#f87171;--red-d:rgba(248,113,113,0.12);
+  --amber:#fbbf24;--amber-d:rgba(251,191,36,0.12);
+  --grn:#4ade80;--grn-d:rgba(74,222,128,0.12);
+  --plan:#818cf8;--plan-d:rgba(129,140,248,0.12);
   --t1:#f0f4f8;--t2:#94a3b8;--t3:#4b5a6e;--t4:#2a3344;
-  --r:12px;--rsm:8px;
+  --r:14px;--rsm:10px;
   --f:'Inter',-apple-system,sans-serif;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--t1);font-family:var(--f);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100dvh}
+body{background:var(--bg);color:var(--t1);font-family:var(--f);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100dvh;background-image:radial-gradient(ellipse at 25% 30%,rgba(52,211,153,.04) 0%,transparent 60%),radial-gradient(ellipse at 75% 20%,rgba(96,165,250,.04) 0%,transparent 60%),radial-gradient(ellipse at 50% 80%,rgba(129,140,248,.03) 0%,transparent 60%)}
 
 /* NAV */
-.topbar{position:sticky;top:0;z-index:50;background:rgba(10,12,16,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:12px;padding:0 20px;height:52px;flex-shrink:0}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(8,11,18,0.82);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--brd);display:flex;align-items:center;gap:12px;padding:0 20px;height:52px;flex-shrink:0}
 .logo{font-size:15px;font-weight:800;color:var(--acc);letter-spacing:-.5px}
 .logo span{color:var(--t3);font-weight:400}
-.nav-tabs{display:flex;gap:2px;background:var(--s3);border:1px solid var(--brd);border-radius:var(--rsm);padding:3px;margin-left:auto}
+.nav-tabs{display:flex;gap:2px;background:var(--s3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--brd);border-radius:var(--rsm);padding:3px;margin-left:auto}
 .ntab{padding:5px 14px;border-radius:6px;border:none;background:none;color:var(--t3);font-family:var(--f);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
 .ntab.active{background:var(--s5);color:var(--t1)}
 .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .3s}
@@ -45,7 +45,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--f);font-size:14px;li
 /* ══ DASHBOARD ══ */
 /* top KPI bar */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:20px}
-.kpi{background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);padding:14px 16px}
+.kpi{background:var(--s2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:var(--r);padding:14px 16px;box-shadow:0 4px 24px rgba(0,0,0,.3)}
 .kpi-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:6px}
 .kpi-val{font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px}
 .kpi-val.g{color:var(--grn)}.kpi-val.r{color:var(--red)}.kpi-val.a{color:var(--acc)}.kpi-val.b{color:var(--blue)}.kpi-val.p{color:var(--plan)}.kpi-val.am{color:var(--amber)}
@@ -58,7 +58,7 @@ body{background:var(--bg);color:var(--t1);font-family:var(--f);font-size:14px;li
 .sec-action:hover{background:var(--s3);color:var(--t1)}
 
 .accounts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-bottom:20px}
-.acct-card{background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .15s;-webkit-tap-highlight-color:transparent}
+.acct-card{background:var(--s2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px;cursor:pointer;transition:border-color .15s;box-shadow:0 4px 20px rgba(0,0,0,.25);-webkit-tap-highlight-color:transparent}
 .acct-card:hover{border-color:var(--brd2)}
 .acct-card.editing{border-color:var(--acc);background:var(--acc-d)}
 .acct-name{font-size:11px;font-weight:600;color:var(--t2);margin-bottom:6px;display:flex;align-items:center;gap:6px}
@@ -67,15 +67,15 @@ body{background:var(--bg);color:var(--t1);font-family:var(--f);font-size:14px;li
 .acct-input{width:100%;background:none;border:none;outline:none;font-family:var(--f);font-size:19px;font-weight:700;color:var(--t1);padding:0}
 
 /* DAILY CASHFLOW TABLE */
-.cf-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--brd);margin-bottom:20px}
+.cf-wrap{overflow-x:auto;border-radius:var(--r);border:1px solid var(--brd);margin-bottom:20px;background:var(--s1);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 4px 24px rgba(0,0,0,.3)}
 .cf-table{border-collapse:collapse;min-width:100%;font-size:12px}
-.cf-table th{background:var(--s2);border-bottom:1px solid var(--brd);border-right:1px solid var(--brd);padding:8px 10px;white-space:nowrap;font-weight:600;color:var(--t2);text-align:right;position:sticky;top:0;z-index:10}
-.cf-table th:first-child{text-align:left;position:sticky;left:0;z-index:20;background:var(--s3);min-width:180px}
+.cf-table th{background:rgba(24,28,40,0.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--brd);border-right:1px solid var(--brd);padding:8px 10px;white-space:nowrap;font-weight:600;color:var(--t2);text-align:right;position:sticky;top:0;z-index:10}
+.cf-table th:first-child{text-align:left;position:sticky;left:0;z-index:20;background:rgba(30,35,48,0.96);min-width:180px}
 .cf-table th.today-col{background:rgba(52,211,153,.08)!important;color:var(--acc)!important;border-bottom:2px solid var(--acc)!important}
 .cf-table td{border-right:1px solid var(--brd);border-bottom:1px solid rgba(255,255,255,.03);padding:7px 10px;text-align:right;vertical-align:middle;white-space:nowrap}
-.cf-table td:first-child{text-align:left;position:sticky;left:0;z-index:5;background:var(--s2);border-right:1px solid var(--brd);font-weight:500;font-size:12px}
+.cf-table td:first-child{text-align:left;position:sticky;left:0;z-index:5;background:rgba(24,28,40,0.93);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-right:1px solid var(--brd);font-weight:500;font-size:12px}
 .cf-table tr:hover td{background:rgba(255,255,255,.02)}
-.cf-table tr:hover td:first-child{background:var(--s3)}
+.cf-table tr:hover td:first-child{background:rgba(30,35,48,0.95)}
 /* weekend */
 th.we-col{opacity:.6}
 td.we-col{background:rgba(248,113,113,.015)!important}
@@ -103,14 +103,14 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 
 /* month nav */
 .month-nav{display:flex;align-items:center;gap:8px;margin-bottom:16px}
-.mnav-btn{width:32px;height:32px;background:var(--s3);border:1px solid var(--brd);color:var(--t1);border-radius:var(--rsm);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .1s;flex-shrink:0}
+.mnav-btn{width:32px;height:32px;background:var(--s3);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--brd);color:var(--t1);border-radius:var(--rsm);cursor:pointer;font-size:15px;display:flex;align-items:center;justify-content:center;transition:background .1s;flex-shrink:0}
 .mnav-btn:hover{background:var(--s4)}
 .month-label{font-size:16px;font-weight:700;color:var(--t1)}
 .month-sub{font-size:12px;color:var(--t3);margin-left:8px}
 
 /* ══ SETTINGS ══ */
-.settings-section{background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
-.settings-section-title{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--brd);background:var(--s3)}
+.settings-section{background:var(--s2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:var(--r);margin-bottom:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.3)}
+.settings-section-title{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--brd);background:var(--s3);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 .ss-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--t2)}
 .ss-add-btn{background:var(--acc-d);border:1px solid rgba(52,211,153,.25);color:var(--acc);font-family:var(--f);font-size:12px;font-weight:600;padding:5px 12px;border-radius:6px;cursor:pointer;transition:all .12s}
 .ss-add-btn:hover{background:var(--acc-m)}
@@ -122,8 +122,8 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .item-name{flex:1;font-size:13px;font-weight:500;color:var(--t1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item-amount{font-size:13px;font-weight:600;min-width:100px;text-align:right}
 .item-amount.inc{color:var(--grn)}.item-amount.exp{color:var(--red)}.item-amount.tax{color:var(--amber)}
-.item-day-badge{background:var(--s4);border:1px solid var(--brd);border-radius:5px;padding:2px 7px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap;flex-shrink:0}
-.item-repeat-badge{background:var(--plan-d);border:1px solid rgba(129,140,248,.2);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--plan);white-space:nowrap;flex-shrink:0}
+.item-day-badge{background:rgba(38,43,58,0.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--brd);border-radius:6px;padding:2px 7px;font-size:11px;font-weight:600;color:var(--t2);white-space:nowrap;flex-shrink:0}
+.item-repeat-badge{background:rgba(129,140,248,.12);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(129,140,248,.2);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:600;color:var(--plan);white-space:nowrap;flex-shrink:0}
 .item-del{background:none;border:none;color:var(--t4);cursor:pointer;font-size:16px;padding:2px 4px;border-radius:4px;line-height:1;flex-shrink:0;transition:color .1s}
 .item-del:hover{color:var(--red)}
 .item-edit{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;padding:2px 6px;border-radius:4px;line-height:1;flex-shrink:0;font-family:var(--f);transition:color .1s}
@@ -131,10 +131,10 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .auto-tag{background:var(--amber-d);border:1px solid rgba(251,191,36,.25);color:var(--amber);font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;white-space:nowrap}
 
 /* MODAL */
-.overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(8px);z-index:100;display:none;align-items:flex-end;justify-content:center}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:100;display:none;align-items:flex-end;justify-content:center}
 .overlay.open{display:flex}
 @media(min-width:600px){.overlay{align-items:center}}
-.modal{background:var(--s2);border:1px solid var(--brd2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px 20px 36px;max-height:92dvh;overflow-y:auto}
+.modal{background:var(--s2);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--brd2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px 20px 36px;max-height:92dvh;overflow-y:auto;box-shadow:0 -8px 40px rgba(0,0,0,.4)}
 @media(min-width:600px){.modal{border-radius:16px;max-height:80vh}}
 .mhandle{width:36px;height:4px;background:var(--s5);border-radius:2px;margin:0 auto 18px}
 .mtitle{font-size:17px;font-weight:700;margin-bottom:18px}
@@ -156,7 +156,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .csw.sel{border-color:var(--t1);transform:scale(1.15)}
 
 /* TOAST */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--s4);border:1px solid var(--brd2);border-radius:20px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--t1);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:300}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--s4);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--brd2);border-radius:20px;padding:10px 20px;font-size:13px;font-weight:500;color:var(--t1);opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;z-index:300}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
 /* LOADING */
@@ -167,14 +167,51 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .loader-text{font-size:13px;color:var(--t3);font-weight:500}
 
 /* DANGER ZONE at bottom */
-.free-money-bar{display:flex;align-items:center;justify-content:space-between;background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;gap:16px;flex-wrap:wrap}
+.free-money-bar{display:flex;align-items:center;justify-content:space-between;background:var(--s2);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid var(--brd);border-radius:var(--r);padding:16px 20px;margin-bottom:20px;gap:16px;flex-wrap:wrap;box-shadow:0 4px 24px rgba(0,0,0,.3)}
 .fm-label{font-size:12px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
 .fm-val{font-size:28px;font-weight:800;letter-spacing:-.5px}
 .fm-val.ok{color:var(--acc)}.fm-val.warn{color:var(--amber)}.fm-val.bad{color:var(--red)}
 .fm-desc{font-size:12px;color:var(--t3);margin-top:2px}
 
+.cat-header{display:flex;align-items:center;gap:8px;padding:10px 16px;cursor:pointer;user-select:none;border-bottom:1px solid var(--brd);position:relative;border-left:3px solid transparent}
+.cat-header.inc{border-left-color:var(--grn);background:linear-gradient(90deg,rgba(74,222,128,.08),var(--s3))}
+.cat-header.exp{border-left-color:var(--red);background:linear-gradient(90deg,rgba(248,113,113,.08),var(--s3))}
+.cat-header::before{content:'▼';margin-right:8px;font-size:8px;transition:transform .15s;color:var(--t3)}
+.cat-header.collapsed::before{transform:rotate(-90deg)}
+.cat-body{overflow:hidden;transition:max-height .2s;margin:0 0 10px 18px;border-left:2px solid var(--brd);padding-left:6px}
+.cat-body.collapsed{max-height:0!important;border-left-color:transparent}
+.cat-body .item-row{padding-left:14px;border-left:2px solid var(--brd);margin-top:2px;border-radius:0 6px 6px 0}
+.cat-body .item-row:last-child{border-bottom:none}
+.cat-body .item-row:hover{background:rgba(255,255,255,.02)}
+.ie-amt{background:var(--s3);border:1px solid var(--brd2);border-radius:4px;color:var(--t1);font-family:var(--f);font-size:inherit;width:80px;padding:2px 6px;outline:none;font-weight:600;text-align:right}
+.ie-rep{background:var(--plan-d);border:1px solid rgba(129,140,248,.2);border-radius:4px;color:var(--plan);font-family:var(--f);font-size:10px;padding:1px 4px;outline:none;font-weight:600}
+.item-amount[data-id],.item-repeat-badge[data-id]{cursor:pointer}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-thumb{background:var(--s5);border-radius:3px}
+@media(max-width:599px){
+  body{font-size:12px}
+  .cf-table{font-size:10px}
+  .cf-table td{padding:5px 6px}
+  .cf-table th{padding:6px 6px}
+  .cf-table th:first-child{min-width:120px}
+  .kpi{padding:10px 12px}
+  .kpi-label{font-size:9px}
+  .kpi-val{font-size:17px}
+  .acct-card{padding:10px 12px}
+  .acct-val{font-size:15px}
+  .item-row{padding:8px 12px}
+  .item-name{font-size:12px}
+  .item-amount{font-size:12px;min-width:70px}
+  .modal{padding:16px 16px 28px}
+  .finput,.fselect{font-size:14px;padding:10px 12px}
+  .month-label{font-size:14px}
+  .fm-val{font-size:22px}
+  .cat-header::before{font-size:8px}
+  .ss-title{font-size:11px}
+  .section-title{font-size:10px}
+  .topbar{padding:0 12px}
+  .logo{font-size:13px}
+}
 </style>
 </head>
 <body>
@@ -370,10 +407,12 @@ async function initApp(){
     dbOk=false; ss('err');
     console.warn('DB:',e);
   }
-  // seed defaults if empty
+  // seed defaults — структура изменилась, принудительно
   if(!D.accounts.length) D.accounts=DEFAULT_ACCOUNTS;
-  if(!D.items.length) D.items=DEFAULT_ITEMS;
+  D.items=DEFAULT_ITEMS;
   D.settings=D.settings||{taxRate:7,taxBase:'all',taxDay:25};
+  saveL();
+  if(dbOk){try{await sUp('kp_data',[{key:'main',data:D}]);}catch(e){}}
 
   hideLoader(); renderAll();
   setInterval(trySync,45000);
@@ -430,32 +469,40 @@ const PVZ_SERVICES=[
   {key:'dp', name:'DPD',                       color:'#38bdf8', day:10},
 ];
 
-// Генерируем доходы: каждая услуга = одна строка (итого по всем ПВЗ),
-// плюс расходы по каждому ПВЗ отдельно
+// Категории расходов
+const EXP_CATS=[
+  {key:'ar',  name:'Аренда + коммуналка',          defaultDay:5},
+  {key:'in',  name:'Интернет + камеры',            defaultDay:10},
+  {key:'zp',  name:'Заработная плата',             defaultDay:5},
+  {key:'knc', name:'Канцелярия / хоз / ремонт',    defaultDay:15},
+];
+
 const DEFAULT_ITEMS=[
-  // ── ДОХОДЫ ПВЗ (по видам услуг) ──
-  ...PVZ_SERVICES.map(s=>({
-    id:'i_'+s.key, name:s.name, color:s.color,
-    type:'income', amount:0, day:s.day,
-    repeat:'monthly', taxable:true, pvz:true,
-  })),
+  // ── ДОХОДЫ ПВЗ (категория + ПВЗ) ──
+  ...PVZ_SERVICES.flatMap(s=>{
+    const svcPvzKeys={'ye':['p12','p08','p11','p09','p10'],'yv':['p01','p04','p07','p05','p03'],'sl':['p01','p13']}[s.key];
+    return (svcPvzKeys?PVZ_LIST.filter(p=>svcPvzKeys.includes(p.key)):PVZ_LIST)
+    .map(p=>({
+      id:'i_'+s.key+'_'+p.key, type:'income',
+      categoryKey:s.key, category:s.name,
+      pvzAddr:p.key, amount:0, day:s.day,
+      repeat:'monthly', taxable:true, color:p.color,
+    }));
+  }),
   // ── ДРУГИЕ ДОХОДЫ ──
-  {id:'i_w',    name:'W',                   color:'#4ade80', type:'income', amount:0, day:5,  repeat:'monthly', taxable:true,  pvz:false},
-  {id:'i_rent', name:'Аренда Стасовой 50г', color:'#a3e635', type:'income', amount:0, day:5,  repeat:'monthly', taxable:false, pvz:false},
-  // ── РАСХОДЫ ПО ПВЗ (аренда + коммуналка по каждому) ──
-  ...PVZ_LIST.map(p=>({
-    id:'e_ar_'+p.key, name:'Аренда+ком — '+p.name, color:p.color,
-    type:'expense', amount:0, day:5, repeat:'monthly', pvzAddr:p.key,
-  })),
-  // ── РАСХОДЫ ПО ПВЗ (интернет + камеры по каждому) ──
-  ...PVZ_LIST.map(p=>({
-    id:'e_in_'+p.key, name:'Интернет+камеры — '+p.name, color:p.color,
-    type:'expense', amount:0, day:10, repeat:'monthly', pvzAddr:p.key,
-  })),
-  // ── ОБЩИЕ РАСХОДЫ ──
-  {id:'e_zp',   name:'Заработная плата',          color:'#f472b6', type:'expense', amount:0, day:5,  repeat:'monthly'},
-  {id:'e_knc',  name:'Канцелярия / хоз / ремонт', color:'#94a3b8', type:'expense', amount:0, day:15, repeat:'monthly'},
-  {id:'e_vvd',  name:'Вывод себе (личное)',        color:'#e879f9', type:'expense', amount:0, day:1,  repeat:'monthly'},
+  {id:'i_w',    type:'income', categoryKey:'w',    category:'W',                   pvzAddr:null, amount:0, day:5,  repeat:'monthly', taxable:true,  color:'#4ade80'},
+  {id:'i_rent', type:'income', categoryKey:'rent', category:'Аренда Стасовой 50г', pvzAddr:null, amount:0, day:5,  repeat:'monthly', taxable:false, color:'#a3e635'},
+  // ── РАСХОДЫ (категория + ПВЗ) ──
+  ...EXP_CATS.flatMap(cat=>
+    PVZ_LIST.map(p=>({
+      id:'e_'+cat.key+'_'+p.key, type:'expense',
+      categoryKey:cat.key, category:cat.name,
+      pvzAddr:p.key, amount:0, day:cat.defaultDay,
+      repeat:'monthly', taxable:false, color:p.color,
+    }))
+  ),
+  // ── ОБЩИЕ РАСХОДЫ (без привязки к ПВЗ) ──
+  {id:'e_vvd', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное)', pvzAddr:null, amount:0, day:1, repeat:'monthly', taxable:false, color:'#e879f9'},
 ];
 
 // ══════════════════════════════════
@@ -510,11 +557,11 @@ function buildDailyCF(year,month){
     if(item.repeat==='weekly'){
       const startDay=Math.min(parseInt(item.day)||1,days);
       for(let d=startDay;d<=days;d+=7){
-        events[d].push({name:item.name,amount:Number(item.amount),type:'income',color:item.color,id:item.id});
+        events[d].push({name:item.category,amount:Number(item.amount),type:'income',color:item.color,id:item.id});
       }
     } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
       const d=Math.min(parseInt(item.day)||1,days);
-      events[d].push({name:item.name,amount:Number(item.amount),type:'income',color:item.color,id:item.id});
+      events[d].push({name:item.category,amount:Number(item.amount),type:'income',color:item.color,id:item.id});
     }
   }
 
@@ -522,8 +569,8 @@ function buildDailyCF(year,month){
   let taxableIncome=0;
   for(const item of incomes){
     if(!item.taxable)continue;
-    if(taxBase==='pvz'&&!item.pvz)continue;
-    if(taxBase==='pvz_w'&&!item.pvz&&item.name!=='W')continue;
+    if(taxBase==='pvz'&&!item.pvzAddr)continue;
+    if(taxBase==='pvz_w'&&!item.pvzAddr&&item.categoryKey!=='w')continue;
     taxableIncome+=Number(item.amount)||0;
   }
   const taxAmount=Math.round(taxableIncome*taxRate);
@@ -535,12 +582,12 @@ function buildDailyCF(year,month){
     if(item.repeat==='weekly'){
       const startDay2=Math.min(parseInt(item.day)||1,days);
       for(let d2=startDay2;d2<=days;d2+=7){
-        events[d2].push({name:item.name,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
+        events[d2].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
       }
     } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
-      events[d].push({name:item.name,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
+      events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
     } else if(item.repeat==='quarterly'){
-      events[d].push({name:item.name,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
+      events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
     }
   }
 
@@ -627,15 +674,7 @@ function renderAccounts(){
 function renderCashflow(){
   const {daily}=buildDailyCF(curYear,curMonth);
   const incomeItems=D.items.filter(i=>i.type==='income'&&(Number(i.amount)||0)>0);
-
-  // For expenses: group PVZ items by address, sum them; show general expenses as-is
-  const pvzExpItems=D.items.filter(i=>i.type==='expense'&&i.pvzAddr&&(Number(i.amount)||0)>0);
-  const genExpItems=D.items.filter(i=>i.type==='expense'&&!i.pvzAddr&&(Number(i.amount)||0)>0);
-
-  // Build per-PVZ-address aggregated rows
-  const pvzAddrKeys=[...new Set(pvzExpItems.map(i=>i.pvzAddr))];
-  // For each PVZ address: sum all expense items on that address per day
-  // We need a virtual "row" per address
+  const expItems=D.items.filter(i=>i.type==='expense'&&(Number(i.amount)||0)>0);
 
   const itemDayMap={}; // itemId -> {day: amount}
   const taxDayMap={};
@@ -650,19 +689,6 @@ function renderCashflow(){
     }
   }
 
-  // Build PVZ address aggregated day maps
-  const pvzAddrDayMap={}; // addrKey -> {day: totalAmount}
-  for(const key of pvzAddrKeys){
-    pvzAddrDayMap[key]={};
-    const addrItems=pvzExpItems.filter(i=>i.pvzAddr===key);
-    for(const item of addrItems){
-      const dm=itemDayMap[item.id]||{};
-      for(const [d,v] of Object.entries(dm)){
-        pvzAddrDayMap[key][d]=(pvzAddrDayMap[key][d]||0)+v;
-      }
-    }
-  }
-
   const days=daily.length;
   const cols=daily;
 
@@ -673,12 +699,19 @@ function renderCashflow(){
   }
   html+='</tr></thead><tbody>';
 
-  // ── INCOME ──
+  // ── INCOME (grouped by categoryKey) ──
   html+=`<tr class="row-section"><td colspan="${days+1}">Доходы</td></tr>`;
+
+  const incGroups={};
   for(const item of incomeItems){
-    html+=`<tr class="row-income"><td>${item.name}</td>`;
+    const key=item.categoryKey||item.id;
+    if(!incGroups[key]) incGroups[key]={name:item.category||item.id,items:[]};
+    incGroups[key].items.push(item);
+  }
+  for(const [key,grp] of Object.entries(incGroups)){
+    html+=`<tr class="row-income"><td>${grp.name}</td>`;
     for(const day of cols){
-      const v=itemDayMap[item.id]?itemDayMap[item.id][day.d]:0;
+      const v=grp.items.reduce((s,it)=>s+((itemDayMap[it.id]||{})[day.d]||0),0);
       const cl=(day.we?'we-col':'')+(day.tod?' today-col':'');
       html+=`<td class="${cl} ${v?'val-pos':'val-zero'}">${v?fmt(v):''}</td>`;
     }
@@ -691,16 +724,25 @@ function renderCashflow(){
   }
   html+='</tr>';
 
-  // ── EXPENSES ──
+  // ── EXPENSES (per PVZ, all categories aggregated) ──
   html+=`<tr class="row-section"><td colspan="${days+1}">Расходы по ПВЗ</td></tr>`;
-  const orderedPvzKeys=PVZ_LIST.map(p=>p.key).filter(k=>pvzAddrKeys.includes(k));
-  for(const key of orderedPvzKeys){
-    const pvzMeta=PVZ_LIST.find(p=>p.key===key);
-    const dm=pvzAddrDayMap[key]||{};
+
+  const pvzExpDayMap={}; // pvzAddr -> {day: totalAmount}
+  for(const item of expItems.filter(i=>i.pvzAddr)){
+    const dm=itemDayMap[item.id]||{};
+    for(const [d,v] of Object.entries(dm)){
+      if(!pvzExpDayMap[item.pvzAddr]) pvzExpDayMap[item.pvzAddr]={};
+      pvzExpDayMap[item.pvzAddr][d]=(pvzExpDayMap[item.pvzAddr][d]||0)+v;
+    }
+  }
+
+  for(const pvz of PVZ_LIST){
+    const dm=pvzExpDayMap[pvz.key]||{};
+    if(!Object.values(dm).some(v=>v>0)) continue;
     html+=`<tr class="row-expense"><td style="padding-left:12px">
       <div style="display:flex;align-items:center;gap:6px">
-        <div style="width:6px;height:6px;border-radius:50%;background:${pvzMeta?.color||'#94a3b8'};flex-shrink:0"></div>
-        ${pvzMeta?.name||key}
+        <div style="width:6px;height:6px;border-radius:50%;background:${pvz.color};flex-shrink:0"></div>
+        ${pvz.name}
       </div></td>`;
     for(const day of cols){
       const v=dm[day.d]||0;
@@ -710,10 +752,12 @@ function renderCashflow(){
     html+='</tr>';
   }
 
+  // non-PVZ expenses
+  const genExpItems=expItems.filter(i=>!i.pvzAddr);
   if(genExpItems.length){
     html+=`<tr class="row-section"><td colspan="${days+1}">Общие расходы</td></tr>`;
     for(const item of genExpItems){
-      html+=`<tr class="row-expense"><td>${item.name}</td>`;
+      html+=`<tr class="row-expense"><td>${item.category||item.id}</td>`;
       for(const day of cols){
         const v=itemDayMap[item.id]?itemDayMap[item.id][day.d]:0;
         const cl=(day.we?'we-col':'')+(day.tod?' today-col':'');
@@ -777,80 +821,136 @@ function renderSettings(){
       <button class="item-del" onclick="delItem('account','${a.id}')">×</button>
     </div>`).join('');
 
-  // ── Доходы ──
-  const pvzItems=D.items.filter(i=>i.type==='income'&&i.pvz);
-  const otherIncItems=D.items.filter(i=>i.type==='income'&&!i.pvz);
+  // ── Доходы (категория → ПВЗ) ──
+  const pvzIncItems=D.items.filter(i=>i.type==='income'&&i.pvzAddr);
+  const otherIncItems=D.items.filter(i=>i.type==='income'&&!i.pvzAddr);
   let incHtml='';
-  if(pvzItems.length){
-    incHtml+=subHead('По видам услуг ПВЗ (суммарно по всем точкам)');
-    incHtml+=pvzItems.map(i=>itemRowHtml(i,'income')).join('');
+
+  if(pvzIncItems.length){
+    incHtml+=subHead('Доходы по услугам ПВЗ');
+
+    for(const svc of PVZ_SERVICES){
+      const svcItems=pvzIncItems.filter(i=>i.categoryKey===svc.key);
+      if(!svcItems.length) continue;
+      const svcTotal=svcItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
+
+      incHtml+=`<div class="cat-header inc" onclick="toggleCat(this)">
+        <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${svc.name}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--grn)">${svcTotal?fmt(svcTotal):'—'}</div>
+      </div>
+      <div class="cat-body">`;
+
+      for(const pvz of PVZ_LIST){
+        const item=svcItems.find(i=>i.pvzAddr===pvz.key);
+        if(!item) continue;
+        incHtml+=`<div class="item-row" style="padding-left:20px">
+          <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('income','${item.id}')"></div>
+          <div class="item-name" style="font-size:12px">${pvz.name}</div>
+          <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
+          <div class="item-day-badge">${item.day} числа</div>
+          <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
+          <button class="item-edit" onclick="openItemModal('income','${item.id}')">✎</button>
+          <button class="item-del" onclick="delItem('item','${item.id}')">×</button>
+        </div>`;
+      }
+
+      incHtml+=`</div>`;
+    }
   }
+
   if(otherIncItems.length){
     incHtml+=subHead('Другие источники');
     incHtml+=otherIncItems.map(i=>itemRowHtml(i,'income')).join('');
   }
   document.getElementById('settingIncome').innerHTML=incHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет доходов</div>';
 
-  // ── Расходы — группируем по ПВЗ-адресу ──
-  const pvzExpenses=D.items.filter(i=>i.type==='expense'&&i.pvzAddr);
-  const generalExpenses=D.items.filter(i=>i.type==='expense'&&!i.pvzAddr);
-
+  // ── Расходы (категория → ПВЗ) ──
+  const pvzExpItems=D.items.filter(i=>i.type==='expense'&&i.pvzAddr);
+  const genExpItems=D.items.filter(i=>i.type==='expense'&&!i.pvzAddr);
   let expHtml='';
 
-  // Группируем по адресу ПВЗ
-  if(pvzExpenses.length){
-    // собираем уникальные адреса в порядке PVZ_LIST
-    const pvzKeys=[...new Set(pvzExpenses.map(i=>i.pvzAddr))];
-    const orderedKeys=PVZ_LIST.map(p=>p.key).filter(k=>pvzKeys.includes(k));
+  if(pvzExpItems.length){
+    expHtml+=subHead('Расходы');
 
-    expHtml+=subHead('Расходы по ПВЗ (аренда, интернет по каждой точке)');
+    for(const cat of EXP_CATS){
+      const catItems=pvzExpItems.filter(i=>i.categoryKey===cat.key);
+      if(!catItems.length) continue;
+      const catTotal=catItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
 
-    for(const key of orderedKeys){
-      const pvzMeta=PVZ_LIST.find(p=>p.key===key);
-      const pvzItems2=pvzExpenses.filter(i=>i.pvzAddr===key);
-      const pvzTotal=pvzItems2.reduce((s,i)=>s+(Number(i.amount)||0),0);
-      // ПВЗ sub-header
-      expHtml+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(255,255,255,.02);border-bottom:1px solid var(--brd)">
-        <div style="width:7px;height:7px;border-radius:50%;background:${pvzMeta?.color||'#94a3b8'};flex-shrink:0"></div>
-        <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${pvzMeta?.name||key}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--red)">${pvzTotal?fmt(pvzTotal):'—'}</div>
-      </div>`;
-      expHtml+=pvzItems2.map(i=>itemRowHtmlIndent(i)).join('');
+      expHtml+=`<div class="cat-header exp" onclick="toggleCat(this)">
+        <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${cat.name}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--red)">${catTotal?fmt(catTotal):'—'}</div>
+      </div>
+      <div class="cat-body">`;
+
+      for(const pvz of PVZ_LIST){
+        const item=catItems.find(i=>i.pvzAddr===pvz.key);
+        if(!item) continue;
+        expHtml+=`<div class="item-row" style="padding-left:20px">
+          <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('expense','${item.id}')"></div>
+          <div class="item-name" style="font-size:12px">${pvz.name}</div>
+          <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
+          <div class="item-day-badge">${item.day} числа</div>
+          <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
+          <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
+          <button class="item-del" onclick="delItem('item','${item.id}')">×</button>
+        </div>`;
+      }
+
+      expHtml+=`</div>`;
     }
   }
 
-  if(generalExpenses.length){
+  if(genExpItems.length){
     expHtml+=subHead('Общие расходы');
-    expHtml+=generalExpenses.map(i=>itemRowHtml(i,'expense')).join('');
+    expHtml+=genExpItems.map(i=>itemRowHtml(i,'expense')).join('');
   }
 
   document.getElementById('settingExpenses').innerHTML=expHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет расходов</div>';
 }
 
-function itemRowHtmlIndent(item){
-  const repeatLabel={monthly:'Ежемес.',weekly:'Еженед.',quarterly:'Ежекварт.',once:'Один раз'}[item.repeat||'monthly']||'Ежемес.';
-  // Extract just the expense type (Аренда+ком or Интернет+камеры)
-  const shortName=item.name.startsWith('Аренда')?'Аренда + коммуналка':'Интернет + камеры';
-  return `<div class="item-row" style="padding-left:32px">
-    <div class="item-dot" style="background:${item.color};opacity:.6" onclick="openItemModal('expense','${item.id}')"></div>
-    <div class="item-name" style="color:var(--t2);font-size:12px">${shortName}</div>
-    <div class="item-amount exp">${fmt(item.amount)||'—'}</div>
-    <div class="item-day-badge">${item.day||'—'} ч.</div>
-    <div class="item-repeat-badge">${repeatLabel}</div>
-    <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
-    <button class="item-del" onclick="delItem('item','${item.id}')">×</button>
-  </div>`;
+function toggleCat(el){
+  const body=el.nextElementSibling;
+  if(!body||!body.classList.contains('cat-body')) return;
+  el.classList.toggle('collapsed');
+  body.classList.toggle('collapsed');
 }
+
+document.addEventListener('click',function(e){
+  const amt=e.target.closest('.item-amount[data-id]');
+  if(amt&&!amt.querySelector('input')){
+    const id=amt.dataset.id, item=D.items.find(x=>x.id===id);
+    if(!item) return;
+    amt.innerHTML=`<input class="ie-amt" type="number" value="${item.amount||0}" step="100">`;
+    const inp=amt.querySelector('input');
+    inp.focus(); inp.select();
+    const save=()=>{ item.amount=parseFloat(inp.value)||0; pushData(); renderAll(); };
+    inp.addEventListener('blur',save);
+    inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
+    return;
+  }
+  const rep=e.target.closest('.item-repeat-badge[data-id]');
+  if(rep&&!rep.querySelector('select')){
+    const id=rep.dataset.id, item=D.items.find(x=>x.id===id);
+    if(!item) return;
+    const sel=document.createElement('select'); sel.className='ie-rep';
+    ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
+    rep.innerHTML=''; rep.appendChild(sel); sel.focus();
+    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); renderAll(); });
+    return;
+  }
+});
+
+function repeatLabel(r){return {monthly:'Ежемесячно',weekly:'Еженедельно',quarterly:'Ежеквартально',once:'Один раз'}[r||'monthly']||'Ежемесячно'}
 
 function itemRowHtml(item,type){
   const amtCls=type==='income'?'inc':'exp';
-  const repeatLabel={monthly:'Ежемесячно',weekly:'Еженедельно',quarterly:'Ежеквартально',once:'Один раз'}[item.repeat||'monthly']||'Ежемесячно';
   return `<div class="item-row">
     <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
-    <div class="item-name">${item.name}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
-    <div class="item-amount ${amtCls}">${fmt(item.amount)||'—'}</div>
+    <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
+    <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
     <div class="item-day-badge">${item.day||'—'} числа</div>
-    <div class="item-repeat-badge">${repeatLabel}</div>
+    <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
     <button class="item-edit" onclick="openItemModal('${type}','${item.id}')">✎</button>
     <button class="item-del" onclick="delItem('item','${item.id}')">×</button>
   </div>`;
@@ -894,8 +994,18 @@ function openItemModal(type,id){
     titleTxt=isEdit?`Редактировать`:(type==='income'?'Новый доход':'Новый расход');
     const isIncome=type==='income'||(isEdit&&mo&&mo.type==='income');
     body=`
-      <div class="frow"><label class="flabel">Название</label>
-        <input class="finput" id="mName" value="${isEdit?mo.name:''}" placeholder="Название"></div>
+      <div class="frow"><label class="flabel">Категория</label>
+        <select class="fselect" id="mCategory">
+          ${(isIncome?PVZ_SERVICES:EXP_CATS).map(c=>`<option value="${c.key}" ${isEdit&&mo.categoryKey===c.key?'selected':''}>${c.name}</option>`).join('')}
+          <option value="__other__" ${isEdit&&!PVZ_SERVICES.some(s=>s.key===mo.categoryKey)&&!EXP_CATS.some(c=>c.key===mo.categoryKey)?'selected':''}>Другое…</option>
+        </select></div>
+      <div class="frow" id="mOtherCatRow" style="display:${isEdit&&!PVZ_SERVICES.some(s=>s.key===mo.categoryKey)&&!EXP_CATS.some(c=>c.key===mo.categoryKey)?'flex':'none'}"><label class="flabel">Своя категория</label>
+        <input class="finput" id="mOtherCat" value="${isEdit?mo.category:''}" placeholder="Название"></div>
+      <div class="frow"><label class="flabel">ПВЗ</label>
+        <select class="fselect" id="mPvzAddr">
+          <option value="">Не привязан к ПВЗ</option>
+          ${PVZ_LIST.map(p=>`<option value="${p.key}" ${isEdit&&mo.pvzAddr===p.key?'selected':''}>${p.name}</option>`).join('')}
+        </select></div>
       <div class="frow-grid">
         <div class="frow"><label class="flabel">Сумма, ₽</label>
           <input class="finput" id="mAmount" type="number" value="${isEdit?(mo.amount||''):''}" placeholder="0"></div>
@@ -912,13 +1022,8 @@ function openItemModal(type,id){
       ${isIncome?`
       <div class="frow"><label class="flabel">Налогооблагаемый доход (УСН)</label>
         <select class="fselect" id="mTaxable">
-          <option value="1" ${(!isEdit||mo.taxable)?'selected':''}>Да — включать в базу налога</option>
+          <option value="1" ${(!isEdit||mo.taxable)?'selected':''}>Да</option>
           <option value="0" ${isEdit&&!mo.taxable?'selected':''}>Нет</option>
-        </select></div>
-      <div class="frow"><label class="flabel">Категория</label>
-        <select class="fselect" id="mPvz">
-          <option value="1" ${(!isEdit||mo.pvz)?'selected':''}>ПВЗ</option>
-          <option value="0" ${isEdit&&!mo.pvz?'selected':''}>Другой источник</option>
         </select></div>`:''}
       <div class="frow"><label class="flabel">Цвет</label>
         <div class="cswatches" id="cpicker"></div></div>`;
@@ -934,8 +1039,18 @@ function openItemModal(type,id){
   document.getElementById('iModalBody').innerHTML=body;
   document.getElementById('iModalBtns').innerHTML=btns;
   buildCP();
+  const catSel=document.getElementById('mCategory');
+  if(catSel){
+    catSel.onchange=()=>{
+      const row=document.getElementById('mOtherCatRow');
+      if(row) row.style.display=catSel.value==='__other__'?'flex':'none';
+    };
+  }
   document.getElementById('itemModal').classList.add('open');
-  setTimeout(()=>document.getElementById('mName')?.focus(),80);
+  setTimeout(()=>{
+    const firstInput=document.getElementById('mOtherCat')||catSel;
+    if(firstInput) firstInput.focus();
+  },80);
 }
 
 function buildCP(){
@@ -961,22 +1076,33 @@ function saveAccount(){
 }
 
 function saveItem(){
-  const name=document.getElementById('mName').value.trim();
+  const categoryKey=document.getElementById('mCategory').value;
+  const otherCat=document.getElementById('mOtherCat')?.value.trim();
+  const pvzAddr=document.getElementById('mPvzAddr').value||null;
   const amount=parseFloat(document.getElementById('mAmount').value)||0;
   const day=parseInt(document.getElementById('mDay').value)||1;
   const repeat=document.getElementById('mRepeat').value;
   const taxableEl=document.getElementById('mTaxable');
-  const pvzEl=document.getElementById('mPvz');
   const taxable=taxableEl?taxableEl.value==='1':false;
-  const pvz=pvzEl?pvzEl.value==='1':false;
-  if(!name){showToast('Введите название');return;}
+
+  let catName='', catKey='';
+  if(categoryKey==='__other__'){
+    if(!otherCat){showToast('Введите категорию');return;}
+    catName=otherCat; catKey=otherCat.toLowerCase().replace(/[^a-zа-яё0-9]/g,'_');
+  } else {
+    const tp=modalType||'income';
+    const list=tp==='income'?PVZ_SERVICES:EXP_CATS;
+    const found=list.find(c=>c.key===categoryKey);
+    if(found){catName=found.name;catKey=found.key;}
+    else{catName=categoryKey;catKey=categoryKey;}
+  }
 
   const tp=editingId?(D.items.find(x=>x.id===editingId)?.type||modalType):modalType;
   if(editingId){
     const it=D.items.find(x=>x.id===editingId);
-    if(it){Object.assign(it,{name,amount,day,repeat,taxable,pvz,color:selColor});}
+    if(it){Object.assign(it,{category:catName,categoryKey:catKey,pvzAddr,amount,day,repeat,taxable,color:selColor});}
   } else {
-    D.items.push({id:uid(),name,amount,day,repeat,taxable,pvz,type:tp,color:selColor});
+    D.items.push({id:uid(),type:tp,category:catName,categoryKey:catKey,pvzAddr,amount,day,repeat,taxable,color:selColor});
   }
   closeModal(); pushData(); renderAll(); showToast('✓ Сохранено');
 }
