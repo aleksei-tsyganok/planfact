@@ -1246,7 +1246,6 @@ function renderSettings(){
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-          <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
           ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):doneToggleHtml(item.id,0);})()}
           <button class="item-edit" onclick="openItemModal('income','${item.id}')">✎</button>
         </div>`;
@@ -1290,7 +1289,6 @@ function renderSettings(){
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-          ${!isSal?`<div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>`:''}
           ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));})()}
           <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
         </div>`;
@@ -1509,7 +1507,6 @@ function itemRowHtml(item,type){
     <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
     <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
     <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-    <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
     ${tgls}
     <button class="item-edit" onclick="openItemModal('${type}','${item.id}')">✎</button>
   </div>`;
