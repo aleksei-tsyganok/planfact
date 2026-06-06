@@ -1250,7 +1250,7 @@ function renderSettings(){
           <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
           <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
-          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>`<span style="font-size:9px;color:var(--t3);margin-right:2px">${_} ч.</span>${doneToggleHtml(item.id,i)}`).join(' '):doneToggleHtml(item.id,0);})()}
+          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):doneToggleHtml(item.id,0);})()}
           <button class="item-edit" onclick="openItemModal('income','${item.id}')">✎</button>
         </div>`;
       }
@@ -1293,8 +1293,8 @@ function renderSettings(){
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-          ${!isSal?`<div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>`:'<span style="font-size:9px;color:var(--t3);white-space:nowrap">смена</span>'}
-          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>`<span style="font-size:9px;color:var(--t3);margin-right:2px">${_} ч.</span>${doneToggleHtml(item.id,i)}`).join(' '):(isSal?`${doneToggleHtml(item.id,0)} ${doneToggleHtml(item.id,1)}`:doneToggleHtml(item.id,0));})()}
+          ${!isSal?`<div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>`:''}
+          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));})()}
           <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
         </div>`;
       }
@@ -1505,7 +1505,7 @@ function itemRowHtml(item,type){
   const amtCls=type==='income'?'inc':'exp';
   const dlist=itemDays(item);
   const tgls=dlist.length>1
-    ? dlist.map((_,i)=>`<span style="font-size:9px;color:var(--t3);margin-right:2px">${_} ч.</span>${doneToggleHtml(item.id,i)}`).join(' ')
+    ? dlist.map((_,i)=>doneToggleHtml(item.id,i)).join('')
     : doneToggleHtml(item.id,0);
   return `<div class="item-row">
     <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
