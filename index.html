@@ -642,6 +642,19 @@ async function initApp(){
       {id:'e_vvd3', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 3', pvzAddr:null, amount:amt, day:20, repeat:'monthly', taxable:false, color:old.color||'#e879f9'}
     );
   }
+  // migrate: add Управление items if missing
+  const hasMgmt=D.items.some(i=>i.categoryKey==='mgmt');
+  if(!hasMgmt){
+    const mgmtItems=PVZ_LIST.map(p=>({
+      id:'e_mgmt_'+p.key, type:'expense',
+      categoryKey:'mgmt', category:'Управление',
+      pvzAddr:p.key, amount:0, day:5,
+      repeat:'monthly', taxable:false, color:p.color,
+    }));
+    const lastZpIdx=D.items.reduce((acc,it,i)=>it.categoryKey==='zp'?i:acc,-1);
+    if(lastZpIdx>=0) D.items.splice(lastZpIdx+1,0,...mgmtItems);
+    else D.items.push(...mgmtItems);
+  }
   D.settings=D.settings||{taxRate:7,taxBase:'all'};
   saveL();
   if(dbOk){try{await sUp('kp_data',[{key:'main',data:D}]);}catch(e){}}
@@ -706,6 +719,7 @@ const EXP_CATS=[
   {key:'ar',  name:'Аренда + коммуналка',          defaultDay:5},
   {key:'in',  name:'Интернет + камеры',            defaultDay:10},
   {key:'zp',  name:'Заработная плата',             defaultDay:5},
+  {key:'mgmt',name:'Управление',                   defaultDay:5},
   {key:'knc', name:'Канцелярия / хоз / ремонт',    defaultDay:15},
 ];
 
