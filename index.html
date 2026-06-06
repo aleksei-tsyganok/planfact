@@ -448,6 +448,8 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 }
 
 /* ── SCROLLBAR ── */
+.item-row.overdue{background:rgba(251,191,36,0.07)!important;border-left:3px solid var(--amber);}
+.item-row.overdue .item-name{color:var(--amber)!important;}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--s5);border-radius:4px}
@@ -1190,6 +1192,23 @@ function subHead(label){
   return `<div style="padding:7px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);background:var(--s3);border-bottom:1px solid var(--brd)">${label}</div>`;
 }
 
+function isOverdue(item){
+  // Only applies in current month, only if not done
+  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
+  const isCurMonth=curYear===cy&&curMonth===cm;
+  if(!isCurMonth) return false;
+  const dlist=itemDays(item);
+  // overdue if ALL planned dates have passed and at least one is not done
+  const key0=item.id, key1=item.id+'_2';
+  if(dlist.length>=2){
+    const d0passed=dlist[0]<cd, d1passed=dlist[1]<cd;
+    const d0done=D.done[key0], d1done=D.done[key1];
+    // overdue if any date passed and its toggle not set
+    return (d0passed&&!d0done)||(d1passed&&!d1done);
+  }
+  return dlist[0]<cd && !D.done[key0];
+}
+
 function renderSettings(){
   // ── Счета ──
   document.getElementById('settingAccounts').innerHTML=D.accounts.map(a=>`
@@ -1222,7 +1241,7 @@ function renderSettings(){
       for(const pvz of PVZ_LIST){
         const item=svcItems.find(i=>i.pvzAddr===pvz.key);
         if(!item) continue;
-        incHtml+=`<div class="item-row" style="padding-left:20px">
+        incHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px">
           <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('income','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
@@ -1266,7 +1285,7 @@ function renderSettings(){
         const item=catItems.find(i=>i.pvzAddr===pvz.key);
         if(!item) continue;
         const isSal=item.categoryKey==='zp';
-        expHtml+=`<div class="item-row" style="padding-left:20px">
+        expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px">
           <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('expense','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
@@ -1485,7 +1504,7 @@ function itemRowHtml(item,type){
   const tgls=dlist.length>1
     ? dlist.map((_,i)=>doneToggleHtml(item.id,i)).join('')
     : doneToggleHtml(item.id,0);
-  return `<div class="item-row">
+  return `<div class="item-row ${isOverdue(item)?'overdue':''}">
     <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
     <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
     <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
