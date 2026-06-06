@@ -448,8 +448,15 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 }
 
 /* ── SCROLLBAR ── */
-.item-row.overdue{background:rgba(251,191,36,0.07)!important;border-left:3px solid var(--amber);}
+.item-row.overdue{background:rgba(251,191,36,0.07)!important;box-shadow:inset 3px 0 0 var(--amber);}
 .item-row.overdue .item-name{color:var(--amber)!important;}
+.weekly-sub{overflow:hidden;max-height:0;transition:max-height .25s ease;background:rgba(0,0,0,.15);}
+.weekly-sub.open{max-height:500px;}
+.weekly-row{display:flex;align-items:center;gap:10px;padding:7px 20px 7px 36px;border-bottom:1px solid var(--brd);}
+.weekly-row:last-child{border-bottom:none;}
+.weekly-date{font-size:12px;color:var(--t2);flex:1;}
+.weekly-row.overdue-w .weekly-date{color:var(--amber);}
+.weekly-row.done-w .weekly-date{color:var(--t4);text-decoration:line-through;}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--s5);border-radius:4px}
@@ -817,6 +824,7 @@ function buildDailyCF(year,month,startOverride){
       if(isDone) continue; // skip — already processed
       if(item.repeat==='weekly'){
         for(let d2=d0;d2<=days;d2+=7){
+          if(isCurMonth&&D.done[weeklyDoneKey(item.id,d2)]) continue;
           events[d2].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
           if(isTaxMonth&&item.taxable&&amt>0){
             const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
@@ -856,6 +864,7 @@ function buildDailyCF(year,month,startOverride){
       const d=Math.min(d0,days);
       if(item.repeat==='weekly'){
         for(let d2=d;d2<=days;d2+=7){
+          if(isCurMonth&&D.done[weeklyDoneKey(item.id,d2)]) continue;
           events[d2].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
         }
       } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
@@ -1192,23 +1201,47 @@ function subHead(label){
   return `<div style="padding:7px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);background:var(--s3);border-bottom:1px solid var(--brd)">${label}</div>`;
 }
 
+function weeklyDates(item,year,month){
+  const days=getDays(year,month);
+  const start=Math.min(parseInt((item.days||[item.day||1])[0])||1,days);
+  const dates=[];
+  for(let d=start;d<=days;d+=7) dates.push(d);
+  return dates;
+}
+function weeklyDoneKey(itemId,d){return itemId+'_d'+d;}
+
 function isOverdue(item){
   // Only applies in current month, only if not done
   const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
   const isCurMonth=curYear===cy&&curMonth===cm;
   if(!isCurMonth) return false;
-  const dlist=itemDays(item);
-  // overdue if ALL planned dates have passed and at least one is not done
-  const key0=item.id, key1=item.id+'_2';
-  if(dlist.length>=2){
-    const d0passed=dlist[0]<cd, d1passed=dlist[1]<cd;
-    const d0done=D.done[key0], d1done=D.done[key1];
-    // overdue if any date passed and its toggle not set
-    return (d0passed&&!d0done)||(d1passed&&!d1done);
+  if(item.repeat==='weekly'){
+    return weeklyDates(item,cy,cm).some(d=>d<cd&&!D.done[weeklyDoneKey(item.id,d)]);
   }
-  return dlist[0]<cd && !D.done[key0];
+  const dlist=itemDays(item);
+  const key0=item.id,key1=item.id+'_2';
+  if(dlist.length>=2){
+    const d0passed=dlist[0]<cd,d1passed=dlist[1]<cd;
+    return (d0passed&&!D.done[key0])||(d1passed&&!D.done[key1]);
+  }
+  return dlist[0]<cd&&!D.done[key0];
 }
 
+function buildWeeklySub(item){
+  const wdates=weeklyDates(item,curYear,curMonth);
+  const now2=new Date(),cd2=(curYear===now2.getFullYear()&&curMonth===now2.getMonth())?now2.getDate():32;
+  let h=`<div class="weekly-sub" id="wsub_${item.id}">`;
+  wdates.forEach(d=>{
+    const dk=weeklyDoneKey(item.id,d);
+    const isDone=!!D.done[dk], isOvd=d<cd2&&!isDone;
+    h+=`<div class="weekly-row ${isDone?'done-w':isOvd?'overdue-w':''}">
+      <span class="weekly-date">${d} числа</span>
+      <label class="tg" style="flex-shrink:0"><input type="checkbox" ${isDone?'checked':''} onchange="toggleWeeklyDone('${item.id}',${d})"><span class="tg-s"></span></label>
+    </div>`;
+  });
+  h+=`</div>`;
+  return h;
+}
 function renderSettings(){
   // ── Счета ──
   document.getElementById('settingAccounts').innerHTML=D.accounts.map(a=>`
@@ -1241,14 +1274,16 @@ function renderSettings(){
       for(const pvz of PVZ_LIST){
         const item=svcItems.find(i=>i.pvzAddr===pvz.key);
         if(!item) continue;
-        incHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px">
-          <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('income','${item.id}')"></div>
+        {const isW=item.repeat==='weekly';
+        incHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
+          <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="event.stopPropagation();openItemModal('income','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):doneToggleHtml(item.id,0);})()}
-          <button class="item-edit" onclick="openItemModal('income','${item.id}')">✎</button>
-        </div>`;
+          ${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):doneToggleHtml(item.id,0);})()}
+          <button class="item-edit" onclick="event.stopPropagation();openItemModal('income','${item.id}')">✎</button>
+        </div>${isW?buildWeeklySub(item):''}`;
+        }
       }
 
       incHtml+=`</div>`;
@@ -1284,14 +1319,16 @@ function renderSettings(){
         const item=catItems.find(i=>i.pvzAddr===pvz.key);
         if(!item) continue;
         const isSal=item.categoryKey==='zp';
-        expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px">
-          <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('expense','${item.id}')"></div>
+        {const isW=item.repeat==='weekly';
+        expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
+          <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="event.stopPropagation();openItemModal('expense','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));})()}
-          <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
-        </div>`;
+          ${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>doneToggleHtml(item.id,i)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));})()}
+          <button class="item-edit" onclick="event.stopPropagation();openItemModal('expense','${item.id}')">✎</button>
+        </div>${isW?buildWeeklySub(item):''}`;
+        }
       }
 
       expHtml+=`</div>`;
@@ -1466,6 +1503,17 @@ document.addEventListener('click', function(ev){
 function repeatLabel(r){return {monthly:'Мес.',weekly:'Нед.',quarterly:'Кв.',once:'Один'}[r||'monthly']||'Мес.'}
 
 // ── DONE TOGGLES ──
+function toggleWeeklyDone(itemId,d){
+  const key=weeklyDoneKey(itemId,d);
+  if(D.done[key]) delete D.done[key]; else D.done[key]=true;
+  pushData(); renderSettings();
+  const msb=getMonthStartBalance(curYear,curMonth);
+  renderCashflow(msb); renderKPI(msb);
+}
+function toggleWeeklySub(id){
+  const el=document.getElementById(id);
+  if(el) el.classList.toggle('open');
+}
 function toggleDone(itemId, dateIdx){
   const key = dateIdx===1 ? itemId+'_2' : itemId;
   if(D.done[key]) delete D.done[key]; else D.done[key]=true;
@@ -1502,14 +1550,16 @@ function itemRowHtml(item,type){
   const tgls=dlist.length>1
     ? dlist.map((_,i)=>doneToggleHtml(item.id,i)).join('')
     : doneToggleHtml(item.id,0);
-  return `<div class="item-row ${isOverdue(item)?'overdue':''}">
-    <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
-    <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
-    <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-    <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-    ${tgls}
-    <button class="item-edit" onclick="openItemModal('${type}','${item.id}')">✎</button>
-  </div>`;
+  const isW=item.repeat==='weekly';
+  return (`<div class="item-row ${isOverdue(item)?'overdue':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')" style="cursor:pointer"`:''}>`+
+    `<div class="item-dot" style="background:${item.color}" onclick="event.stopPropagation();openItemModal('${type}','${item.id}')"></div>`+
+    `<div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>`+
+    `<div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>`+
+    `<div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>`+
+    `${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':tgls}`+
+    `<button class="item-edit" onclick="event.stopPropagation();openItemModal('${type}','${item.id}')">✎</button>`+
+    `</div>`+
+    (isW?buildWeeklySub(item):''));
 }
 
 // ══════════════════════════════════
