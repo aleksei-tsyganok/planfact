@@ -898,47 +898,30 @@ function buildDailyCF(year,month,startOverride){
   return {daily,startBalance:rawBalance,taxAmount,taxableIncome,isTaxMonth};
 }
 
-// compute projected balance at day 1 of (year,month)
+// Стартовый баланс для месяца:
+// Текущий месяц — реальный баланс счетов (buildDailyCF считает с 1-го числа)
+// Будущий месяц — итог предыдущего месяца
+// Прошлое — не используется
 function getMonthStartBalance(year,month){
-  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
+  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth();
   const current=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
 
-  // same month → undo events from day 1 to yesterday
-  if(year===cy&&month===cm){
-    const cf=buildDailyCF(year,month,0);
-    let net=0;
-    for(let d=1;d<cd;d++) net+=cf.daily[d-1]?.net||0;
-    return current-net;
-  }
+  if(year===cy&&month===cm) return current;
 
-  // past month → undo all events from target day 1 to today
-  if(year<cy||(year===cy&&month<cm)){
-    let net=0, y=year, m=month;
-    while(y<cy||(y===cy&&m<=cm)){
-      const cf=buildDailyCF(y,m,0);
-      const dim=getDays(y,m);
-      for(let d=1;d<=dim;d++){
-        if(y===year&&m===month&&d===1) continue;
-        if(y===cy&&m===cm&&d>cd) break;
-        net+=cf.daily[d-1]?.net||0;
-      }
+  if(year>cy||(year===cy&&month>cm)){
+    // future: chain from current month
+    let bal=current;
+    let y=cy, m=cm;
+    while(y<year||(y===year&&m<month)){
+      const cf=buildDailyCF(y,m,bal);
+      bal=cf.daily[cf.daily.length-1].balance;
       m++; if(m>11){m=0;y++;}
     }
-    return current-net;
+    return bal;
   }
 
-  // future month → add events from today to end of prev month
-  let net=0, y=cy, m=cm;
-  while(y<year||(y===year&&m<month)){
-    const cf=buildDailyCF(y,m,0);
-    const dim=getDays(y,m);
-    for(let d=1;d<=dim;d++){
-      if(y===cy&&m===cm&&d<cd) continue;
-      net+=cf.daily[d-1]?.net||0;
-    }
-    m++; if(m>11){m=0;y++;}
-  }
-  return current+net;
+  // past month — return current (no history)
+  return current;
 }
 
 // ══════════════════════════════════
@@ -956,19 +939,14 @@ function calcSafeWithdrawal(){
   let minMonth=cm, minYear=cy;
 
   // --- Текущий месяц ---
-  // buildDailyCF уже корректно обрабатывает paidToday для сегодняшнего дня.
-  // Передаём currentTotal как стартовый баланс, но считаем только дни >= сегодня,
-  // т.к. прошедшие дни уже отражены в реальных остатках по счетам.
+  // Стартуем с реального баланса. buildDailyCF пропускает done-строки,
+  // поэтому учитываются только непроведённые операции — весь месяц целиком.
   {
     const cf = buildDailyCF(cy, cm, currentTotal);
-    let bal = currentTotal;
     for(const day of cf.daily){
-      if(day.d < cd) continue; // прошедшие дни пропускаем
-      // paidToday уже применён внутри buildDailyCF для day.d === cd
-      bal += day.income + day.expense; // expense уже отрицательный
-      if(bal < minBalance){ minBalance = bal; minMonth = cm; minYear = cy; }
+      if(day.balance < minBalance){ minBalance = day.balance; minMonth = cm; minYear = cy; }
     }
-    var carryBal = bal;
+    var carryBal = cf.daily[cf.daily.length-1].balance;
   }
 
   // --- Следующие 12 месяцев ---
