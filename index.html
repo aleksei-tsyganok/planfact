@@ -502,10 +502,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
       <button class="ss-add-btn" onclick="openItemModal('account')">+ Добавить счёт</button>
     </div>
     <div id="settingAccounts"></div>
-    <div class="item-row" style="border-top:1px solid var(--brd)">
-      <div class="item-name" style="color:var(--t2);font-size:12px">Платежи за сегодня оплачены</div>
-      <label class="tg"><input type="checkbox" id="paidToday" onchange="togglePaid()"><span class="tg-s"></span></label>
-    </div>
+
   </div>
   <div class="settings-section">
     <div class="settings-section-title">
@@ -581,8 +578,9 @@ const LS='kp_v1';
 // ══════════════════════════════════
 // D = persistent data (saved to supabase + localStorage)
 let D = {
-  accounts:[],  // {id,name,color,balance}
-  items:[],     // {id,name,type('income'|'expense'),amount,day,repeat('monthly'|'once'|'quarterly'),taxable(bool),color,note}
+  accounts:[],
+  items:[],
+  done:{},   // {"itemId":true} or {"itemId_2":true} for 2nd date
   settings:{taxRate:7, taxBase:'all'}
 };
 let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
@@ -616,6 +614,7 @@ async function initApp(){
       const remote=rows[0].data;
       if(remote.accounts&&remote.accounts.length) D.accounts=remote.accounts;
       if(remote.items&&remote.items.length) D.items=remote.items;
+      D.done=remote.done||{};
       D.settings=remote.settings||D.settings||{taxRate:7,taxBase:'all'};
     } else {
       // Supabase пуст — берём из localStorage как запасной вариант
@@ -802,11 +801,18 @@ function buildDailyCF(year,month,startOverride){
   for(let d=1;d<=days;d++)events[d]=[];
 
   // income items
+  const now_=new Date(), cy_=now_.getFullYear(), cm_=now_.getMonth();
+  const isCurMonth=(year===cy_&&month===cm_);
   const incomes=D.items.filter(i=>i.type==='income'&&(Number(i.amount)||0)>0);
   for(const item of incomes){
     const amt=Number(item.amount);
     const dlist=itemDays(item);
-    for(const d0 of dlist){
+    for(let di=0;di<dlist.length;di++){
+      const d0=dlist[di];
+      // done key: first date = itemId, second date = itemId_2
+      const doneKey=di===0?item.id:item.id+'_2';
+      const isDone=isCurMonth&&D.done[doneKey];
+      if(isDone) continue; // skip — already processed
       if(item.repeat==='weekly'){
         for(let d2=d0;d2<=days;d2+=7){
           events[d2].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
@@ -840,7 +846,11 @@ function buildDailyCF(year,month,startOverride){
   const expenses=D.items.filter(i=>i.type==='expense'&&(Number(i.amount)||0)>0&&i.categoryKey!=='zp');
   for(const item of expenses){
     const dlist=itemDays(item);
-    for(const d0 of dlist){
+    for(let di=0;di<dlist.length;di++){
+      const d0=dlist[di];
+      const doneKey=di===0?item.id:item.id+'_2';
+      const isDone=isCurMonth&&D.done[doneKey];
+      if(isDone) continue;
       const d=Math.min(d0,days);
       if(item.repeat==='weekly'){
         for(let d2=d;d2<=days;d2+=7){
@@ -858,15 +868,17 @@ function buildDailyCF(year,month,startOverride){
   const salaryItems=D.items.filter(i=>i.categoryKey==='zp'&&(Number(i.amount)||0)>0);
   if(salaryItems.length){
     let pm=month-1,py=year; if(pm<0){pm=11;py--;}
-    const pmd=getDays(py,pm); // days in previous month
-    const days5=pmd-15; // 16..last inclusive
-    const days20=15;    // 1..15 inclusive
+    const pmd=getDays(py,pm);
+    const days5=pmd-15;
+    const days20=15;
     for(const item of salaryItems){
       const sc=Number(item.amount)||0;
       const pvzName=(PVZ_LIST.find(p=>p.key===item.pvzAddr)||{}).name||item.pvzAddr||'';
       const d5=Math.min(5,days), d20=Math.min(20,days);
-      if(d5<=days) events[d5].push({name:pvzName+' — аванс',amount:-Math.round(sc*days5),type:'expense',color:item.color,id:item.id});
-      if(d20<=days) events[d20].push({name:pvzName+' — зп',amount:-Math.round(sc*days20),type:'expense',color:item.color,id:item.id});
+      const done1=isCurMonth&&D.done[item.id];
+      const done2=isCurMonth&&D.done[item.id+'_2'];
+      if(!done1&&d5<=days) events[d5].push({name:pvzName+' — аванс',amount:-Math.round(sc*days5),type:'expense',color:item.color,id:item.id});
+      if(!done2&&d20<=days) events[d20].push({name:pvzName+' — зп',amount:-Math.round(sc*days20),type:'expense',color:item.color,id:item.id});
     }
   }
 
@@ -877,7 +889,7 @@ function buildDailyCF(year,month,startOverride){
     const dayEvents=events[d];
     let dayIncome=dayEvents.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
     let dayExpense=dayEvents.filter(e=>e.type!=='income').reduce((s,e)=>s+e.amount,0);
-    if(isToday(year,month,d)&&D.settings.paidToday){ dayExpense=0; dayIncome=0; }
+
     const dayNet=dayIncome+dayExpense;
     balance+=dayNet;
     daily.push({d,events:dayEvents,income:dayIncome,expense:dayExpense,net:dayNet,balance,we:isWe(year,month,d),tod:isToday(year,month,d)});
@@ -991,7 +1003,7 @@ function renderAll(){
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
-  document.getElementById('paidToday').checked=D.settings.paidToday||false;
+
 }
 
 function renderKPI(msb){
@@ -1238,6 +1250,7 @@ function renderSettings(){
           <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
           <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
           <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
+          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>`<span style="font-size:9px;color:var(--t3);margin-right:2px">${_} ч.</span>${doneToggleHtml(item.id,i)}`).join(' '):doneToggleHtml(item.id,0);})()}
           <button class="item-edit" onclick="openItemModal('income','${item.id}')">✎</button>
         </div>`;
       }
@@ -1279,9 +1292,9 @@ function renderSettings(){
           <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="openItemModal('expense','${item.id}')"></div>
           <div class="item-name" style="font-size:12px">${pvz.name}</div>
           <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-          ${isSal?'<span style="font-size:9px;color:var(--t3);white-space:nowrap">смена</span>'
-            :`<div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-               <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>`}
+          <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
+          ${!isSal?`<div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>`:'<span style="font-size:9px;color:var(--t3);white-space:nowrap">смена</span>'}
+          ${(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,i)=>`<span style="font-size:9px;color:var(--t3);margin-right:2px">${_} ч.</span>${doneToggleHtml(item.id,i)}`).join(' '):(isSal?`${doneToggleHtml(item.id,0)} ${doneToggleHtml(item.id,1)}`:doneToggleHtml(item.id,0));})()}
           <button class="item-edit" onclick="openItemModal('expense','${item.id}')">✎</button>
         </div>`;
       }
@@ -1325,10 +1338,15 @@ document.addEventListener('click',function(e){
     return;
   }
   const dayEl=e.target.closest('.item-day-badge[data-id]');
-  if(dayEl&&!document.querySelector('.cal-popup')&&!dayEl.querySelector('input')){
+  if(dayEl&&!document.querySelector('.day-cal-popup')&&!dayEl.querySelector('input')){
     const id=dayEl.dataset.id, item=D.items.find(x=>x.id===id);
     if(!item) return;
-    // multi-day: show text input with comma-separated values
+    // For dual-date categories — show calendar popup
+    if(DUAL_CAT.includes(item.categoryKey)){
+      openDayCalPopup(dayEl, item);
+      return;
+    }
+    // For all others — text input as before
     const inp=document.createElement('input');
     inp.className='ie-day';
     inp.type='text';
@@ -1358,16 +1376,144 @@ document.addEventListener('click',function(e){
   }
 });
 
+// ── DUAL DATE CALENDAR POPUP ──
+const DUAL_CAT = ['zp','mgmt','w'];
+
+let _calItem = null; // item being edited via popup
+
+function openDayCalPopup(anchorEl, item){
+  closeDayCalPopup();
+  _calItem = item;
+  const sel = (item.days||[item.day||1]).map(Number).slice(0,2);
+
+  const popup = document.createElement('div');
+  popup.className = 'day-cal-popup';
+  popup.style.cssText = `
+    position:fixed;z-index:500;
+    background:var(--s3);border:1px solid var(--brd2);border-radius:14px;
+    padding:14px;width:240px;
+    box-shadow:0 12px 40px rgba(0,0,0,.6);
+  `;
+
+  popup.innerHTML = renderDayCalContent(sel);
+
+  // Position near the badge
+  document.body.appendChild(popup);
+  const rect = anchorEl.getBoundingClientRect();
+  const pw = 240, ph = 280;
+  let top = rect.bottom + 6;
+  let left = rect.left;
+  if(left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
+  if(top + ph > window.innerHeight - 10) top = rect.top - ph - 6;
+  popup.style.top = top + 'px';
+  popup.style.left = left + 'px';
+}
+
+function renderDayCalContent(sel){
+  sel = sel.map(Number);
+  let h = `<div style="font-size:11px;font-weight:700;color:var(--t2);text-align:center;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Выберите 2 даты</div>`;
+  h += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">`;
+  for(let d=1;d<=31;d++){
+    const isSel = sel.includes(d);
+    h += `<div onclick="toggleCalDay(${d})" style="
+      font-size:12px;font-weight:600;text-align:center;padding:6px 2px;border-radius:7px;cursor:pointer;
+      background:${isSel?'var(--acc)':'var(--s4)'};
+      color:${isSel?'var(--bg)':'var(--t2)'};
+      transition:all .1s;
+    ">${d}</div>`;
+  }
+  h += `</div>`;
+  const sorted = [...sel].sort((a,b)=>a-b);
+  h += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">`;
+  h += `<div style="font-size:13px;color:var(--t2)">`;
+  if(sorted.length===0) h += `<span style="color:var(--t3)">не выбрано</span>`;
+  else h += sorted.map(d=>`<strong style="color:var(--acc)">${d}</strong>`).join(' и ') + ' <span style="color:var(--t3)">числа</span>';
+  h += `</div>`;
+  h += `<button onclick="closeDayCalPopup()" style="
+    background:${sel.length===2?'var(--acc)':'var(--s5)'};
+    border:none;border-radius:7px;padding:5px 10px;
+    color:${sel.length===2?'var(--bg)':'var(--t3)'};
+    font-family:var(--f);font-size:12px;font-weight:700;cursor:pointer;
+  ">${sel.length===2?'Готово':'—'}</button>`;
+  h += `</div>`;
+  return h;
+}
+
+function toggleCalDay(d){
+  if(!_calItem) return;
+  let sel = (_calItem.days||[_calItem.day||1]).map(Number);
+  const idx = sel.indexOf(d);
+  if(idx>=0){ sel.splice(idx,1); }
+  else if(sel.length<2){ sel.push(d); }
+  else { sel = [sel[1], d]; } // replace oldest with new
+  _calItem.days = sel; delete _calItem.day;
+  // re-render popup content
+  const popup = document.querySelector('.day-cal-popup');
+  if(popup) popup.innerHTML = renderDayCalContent(sel);
+  // save immediately on each click
+  pushData(); renderSettings();
+}
+
+function closeDayCalPopup(){
+  const popup = document.querySelector('.day-cal-popup');
+  if(popup) popup.remove();
+  _calItem = null;
+}
+
+// Close popup on outside click
+document.addEventListener('click', function(ev){
+  const popup = document.querySelector('.day-cal-popup');
+  if(popup && !popup.contains(ev.target) && !ev.target.closest('.item-day-badge[data-id]')){
+    closeDayCalPopup();
+  }
+}, true);
+
 function repeatLabel(r){return {monthly:'Мес.',weekly:'Нед.',quarterly:'Кв.',once:'Один'}[r||'monthly']||'Мес.'}
+
+// ── DONE TOGGLES ──
+function toggleDone(itemId, dateIdx){
+  const key = dateIdx===1 ? itemId+'_2' : itemId;
+  if(D.done[key]) delete D.done[key]; else D.done[key]=true;
+  pushData(); renderSettings(); renderCashflow(getMonthStartBalance(curYear,curMonth));
+  // update KPI too
+  const msb=getMonthStartBalance(curYear,curMonth);
+  renderKPI(msb);
+}
+
+// Auto-reset done on 1st of each month at 01:00
+function scheduleReset(){
+  const now=new Date();
+  const next=new Date(now.getFullYear(),now.getMonth()+1,1,1,0,0,0);
+  const ms=next-now;
+  setTimeout(()=>{
+    D.done={}; pushData(); renderAll();
+    scheduleReset();
+  }, ms);
+}
+scheduleReset();
+
+function doneToggleHtml(itemId, dateIdx){
+  const key=dateIdx===1?itemId+'_2':itemId;
+  const checked=D.done[key]?'checked':'';
+  return `<label class="tg" title="${checked?'Проведено':'Отметить как проведено'}" style="flex-shrink:0">
+    <input type="checkbox" ${checked} onchange="toggleDone('${itemId}',${dateIdx})">
+    <span class="tg-s"></span>
+  </label>`;
+}
 
 function itemRowHtml(item,type){
   const amtCls=type==='income'?'inc':'exp';
+  const dlist=itemDays(item);
+  const tgls=dlist.length>1
+    ? dlist.map((_,i)=>`<span style="font-size:9px;color:var(--t3);margin-right:2px">${_} ч.</span>${doneToggleHtml(item.id,i)}`).join(' ')
+    : doneToggleHtml(item.id,0);
   return `<div class="item-row">
     <div class="item-dot" style="background:${item.color}" onclick="openItemModal('${type}','${item.id}')"></div>
     <div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>
     <div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
     <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
     <div class="item-repeat-badge" data-id="${item.id}">${repeatLabel(item.repeat)}</div>
+    ${tgls}
     <button class="item-edit" onclick="openItemModal('${type}','${item.id}')">✎</button>
   </div>`;
 }
@@ -1473,6 +1619,7 @@ function openItemModal(type,id){
   setTimeout(()=>{
     const firstInput=document.getElementById('mOtherCat')||catSel;
     if(firstInput) firstInput.focus();
+
   },80);
 }
 
