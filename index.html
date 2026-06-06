@@ -608,24 +608,24 @@ function loadL(){try{const d=JSON.parse(localStorage.getItem(LS)||'null');if(d)D
 // SUPABASE INIT — single JSON row
 // ══════════════════════════════════
 async function initApp(){
-  setLT('Загрузка…'); loadL();
+  setLT('Загрузка…');
   try{
-    // Try to create kp_data table via RPC — silently fails if table exists
-    // We store everything as a single JSON blob with key='main'
+    // Supabase — главный источник данных, загружаем первым
     const rows=await sGet('kp_data','key=eq.main&select=data');
     if(rows.length>0&&rows[0].data){
       const remote=rows[0].data;
-      // merge: prefer remote accounts/items, keep local settings if remote has none
-      D.accounts=remote.accounts||D.accounts||[];
-      D.items=remote.items||D.items||[];
+      if(remote.accounts&&remote.accounts.length) D.accounts=remote.accounts;
+      if(remote.items&&remote.items.length) D.items=remote.items;
       D.settings=remote.settings||D.settings||{taxRate:7,taxBase:'all'};
     } else {
-      // first time — push local defaults
-      await sUp('kp_data',[{key:'main',data:D}]);
+      // Supabase пуст — берём из localStorage как запасной вариант
+      loadL();
     }
     dbOk=true; ss('ok'); saveL();
   }catch(e){
+    // Supabase недоступен — берём из localStorage
     dbOk=false; ss('err');
+    loadL();
     console.warn('DB:',e);
   }
   // seed defaults — только для новых пользователей
@@ -875,9 +875,9 @@ function buildDailyCF(year,month,startOverride){
   let balance=startBalance;
   for(let d=1;d<=days;d++){
     const dayEvents=events[d];
-    const dayIncome=dayEvents.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
+    let dayIncome=dayEvents.filter(e=>e.type==='income').reduce((s,e)=>s+e.amount,0);
     let dayExpense=dayEvents.filter(e=>e.type!=='income').reduce((s,e)=>s+e.amount,0);
-    if(isToday(year,month,d)&&D.settings.paidToday) dayExpense=0;
+    if(isToday(year,month,d)&&D.settings.paidToday){ dayExpense=0; dayIncome=0; }
     const dayNet=dayIncome+dayExpense;
     balance+=dayNet;
     daily.push({d,events:dayEvents,income:dayIncome,expense:dayExpense,net:dayNet,balance,we:isWe(year,month,d),tod:isToday(year,month,d)});
@@ -930,6 +930,54 @@ function getMonthStartBalance(year,month){
 }
 
 // ══════════════════════════════════
+// SAFE WITHDRAWAL CALC
+// ══════════════════════════════════
+// Сколько можно вывести прямо сейчас, не уйдя в минус ни в один день
+// начиная с сегодня и на 12 месяцев вперёд.
+// Учитывает тумблер paidToday так же как buildDailyCF.
+function calcSafeWithdrawal(){
+  const now=new Date();
+  const cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
+  const currentTotal=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+
+  let minBalance=Infinity;
+  let minMonth=cm, minYear=cy;
+
+  // --- Текущий месяц ---
+  // buildDailyCF уже корректно обрабатывает paidToday для сегодняшнего дня.
+  // Передаём currentTotal как стартовый баланс, но считаем только дни >= сегодня,
+  // т.к. прошедшие дни уже отражены в реальных остатках по счетам.
+  {
+    const cf = buildDailyCF(cy, cm, currentTotal);
+    let bal = currentTotal;
+    for(const day of cf.daily){
+      if(day.d < cd) continue; // прошедшие дни пропускаем
+      // paidToday уже применён внутри buildDailyCF для day.d === cd
+      bal += day.income + day.expense; // expense уже отрицательный
+      if(bal < minBalance){ minBalance = bal; minMonth = cm; minYear = cy; }
+    }
+    var carryBal = bal;
+  }
+
+  // --- Следующие 12 месяцев ---
+  let scanM = cm + 1, scanY = cy;
+  if(scanM > 11){ scanM = 0; scanY++; }
+
+  for(let i = 0; i < 12; i++){
+    const cf = buildDailyCF(scanY, scanM, carryBal);
+    for(const day of cf.daily){
+      if(day.balance < minBalance){ minBalance = day.balance; minMonth = scanM; minYear = scanY; }
+    }
+    carryBal = cf.daily[cf.daily.length - 1].balance;
+    scanM++; if(scanM > 11){ scanM = 0; scanY++; }
+  }
+
+  const buffer = Number(D.settings.safetyBuffer)||0;
+  const safe = Math.max(0, Math.floor(minBalance) - buffer);
+  return { safe, minBalance: Math.floor(minBalance), minMonth, minYear };
+}
+
+// ══════════════════════════════════
 // RENDER ALL
 // ══════════════════════════════════
 function renderAll(){
@@ -951,28 +999,52 @@ function renderKPI(msb){
   const totalIncome=D.items.filter(i=>i.type==='income').reduce((s,i)=>s+(Number(i.amount)||0),0);
   const totalExpense=daily.reduce((s,d)=>s+Math.abs(d.expense),0)+taxAmount;
   const endBalance=daily.length?daily[daily.length-1].balance:startBalance;
-  const freeMoney=endBalance; // balance at end of month = free
 
   document.getElementById('kpiGrid').innerHTML=[
-    {label:'Текущий баланс', val:fmtK(startBalance), cls:startBalance<0?'r':startBalance<50000?'am':'a'},
-    {label:'Прогноз доходов', val:fmtK(totalIncome), cls:'g'},
-    {label:'Прогноз расходов', val:fmtK(totalExpense), cls:'r'},
+    {label:'Текущий баланс',    val:fmtK(startBalance), cls:startBalance<0?'r':startBalance<50000?'am':'a'},
+    {label:'Прогноз доходов',   val:fmtK(totalIncome),  cls:'g'},
+    {label:'Прогноз расходов',  val:fmtK(totalExpense), cls:'r'},
     {label:'Налог '+((D.settings.taxRate)||7)+'%', val:fmtK(taxAmount), cls:'am'},
-    {label:'Остаток конец мес.', val:fmtK(endBalance), cls:endBalance<0?'r':endBalance<30000?'am':'a'},
+    {label:'Остаток конец мес.', val:fmtK(endBalance),  cls:endBalance<0?'r':endBalance<30000?'am':'a'},
   ].map(k=>`<div class="kpi"><div class="kpi-label">${k.label}</div><div class="kpi-val ${k.cls}">${k.val}</div></div>`).join('');
 
-  const freeCls=freeMoney<0?'bad':freeMoney<50000?'warn':'ok';
-  const freeDesc=freeMoney<0?'⚠ Кассовый разрыв! Нужно пополнить счета или сократить расходы':
-    freeMoney<50000?'Мало свободных денег — проверь расходы':'Прогноз положительный';
+  // Расчёт безопасного вывода
+  const {safe, minBalance, minMonth, minYear} = calcSafeWithdrawal();
+  const safeCls = safe <= 0 ? 'bad' : safe < 100000 ? 'warn' : 'ok';
+  const minLabel = MONTHS[minMonth] + ' ' + minYear;
+  const safeDesc = safe <= 0
+    ? `⚠ Вывод невозможен — разрыв в ${minLabel} (мин. остаток ${fmt(minBalance)})`
+    : `Узкое место: ${minLabel} — минимальный остаток ${fmt(minBalance)}`;
+
   document.getElementById('freeMoneyBar').innerHTML=`
-    <div>
-      <div class="fm-label">Свободные деньги на конец месяца</div>
-      <div class="fm-val ${freeCls}">${fmt(freeMoney)}</div>
-      <div class="fm-desc">${freeDesc}</div>
+    <div style="flex:1;min-width:0">
+      <div class="fm-label">Можно вывести из оборота сейчас</div>
+      <div class="fm-val ${safeCls}">${safe > 0 ? fmt(safe) : '0₽'}</div>
+      <div class="fm-desc">${safeDesc}</div>
     </div>
-    <div style="text-align:right">
-      <div style="font-size:11px;color:var(--t3);margin-bottom:4px">Начало месяца</div>
-      <div style="font-size:16px;font-weight:700;color:var(--t2)">${fmt(startBalance)}</div>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;flex-shrink:0">
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:3px">Баланс сейчас</div>
+        <div style="font-size:16px;font-weight:700;color:var(--t2)">${fmt(D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0))}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:3px">Конец месяца</div>
+        <div style="font-size:16px;font-weight:700;color:${endBalance<0?'var(--red)':endBalance<50000?'var(--amber)':'var(--t2)'}">${fmt(endBalance)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:5px">Страховой буфер</div>
+        <div style="display:flex;align-items:center;gap:6px;justify-content:flex-end">
+          <input
+            type="number" min="0" step="10000"
+            value="${D.settings.safetyBuffer||0}"
+            style="width:100px;background:var(--s3);border:1.5px solid var(--brd2);border-radius:8px;color:var(--t1);font-family:var(--f);font-size:13px;font-weight:600;padding:5px 8px;text-align:right;outline:none;"
+            onchange="D.settings.safetyBuffer=Math.max(0,parseInt(this.value)||0);pushData();renderAll();"
+            onfocus="this.style.borderColor='var(--acc)'"
+            onblur="this.style.borderColor='var(--brd2)'"
+            title="Минимальный остаток на счетах">
+          <span style="font-size:13px;color:var(--t2);font-weight:600">₽</span>
+        </div>
+      </div>
     </div>`;
 }
 
