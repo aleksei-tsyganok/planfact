@@ -462,6 +462,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .pvz-group-header.overdue-group .pvz-group-name{color:var(--amber);}
 .pvz-group-body{overflow:hidden;max-height:0;transition:max-height .25s ease;}
 .pvz-group-body.open{max-height:2000px;}
+.pvz-dot-glow{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .weekly-sub.open{max-height:500px;}
 .weekly-row{display:flex;align-items:center;gap:10px;padding:7px 20px 7px 36px;border-bottom:1px solid var(--brd);}
 .weekly-row:last-child{border-bottom:none;}
@@ -724,14 +725,13 @@ const PVZ_LIST=[
 
 // Подгруппы ПВЗ
 const PVZ_GROUPS=[
-  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04']},
-  {key:'AD',  name:'"А+Д" ПВЗ', pvz:['p03','p05','p06','p07']},
-  {key:'YM',  name:'"ЯМ" ПВЗ',  pvz:['p08','p09','p10','p11','p12','p13']},
+  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04'],   color:'#34d399'},
+  {key:'AD',  name:'"А+Д" ПВЗ', pvz:['p03','p05','p06','p07'], color:'#818cf8'},
+  {key:'YM',  name:'"ЯМ" ПВЗ',  pvz:['p08','p09','p10','p11','p12','p13'], color:'#f87171'},
 ];
-// Для Химчистки: «А» = p01,p02,p04, «Остальные» = всё остальное
 const HM_GROUPS=[
-  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04']},
-  {key:'REST',name:'Остальные', pvz:['p03','p05','p06','p07','p08','p09','p10','p11','p12','p13']},
+  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04'],   color:'#34d399'},
+  {key:'REST',name:'Остальные', pvz:['p03','p05','p06','p07','p08','p09','p10','p11','p12','p13'], color:'#94a3b8'},
 ];
 // Категории без группировки (плоский список)
 const NO_GROUP_CATS=['ye','pp','dp']; // Яндекс Еда, Пункт Печати, DPD
@@ -1334,12 +1334,29 @@ function renderSettings(){
           const grpTotal=grpItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
           const grpOverdue=isGroupOverdue(grp.pvz,svcItems);
           const grpId='pvzg_inc_'+svc.key+'_'+grp.key;
-          incHtml+=`<div class="pvz-group-header ${grpOverdue?'overdue-group':''}" onclick="togglePvzGroup('${grpId}')">
-            <div class="pvz-group-name">${grp.name}</div>
-            <div class="pvz-group-sum" style="color:var(--grn)">${grpTotal?fmt(grpTotal):'—'}</div>
-            <div class="pvz-group-arrow">▾</div>
-          </div>
-          <div class="pvz-group-body" id="${grpId}">`;
+          {
+            const isYmAg = svc.key==='ag' && grp.key==='YM';
+            const ymIds = isYmAg ? grpItems.map(i=>i.id) : [];
+            const ymDone = isYmAg && ymIds.every(id=>D.done[id]);
+            let tglStr = '';
+            if(isYmAg){
+              tglStr = '<label class="tg" onclick="event.stopPropagation()" style="flex-shrink:0;margin-left:4px">'
+                + '<input type="checkbox" ' + (ymDone?'checked':'') + ' onchange="toggleGroupDone()">'
+                + '<span class="tg-s"></span></label>';
+              window._ymAgIds = ymIds;
+            }
+            incHtml+=`<div class="pvz-group-header ${grpOverdue?'overdue-group':''}" style="border-left-color:${grpOverdue?'var(--amber)':grp.color}">
+              <div onclick="togglePvzGroup('${grpId}')" style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer">
+                <div style="width:8px;height:8px;border-radius:50%;background:${grp.color};flex-shrink:0;box-shadow:0 0 5px ${grp.color}66"></div>
+                <div class="pvz-group-name">${grp.name}</div>
+                <div class="pvz-group-sum" style="color:var(--grn)">${grpTotal?fmt(grpTotal):'—'}</div>
+                <div class="pvz-group-arrow">▾</div>
+              </div>
+              ${tglStr}
+            </div>
+            <div class="pvz-group-body" id="${grpId}">`;
+          }
+
           for(const pvzKey of grp.pvz){
             const pvz=PVZ_LIST.find(p=>p.key===pvzKey);
             const item=grpItems.find(i=>i.pvzAddr===pvzKey);
@@ -1396,19 +1413,43 @@ function renderSettings(){
         const grpId='pvzg_exp_'+cat.key+'_'+grp.key;
 
         if(groupOnly){
-          // Только заголовок группы с суммой, датой и тумблером — без внутренних пунктов
-          // Берём первый элемент группы для даты/тумблеров (у всех одинаковые)
+          // Group-only: editable amount per each item, shared date/toggles shown per item
+          const grpColors={'A':'#34d399','AD':'#818cf8','YM':'#f87171','REST':'#94a3b8'};
+          const dotColor=grpColors[grp.key]||'#94a3b8';
+          // Show one row per item in the group (each has its own amount)
+          // But aggregate sum, with group label and dot, then per-item amounts inline-editable
+          // Actually: show group header row (sum, date, toggles) then sub-amounts per pvz
+          // Per user request: no inner pvz list — so show ONE row per group
+          // with the group's total as editable sum (editing edits all items proportionally)
+          // Simpler: show one row per item but without pvz name, just group label on first
           const firstItem=grpItems[0];
           const dl=itemDays(firstItem);
           const tgls=dl.length>1?dl.map((_,ii)=>doneToggleHtml(firstItem.id,ii)).join(''):doneToggleHtml(firstItem.id,0);
-          expHtml+=`<div class="item-row ${grpOverdue?'overdue':''}" style="padding-left:16px">
-            <div class="pvz-group-name" style="flex:1;font-style:italic">${grp.name}</div>
-            <div class="item-amount exp">${grpTotal?fmt(grpTotal):'—'}</div>
+          // One compact row per pvz item, grouped under group name header
+          expHtml+=`<div style="display:flex;align-items:center;gap:8px;padding:7px 16px 4px 16px;background:rgba(0,0,0,.08);border-bottom:1px solid var(--brd)">
+            <div style="width:9px;height:9px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 0 2px rgba(0,0,0,.3),0 0 6px ${dotColor}55"></div>
+            <div style="font-size:12px;font-weight:700;color:var(--t2);font-style:italic;flex:1">${grp.name}</div>
+            <div style="font-size:11px;font-weight:600;color:var(--red)">${grpTotal?fmt(grpTotal):'—'}</div>
             <div class="item-day-badge" data-id="${firstItem.id}">${firstItem.days?firstItem.days.join(', '):(firstItem.day||'—')}</div>
             ${tgls}
           </div>`;
+          // Editable amount per each pvz item
+          for(const item of grpItems){
+            const pvz=PVZ_LIST.find(p=>p.key===item.pvzAddr);
+            if(!pvz) continue;
+            const isSal=item.categoryKey==='zp';
+            const dl2=itemDays(item);
+            const tgls2=dl2.length>1?dl2.map((_,ii)=>doneToggleHtml(item.id,ii)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));
+            expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:28px">
+              <div style="width:4px;height:4px;border-radius:50%;background:${dotColor};opacity:.5;flex-shrink:0;margin-right:2px"></div>
+              <div class="item-name" style="font-size:12px;color:var(--t2)">${pvz.name}</div>
+              <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
+              ${tgls2}
+            </div>`;
+          }
         } else {
-          expHtml+=`<div class="pvz-group-header ${grpOverdue?'overdue-group':''}" onclick="togglePvzGroup('${grpId}')">
+          expHtml+=`<div class="pvz-group-header ${grpOverdue?'overdue-group':''}" onclick="togglePvzGroup('${grpId}')" style="border-left-color:${grpOverdue?'var(--amber)':grp.color}">
+            <div style="width:8px;height:8px;border-radius:50%;background:${grp.color};flex-shrink:0;box-shadow:0 0 5px ${grp.color}66"></div>
             <div class="pvz-group-name">${grp.name}</div>
             <div class="pvz-group-sum" style="color:var(--red)">${grpTotal?fmt(grpTotal):'—'}</div>
             <div class="pvz-group-arrow">▾</div>
@@ -1443,6 +1484,19 @@ function renderSettings(){
   }
 
   document.getElementById('settingExpenses').innerHTML=expHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет расходов</div>';
+}
+
+function toggleGroupDone(){
+  const itemIds = window._ymAgIds || [];
+  const allDone = itemIds.every(id => D.done[id]);
+  itemIds.forEach(id => {
+    if(allDone) delete D.done[id];
+    else D.done[id] = true;
+  });
+  pushData();
+  renderSettings();
+  const msb = getMonthStartBalance(curYear, curMonth);
+  renderCashflow(msb); renderKPI(msb);
 }
 
 function togglePvzGroup(id){
