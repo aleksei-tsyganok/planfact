@@ -1287,7 +1287,7 @@ function renderCashflow(msb){
   if(genExpItems.length){
     html+=`<tr class="row-section"><td colspan="${days+1}">Общие расходы</td></tr>`;
     for(const item of genExpItems){
-      html+=`<tr class="row-expense"><td>${item.category||item.id}</td>`;
+      html+=`<tr class="row-expense"><td>${item.category||item.id}${item.pvzAddr?' — '+((PVZ_LIST.find(p=>p.key===item.pvzAddr)||{}).name||''):''}</td>`;
       for(const day of cols){
         const v=itemDayMap[item.id]?itemDayMap[item.id][day.d]:0;
         const cl=(day.we?'we-col':'')+(day.tod?' today-col':'');
