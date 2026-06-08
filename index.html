@@ -812,8 +812,7 @@ function fmt(n,plus){
 }
 function fmtK(n){
   if(!n)return '0₽';
-  const abs=Math.abs(n);
-  const s=abs>=1000000?(abs/1000000).toFixed(1).replace('.0','')+'М':abs>=1000?(abs/1000).toFixed(0)+'к':abs.toString();
+  const s=Math.abs(n).toLocaleString('ru-RU');
   return (n<0?'−':'')+s+'₽';
 }
 function setLT(t){document.getElementById('loaderTxt').textContent=t;}
@@ -1235,9 +1234,27 @@ function subHead(label){
 
 function weeklyDates(item,year,month){
   const days=getDays(year,month);
-  const start=Math.min(parseInt((item.days||[item.day||1])[0])||1,days);
+  // Базовый день старта (абсолютный, из настройки)
+  const baseDay=parseInt((item.days||[item.day||1])[0])||1;
+  // Вычисляем смещение: сколько дней прошло от начала "опорного" месяца
+  // Опорный месяц — тот где задан baseDay
+  // Для правильной цепочки считаем суммарное количество дней от точки отсчёта
+  // Используем: начало года как точку, считаем дни
+  // Проще: найти первый день в текущем месяце через остаток от 7
+  // Считаем дни от 1 января опорного года до baseDay опорного месяца
+  // Затем прибавляем дни всех месяцев до year/month
+  const refYear=new Date().getFullYear();
+  const refMonth=new Date().getMonth();
+  // Найдём базовую дату как число дней от эпохи
+  const baseDate=new Date(refYear,refMonth,baseDay);
+  const targetMonthStart=new Date(year,month,1);
+  const diffDays=Math.round((targetMonthStart-baseDate)/(86400000));
+  const offset=((diffDays%7)+7)%7; // смещение внутри недели
+  // Первая дата в target month = 1 + (7 - offset) % 7, но не раньше 1
+  let firstDay=1+((7-offset)%7);
+  if(firstDay>days) return [];
   const dates=[];
-  for(let d=start;d<=days;d+=7) dates.push(d);
+  for(let d=firstDay;d<=days;d+=7) dates.push(d);
   return dates;
 }
 function weeklyDoneKey(itemId,d){return itemId+'_d'+d;}
@@ -1248,15 +1265,15 @@ function isOverdue(item){
   const isCurMonth=curYear===cy&&curMonth===cm;
   if(!isCurMonth) return false;
   if(item.repeat==='weekly'){
-    return weeklyDates(item,cy,cm).some(d=>d<cd&&!D.done[weeklyDoneKey(item.id,d)]);
+    return weeklyDates(item,cy,cm).some(d=>d<=cd&&!D.done[weeklyDoneKey(item.id,d)]);
   }
   const dlist=itemDays(item);
   const key0=item.id,key1=item.id+'_2';
   if(dlist.length>=2){
-    const d0passed=dlist[0]<cd,d1passed=dlist[1]<cd;
+    const d0passed=dlist[0]<=cd,d1passed=dlist[1]<=cd;
     return (d0passed&&!D.done[key0])||(d1passed&&!D.done[key1]);
   }
-  return dlist[0]<cd&&!D.done[key0];
+  return dlist[0]<=cd&&!D.done[key0];
 }
 
 function isSvcOverdue(svcItems){
