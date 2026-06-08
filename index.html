@@ -450,6 +450,18 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 /* ── SCROLLBAR ── */
 .item-row.overdue{background:rgba(251,191,36,0.07)!important;box-shadow:inset 3px 0 0 var(--amber);}
 .cat-header.overdue-cat{box-shadow:inset 3px 0 0 var(--amber);background:rgba(251,191,36,0.06)!important;}
+.overdue-dash{background:var(--s2);border:1px solid rgba(251,191,36,0.25);border-radius:var(--r);margin-bottom:20px;overflow:hidden;}
+.overdue-dash-title{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(251,191,36,0.15);background:rgba(251,191,36,0.06);}
+.overdue-dash-title span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--amber);}
+.overdue-dash-count{background:var(--amber);color:var(--bg);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;flex-shrink:0;}
+.overdue-item{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background .1s;}
+.overdue-item:last-child{border-bottom:none;}
+.overdue-item:active{background:var(--s3);}
+.ov-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.ov-name{font-size:13px;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ov-date{font-size:11px;color:var(--amber);font-weight:600;flex-shrink:0;}
+.ov-amt{font-size:13px;font-weight:600;flex-shrink:0;}
+.ov-tgl{flex-shrink:0;}
 .cat-header.overdue-cat>div:first-child{color:var(--amber)!important;}
 .item-row.overdue .item-name{color:var(--amber)!important;}
 .weekly-sub{overflow:hidden;max-height:0;transition:max-height .25s ease;background:rgba(0,0,0,.15);}
@@ -504,6 +516,8 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   </div>
   <div class="kpi-grid" id="kpiGrid"></div>
   <div class="free-money-bar" id="freeMoneyBar"></div>
+  <div id="overdueDash"></div>
+
   <div class="section-head">
     <div class="section-title">Остатки по счетам</div>
     <button class="sec-action" onclick="showView('settings',document.querySelectorAll('.ntab')[1])">Настроить →</button>
@@ -1020,6 +1034,7 @@ function renderAll(){
   renderAccounts();
   renderCashflow(msb);
   renderSettings();
+  renderOverdueDash();
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
@@ -1078,6 +1093,87 @@ function renderKPI(msb){
         </div>
       </div>
     </div>`;
+}
+
+function getOverdueItems(){
+  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
+  const result=[];
+
+  for(const item of D.items){
+    if(!(Number(item.amount)||0)) continue;
+    const isCurMonth=curYear===cy&&curMonth===cm;
+    if(!isCurMonth) continue;
+
+    if(item.repeat==='weekly'){
+      const wdates=weeklyDates(item,cy,cm);
+      wdates.forEach(d=>{
+        if(d<=cd&&!D.done[weeklyDoneKey(item.id,d)]){
+          result.push({item, date:d, key:weeklyDoneKey(item.id,d), label:d+' числа'});
+        }
+      });
+    } else {
+      const dlist=itemDays(item);
+      dlist.forEach((d,i)=>{
+        const key=i===0?item.id:item.id+'_2';
+        if(d<=cd&&!D.done[key]){
+          result.push({item, date:d, key, label:d+' числа'});
+        }
+      });
+    }
+  }
+
+  // Sort: today first, then by date desc
+  return result.sort((a,b)=>{
+    const now2=new Date().getDate();
+    if(a.date===now2&&b.date!==now2) return -1;
+    if(b.date===now2&&a.date!==now2) return 1;
+    return b.date-a.date;
+  });
+}
+
+function renderOverdueDash(){
+  const el=document.getElementById('overdueDash');
+  if(!el) return;
+  const items=getOverdueItems();
+  if(!items.length){el.innerHTML='';return;}
+
+  const now=new Date().getDate();
+  let h=`<div class="overdue-dash">
+    <div class="overdue-dash-title">
+      <span>⚠ Требуют внимания</span>
+      <div class="overdue-dash-count">${items.length}</div>
+    </div>`;
+
+  items.forEach(({item,date,key,label})=>{
+    const isToday2=date===now;
+    const pvz=item.pvzAddr?PVZ_LIST.find(p=>p.key===item.pvzAddr):null;
+    const name=(item.category||'')+(pvz?' — '+pvz.name:'');
+    const amt=Number(item.amount)||0;
+    const amtCls=item.type==='income'?'color:var(--grn)':'color:var(--red)';
+    const sign=item.type==='income'?'+':'−';
+    const isDone=!!D.done[key];
+    h+=`<div class="overdue-item" onclick="showView('settings',document.querySelectorAll('.ntab')[1])">
+      <div class="ov-dot" style="background:${item.color||'#94a3b8'}"></div>
+      <div class="ov-name">${name}</div>
+      <div class="ov-date" style="color:${isToday2?'var(--acc)':'var(--amber)'}">${isToday2?'сегодня':label}</div>
+      <div class="ov-amt" style="${amtCls}">${sign}${fmt(amt)}</div>
+      <div class="ov-tgl" onclick="event.stopPropagation()">
+        <label class="tg"><input type="checkbox" ${isDone?'checked':''} onchange="toggleOverdueDone('${key}','${item.id}')"><span class="tg-s"></span></label>
+      </div>
+    </div>`;
+  });
+
+  h+=`</div>`;
+  el.innerHTML=h;
+}
+
+function toggleOverdueDone(key,itemId){
+  if(D.done[key]) delete D.done[key]; else D.done[key]=true;
+  pushData();
+  renderOverdueDash();
+  renderSettings();
+  const msb=getMonthStartBalance(curYear,curMonth);
+  renderCashflow(msb); renderKPI(msb);
 }
 
 function renderAccounts(){
