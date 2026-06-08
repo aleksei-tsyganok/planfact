@@ -1147,28 +1147,22 @@ function renderOverdueDash(){
   items.forEach(({item,date,key,label})=>{
     const isToday2=date===now;
     const pvz=item.pvzAddr?PVZ_LIST.find(p=>p.key===item.pvzAddr):null;
-    // Короткие названия категорий
-    const CAT_SHORT={
-      'ag':'Агент.','ye':'Я.Еда','yv':'Я.Вместе','sl':'Sima',
-      'hm':'Химч.','pp':'Печать','dp':'DPD','w':'W','rent':'Аренда С.',
-      'ar':'Аренда','in':'Интернет','zp':'ЗП','mgmt':'Управл.',
-      'knc':'Канц.','vvd':'Вывод'
-    };
-    const catShort=CAT_SHORT[item.categoryKey]||item.category||'';
-    // Адрес ПВЗ — только улица без номера дома чтобы короче
-    const pvzShort=pvz?pvz.name.split(' ').slice(0,-1).join(' ')||pvz.name:'';
-    const name=catShort+(pvzShort?' · '+pvzShort:'');
+    const catName=item.category||'';
+    const pvzName=pvz?pvz.name:'';
     const amt=Number(item.amount)||0;
     const amtCls=item.type==='income'?'color:var(--grn)':'color:var(--red)';
     const sign=item.type==='income'?'+':'−';
     const isDone=!!D.done[key];
     h+=`<div class="overdue-item" onclick="showView('settings',document.querySelectorAll('.ntab')[1])">
       <div class="ov-dot" style="background:${item.color||'#94a3b8'}"></div>
-      <div style="flex:1;min-width:0">
-        <div class="ov-name">${name}</div>
-        <div style="font-size:11px;color:${isToday2?'var(--acc)':'var(--amber)'};margin-top:1px">${isToday2?'сегодня':label}</div>
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div style="font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catName}</div>
+        ${pvzName?`<div style="font-size:10px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${pvzName}</div>`:''}
+        <div style="font-size:10px;color:${isToday2?'var(--acc)':'var(--amber)'};margin-top:1px;font-weight:600">${isToday2?'сегодня':label}</div>
       </div>
-      <div class="ov-amt" style="${amtCls}">${sign}${fmt(amt)}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
+        <div style="font-size:12px;font-weight:700;${amtCls}">${sign}${fmt(amt)}</div>
+      </div>
       <div class="ov-tgl" onclick="event.stopPropagation()">
         <label class="tg"><input type="checkbox" ${isDone?'checked':''} onchange="toggleOverdueDone('${key}','${item.id}')"><span class="tg-s"></span></label>
       </div>
