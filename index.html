@@ -1668,9 +1668,8 @@ function buildWeeklySub(item){
 function saveOpenState(){
   const state={cats:new Set(), pvzGroups:new Set()};
   document.querySelectorAll('.cat-header:not(.collapsed)').forEach(el=>{
-    // use text content as key
-    const key=el.textContent.trim().slice(0,30);
-    state.cats.add(key);
+    const key=el.dataset.catKey;
+    if(key) state.cats.add(key);
   });
   document.querySelectorAll('.pvz-group-body.open').forEach(el=>{
     state.pvzGroups.add(el.id);
@@ -1679,8 +1678,8 @@ function saveOpenState(){
 }
 
 function restoreOpenState(state){
-  document.querySelectorAll('.cat-header').forEach(el=>{
-    const key=el.textContent.trim().slice(0,30);
+  document.querySelectorAll('.cat-header[data-cat-key]').forEach(el=>{
+    const key=el.dataset.catKey;
     if(state.cats.has(key)){
       el.classList.remove('collapsed');
       const body=el.nextElementSibling;
@@ -1731,7 +1730,7 @@ function renderSettings(){
           + '<input type="checkbox" '+(svcAllDone?'checked':'')+' onchange="toggleSvcDone(\''+svc.key+'\')"><span class="tg-s"></span></label>'
         : '';
       const svcOverdue = isSvcOverdue(svcItems);
-      incHtml+=`<div class="cat-header inc${svcOverdue?' overdue-cat':''}" style="display:flex;align-items:center" onclick="toggleCat(this)">
+      incHtml+=`<div class="cat-header inc${svcOverdue?' overdue-cat':''}" data-cat-key="${svc.key}" style="display:flex;align-items:center" onclick="toggleCat(this)">
         <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${svc.name}</div>
         <div style="font-size:12px;font-weight:600;color:var(--grn)">${svcTotal?fmt(svcTotal):'—'}</div>
         ${svcTglHtml}
@@ -1826,7 +1825,7 @@ function renderSettings(){
       const catTotal=catItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
 
       const catOverdue = isCatOverdue(catItems);
-      expHtml+=`<div class="cat-header exp${catOverdue?' overdue-cat':''}" onclick="toggleCat(this)">
+      expHtml+=`<div class="cat-header exp${catOverdue?' overdue-cat':''}" data-cat-key="${cat.key}" onclick="toggleCat(this)">
         <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${cat.name}</div>
         <div style="font-size:12px;font-weight:600;color:var(--red)">${catTotal?fmt(catTotal):'—'}${cat.key==='zp'?' <span style="font-size:9px;color:var(--t3);font-weight:400">/смена</span>':''}</div>
       </div>
@@ -1963,7 +1962,7 @@ document.addEventListener('click',function(e){
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      pushData(); renderAll();
+      pushData(); const _st=saveOpenState(); renderAll(); restoreOpenState(_st);
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -1990,7 +1989,7 @@ document.addEventListener('click',function(e){
       const nums=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
       if(nums.length){item.days=nums; delete item.day;}
       else if(nums.length===1){item.days=nums;}
-      pushData(); renderAll();
+      pushData(); const _st=saveOpenState(); renderAll(); restoreOpenState(_st);
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -2003,7 +2002,7 @@ document.addEventListener('click',function(e){
     const sel=document.createElement('select'); sel.className='ie-rep';
     ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
     rep.innerHTML=''; rep.appendChild(sel); sel.focus();
-    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); renderAll(); });
+    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); const _st=saveOpenState(); renderAll(); restoreOpenState(_st); });
     return;
   }
 });
@@ -2083,7 +2082,7 @@ function toggleCalDay(d){
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); renderSettings();
+  pushData(); const _st=saveOpenState(); renderSettings(); restoreOpenState(_st);
 }
 
 function closeDayCalPopup(){
