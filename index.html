@@ -33,6 +33,8 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
   min-height:100dvh;
+  overflow-anchor:none;
+  scrollbar-gutter:stable;
   background-image:
     radial-gradient(ellipse 80% 40% at 20% 0%,rgba(45,212,160,.035) 0%,transparent 70%),
     radial-gradient(ellipse 60% 30% at 80% 10%,rgba(91,156,246,.025) 0%,transparent 70%),
@@ -907,7 +909,10 @@ function buildDailyCF(year,month,startOverride){
       const isDone=isCurMonth&&D.done[doneKey];
       if(isDone) continue; // skip — already processed
       if(item.repeat==='weekly'){
-        for(let d2=d0;d2<=days;d2+=7){
+        const refYear=item._refYear!==undefined?item._refYear:year;
+        const refMonth=item._refMonth!==undefined?item._refMonth:month;
+        const refDow=new Date(refYear,refMonth,d0).getDay();
+        for(const d2 of weeklyDatesForDow(refDow,year,month)){
           if(isCurMonth&&D.done[weeklyDoneKey(item.id,d2)]) continue;
           events[d2].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
           if(item.taxable&&amt>0){
@@ -947,7 +952,10 @@ function buildDailyCF(year,month,startOverride){
       if(isDone) continue;
       const d=Math.min(d0,days);
       if(item.repeat==='weekly'){
-        for(let d2=d;d2<=days;d2+=7){
+        const refYear=item._refYear!==undefined?item._refYear:year;
+        const refMonth=item._refMonth!==undefined?item._refMonth:month;
+        const refDow=new Date(refYear,refMonth,d0).getDay();
+        for(const d2 of weeklyDatesForDow(refDow,year,month)){
           if(isCurMonth&&D.done[weeklyDoneKey(item.id,d2)]) continue;
           events[d2].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
         }
@@ -1066,6 +1074,8 @@ function calcSafeWithdrawal(){
 // RENDER ALL
 // ══════════════════════════════════
 function renderAll(){
+  const _sy=document.documentElement.scrollTop;
+  const _ost=saveOpenState();
   document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
   document.getElementById('monthSub').textContent='';
   const msb=getMonthStartBalance(curYear,curMonth);
@@ -1078,6 +1088,8 @@ function renderAll(){
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
+  restoreOpenState(_ost);
+  setTimeout(()=>{ document.documentElement.scrollTop=_sy; },0);
 
 }
 
@@ -1125,7 +1137,7 @@ function renderKPI(msb){
             type="number" min="0" step="10000"
             value="${D.settings.safetyBuffer||0}"
             style="width:100px;background:var(--s3);border:1.5px solid var(--brd2);border-radius:8px;color:var(--t1);font-family:var(--f);font-size:13px;font-weight:600;padding:5px 8px;text-align:right;outline:none;"
-            onchange="D.settings.safetyBuffer=Math.max(0,parseInt(this.value)||0);pushData();renderAll();"
+            onchange="D.settings.safetyBuffer=Math.max(0,parseInt(this.value)||0);pushData();rerender();"
             onfocus="this.style.borderColor='var(--acc)'"
             onblur="this.style.borderColor='var(--brd2)'"
             title="Минимальный остаток на счетах">
@@ -1311,7 +1323,7 @@ function renderForecast(){
   PVZ_LIST.forEach(p=>{
     let taxable=0;
     D.items.filter(i=>i.type==='income'&&i.pvzAddr===p.key&&i.taxable).forEach(i=>{
-      const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:1;
+      const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:itemDays(i).length;
       taxable+=(Number(i.amount)||0)*occ;
     });
     pvzMap[p.key].exp+=Math.round(taxable*taxRate2);
@@ -1342,7 +1354,7 @@ function renderForecast(){
   let nonPvzTaxable=0;
   D.items.filter(i=>i.type==='income'&&i.taxable&&!i.pvzAddr).forEach(i=>{
     if(taxBase2==='pvz') return;
-    const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:1;
+    const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:itemDays(i).length;
     nonPvzTaxable+=(Number(i.amount)||0)*occ;
   });
   generalExp+=Math.round(nonPvzTaxable*(D.settings.taxRate||7)/100);
@@ -1593,29 +1605,27 @@ function subHead(label){
   return `<div style="padding:7px 16px 4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);background:var(--s3);border-bottom:1px solid var(--brd)">${label}</div>`;
 }
 
+function weeklyDatesForDow(refDow,targetYear,targetMonth){
+  const mdays=getDays(targetYear,targetMonth);
+  const firstDow=new Date(targetYear,targetMonth,1).getDay();
+  let fd=1+((refDow-firstDow+7)%7);
+  if(fd>mdays) return [];
+  const out=[];
+  for(let d=fd;d<=mdays;d+=7) out.push(d);
+  return out;
+}
 function weeklyDates(item,year,month){
-  const days=getDays(year,month);
-  // Базовый день старта (абсолютный, из настройки)
-  const baseDay=parseInt((item.days||[item.day||1])[0])||1;
-  // Вычисляем смещение: сколько дней прошло от начала "опорного" месяца
-  // Опорный месяц — тот где задан baseDay
-  // Для правильной цепочки считаем суммарное количество дней от точки отсчёта
-  // Используем: начало года как точку, считаем дни
-  // Проще: найти первый день в текущем месяце через остаток от 7
-  // Считаем дни от 1 января опорного года до baseDay опорного месяца
-  // Затем прибавляем дни всех месяцев до year/month
-  const refYear=new Date().getFullYear();
-  const refMonth=new Date().getMonth();
-  // Найдём базовую дату как число дней от эпохи
-  const baseDate=new Date(refYear,refMonth,baseDay);
-  const targetMonthStart=new Date(year,month,1);
-  const diffDays=Math.round((targetMonthStart-baseDate)/(86400000));
-  const offset=((diffDays%7)+7)%7; // смещение внутри недели
-  // Первая дата в target month = 1 + (7 - offset) % 7, но не раньше 1
-  let firstDay=1+((7-offset)%7);
-  if(firstDay>days) return [];
+  const dlist=itemDays(item);
+  const refYear=item._refYear!==undefined?item._refYear:curYear;
+  const refMonth=item._refMonth!==undefined?item._refMonth:curMonth;
   const dates=[];
-  for(let d=firstDay;d<=days;d+=7) dates.push(d);
+  for(const baseDay of dlist){
+    const refDow=new Date(refYear,refMonth,baseDay).getDay();
+    for(const d of weeklyDatesForDow(refDow,year,month)){
+      if(!dates.includes(d)) dates.push(d);
+    }
+  }
+  dates.sort((a,b)=>a-b);
   return dates;
 }
 function weeklyDoneKey(itemId,d){return itemId+'_d'+d;}
@@ -1957,12 +1967,22 @@ document.addEventListener('click',function(e){
     const val=isAcct?item.balance:item.amount;
     amt.innerHTML=`<input class="ie-amt" type="number" value="${val||0}" step="${isAcct?'1000':'100'}">`;
     const inp=amt.querySelector('input');
-    const _initSy=window.scrollY;
-    inp.focus({preventScroll:true}); inp.select();
+    inp.focus(); inp.select();
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      pushData(); const _st=saveOpenState(), _sy=_initSy; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy)));
+      // Minimal update — don't re-render settings, just update the display and KPI
+      amt.textContent=isAcct?fmt(v)||'0₽':fmt(v)||'—';
+      pushData();
+      renderKPI(getMonthStartBalance(curYear,curMonth));
+      renderOverdueDash();
+      renderForecast();
+      const msb=getMonthStartBalance(curYear,curMonth);
+      renderCashflow(msb);
+      renderAccounts();
+      document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
+      document.documentElement.scrollTop=_sy;
+      requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -1972,29 +1992,7 @@ document.addEventListener('click',function(e){
   if(dayEl&&!document.querySelector('.day-cal-popup')&&!dayEl.querySelector('input')){
     const id=dayEl.dataset.id, item=D.items.find(x=>x.id===id);
     if(!item) return;
-    // For dual-date categories — show calendar popup
-    if(DUAL_CAT.includes(item.categoryKey)){
-      openDayCalPopup(dayEl, item);
-      return;
-    }
-    // For all others — text input as before
-    const inp=document.createElement('input');
-    inp.className='ie-day';
-    inp.type='text';
-    inp.value=item.days?item.days.join(', '):(item.day||'1');
-    inp.style.width='80px';
-    dayEl.textContent=''; dayEl.appendChild(inp);
-    const _initSy=window.scrollY;
-    inp.focus({preventScroll:true}); inp.select();
-    const save=()=>{
-      const raw=inp.value.trim();
-      const nums=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
-      if(nums.length){item.days=nums; delete item.day;}
-      else if(nums.length===1){item.days=nums;}
-      pushData(); const _st=saveOpenState(), _sy=_initSy; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy)));
-    };
-    inp.addEventListener('blur',save);
-    inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
+    openDayCalPopup(dayEl, item);
     return;
   }
   const rep=e.target.closest('.item-repeat-badge[data-id]');
@@ -2003,8 +2001,8 @@ document.addEventListener('click',function(e){
     if(!item) return;
     const sel=document.createElement('select'); sel.className='ie-rep';
     ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
-    rep.innerHTML=''; rep.appendChild(sel); const _initSy=window.scrollY; sel.focus({preventScroll:true});
-    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); const _st=saveOpenState(), _sy=_initSy; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy))); });
+    rep.innerHTML=''; rep.appendChild(sel); sel.focus();
+    sel.addEventListener('change',()=>{ item.repeat=sel.value; if(item.repeat==='weekly'){item._refYear=curYear;item._refMonth=curMonth;}else{delete item._refYear;delete item._refMonth;} pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>document.documentElement.scrollTop=_sy); });
     return;
   }
 });
@@ -2044,7 +2042,8 @@ function openDayCalPopup(anchorEl, item){
 
 function renderDayCalContent(sel){
   sel = sel.map(Number);
-  let h = `<div style="font-size:11px;font-weight:700;color:var(--t2);text-align:center;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Выберите 2 даты</div>`;
+  const maxSel=_calItem&&['zp','mgmt','w'].includes(_calItem.categoryKey)?2:1;
+  let h = `<div style="font-size:11px;font-weight:700;color:var(--t2);text-align:center;margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Выберите ${maxSel===1?'дату':'до 2 дат'}</div>`;
   h += `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">`;
   for(let d=1;d<=31;d++){
     const isSel = sel.includes(d);
@@ -2060,14 +2059,15 @@ function renderDayCalContent(sel){
   h += `<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">`;
   h += `<div style="font-size:13px;color:var(--t2)">`;
   if(sorted.length===0) h += `<span style="color:var(--t3)">не выбрано</span>`;
-  else h += sorted.map(d=>`<strong style="color:var(--acc)">${d}</strong>`).join(' и ') + ' <span style="color:var(--t3)">числа</span>';
+  else h += sorted.map(d=>`<strong style="color:var(--acc)">${d}</strong>`).join(', ') + ' <span style="color:var(--t3)">числа</span>';
   h += `</div>`;
-  h += `<button onclick="closeDayCalPopup()" style="
-    background:${sel.length===2?'var(--acc)':'var(--s5)'};
+  const ready=sel.length>=1;
+  h += `<button onclick="${ready?'applyDayCal()':'closeDayCalPopup()'}" style="
+    background:${ready?'var(--acc)':'var(--s5)'};
     border:none;border-radius:7px;padding:5px 10px;
-    color:${sel.length===2?'var(--bg)':'var(--t3)'};
+    color:${ready?'var(--bg)':'var(--t3)'};
     font-family:var(--f);font-size:12px;font-weight:700;cursor:pointer;
-  ">${sel.length===2?'Готово':'—'}</button>`;
+  ">${ready?'Готово':'Закрыть'}</button>`;
   h += `</div>`;
   return h;
 }
@@ -2075,16 +2075,25 @@ function renderDayCalContent(sel){
 function toggleCalDay(d){
   if(!_calItem) return;
   let sel = (_calItem.days||[_calItem.day||1]).map(Number);
+  const maxSel=_calItem.categoryKey&&['zp','mgmt','w'].includes(_calItem.categoryKey)?2:1;
   const idx = sel.indexOf(d);
   if(idx>=0){ sel.splice(idx,1); }
-  else if(sel.length<2){ sel.push(d); }
-  else { sel = [sel[1], d]; } // replace oldest with new
+  else if(sel.length<maxSel){ sel.push(d); }
+  else { sel = [sel[sel.length-1], d].slice(-maxSel); } // replace
   _calItem.days = sel; delete _calItem.day;
+  if(_calItem.repeat==='weekly'){_calItem._refYear=curYear;_calItem._refMonth=curMonth;}
   // re-render popup content
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy)));
+  pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>document.documentElement.scrollTop=_sy);
+}
+
+function applyDayCal(){
+  if(!_calItem) return;
+  if(_calItem.repeat==='weekly'){_calItem._refYear=curYear;_calItem._refMonth=curMonth;}
+  closeDayCalPopup();
+  pushData(); rerender();
 }
 
 function closeDayCalPopup(){
@@ -2287,7 +2296,7 @@ function saveAccount(){
   } else {
     D.accounts.push({id:uid(),name,balance,color:selColor});
   }
-  closeModal(); pushData(); renderAll(); showToast('✓ Сохранено');
+  closeModal(); pushData(); rerender(); showToast('✓ Сохранено');
 }
 
 function saveItem(){
@@ -2320,46 +2329,62 @@ function saveItem(){
   const tp=editingId?(D.items.find(x=>x.id===editingId)?.type||modalType):modalType;
   if(editingId){
     const it=D.items.find(x=>x.id===editingId);
-    if(it){Object.assign(it,itemData);}
+    if(it){Object.assign(it,itemData); if(repeat==='weekly'){it._refYear=curYear;it._refMonth=curMonth;}else{delete it._refYear;delete it._refMonth;}}
   } else {
-    D.items.push({id:uid(),type:tp,...itemData});
+    const newItem={id:uid(),type:tp,...itemData};
+    if(repeat==='weekly'){newItem._refYear=curYear;newItem._refMonth=curMonth;}
+    D.items.push(newItem);
   }
-  closeModal(); pushData(); renderAll(); showToast('✓ Сохранено');
+  closeModal(); pushData(); rerender(); showToast('✓ Сохранено');
 }
 
 function delItem(cat,id){
   if(!confirm('Удалить?'))return;
   if(cat==='account')D.accounts=D.accounts.filter(x=>x.id!==id);
   else D.items=D.items.filter(x=>x.id!==id);
-  closeModal(); pushData(); renderAll(); showToast('Удалено');
+  closeModal(); pushData(); rerender(); showToast('Удалено');
 }
 
+function rerender(){
+  const _st=saveOpenState(), _sy=document.documentElement.scrollTop;
+  renderAll();
+  restoreOpenState(_st);
+  // disable CSS transitions on restored groups so height is immediate
+  document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
+  document.documentElement.scrollTop=_sy;
+  // re-enable transitions after layout settles
+  requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
+}
 function closeModal(){document.getElementById('itemModal').classList.remove('open');}
 document.getElementById('itemModal').addEventListener('click',e=>{if(e.target===document.getElementById('itemModal'))closeModal();});
 
 // ══════════════════════════════════
 // TAX SETTINGS
 // ══════════════════════════════════
-function saveTaxRate(){D.settings.taxRate=parseFloat(document.getElementById('taxRate').value)||7;pushData();renderAll();}
-function saveTaxBase(){D.settings.taxBase=document.getElementById('taxBase').value;pushData();renderAll();}
+function saveTaxRate(){D.settings.taxRate=parseFloat(document.getElementById('taxRate').value)||7;pushData();rerender();}
+function saveTaxBase(){D.settings.taxBase=document.getElementById('taxBase').value;pushData();rerender();}
 
-function togglePaid(){D.settings.paidToday=document.getElementById('paidToday').checked;pushData();renderAll();}
+function togglePaid(){D.settings.paidToday=document.getElementById('paidToday').checked;pushData();rerender();}
 
 // ══════════════════════════════════
 // NAV
 // ══════════════════════════════════
 function showView(id,btn){
+  const _sy=document.documentElement.scrollTop;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
   btn.classList.add('active');
+  requestAnimationFrame(()=>document.documentElement.scrollTop=_sy);
 }
 function chMonth(d){
+  const _sy=document.documentElement.scrollTop;
   curMonth+=d;
   if(curMonth>11){curMonth=0;curYear++;}
   if(curMonth<0){curMonth=11;curYear--;}
   renderAll();
   renderForecast();
+  requestAnimationFrame(()=>document.documentElement.scrollTop=_sy);
 }
 function chFcMonth(d){
   chMonth(d);
