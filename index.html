@@ -69,7 +69,7 @@ body{
 .sync-dot.sync{background:var(--amber);animation:blink .9s ease-in-out infinite}
 .sync-dot.err{background:var(--red)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.sync-label{font-size:11px;color:var(--t3);white-space:nowrap;font-weight:500}
+
 
 /* ── VIEWS ── */
 .view{display:none;padding:24px 20px;max-width:1240px;margin:0 auto}
@@ -503,8 +503,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
     <button class="ntab" onclick="showView('forecast',this)">Прогноз</button>
     <button class="ntab" onclick="showView('settings',this)">Настройки</button>
   </div>
-  <div class="sync-dot" id="sdot"></div>
-  <div class="sync-label" id="slabel">—</div>
+  <div class="sync-dot" id="sdot" title="Статус синхронизации"></div>
 </div>
 
 <!-- ════ DASHBOARD ════ -->
@@ -639,9 +638,8 @@ let selColor=COLORS[0];
 // SYNC
 // ══════════════════════════════════
 function ss(st){
-  const d=document.getElementById('sdot'), l=document.getElementById('slabel');
+  const d=document.getElementById('sdot');
   d.className='sync-dot '+(st==='ok'?'ok':st==='sync'?'sync':'err');
-  l.textContent=st==='ok'?'Сохранено':st==='sync'?'Синхронизация…':'Офлайн';
 }
 
 // ══════════════════════════════════
@@ -729,10 +727,23 @@ async function initApp(){
 }
 
 async function pushData(){
-  if(!dbOk){saveL();return;}
+  saveL(); // always save locally first
+  if(!dbOk){
+    // try to reconnect
+    try{
+      await sGet('kp_data','limit=1');
+      dbOk=true;
+    }catch(e){ ss('err'); return; }
+  }
   ss('sync');
-  try{await sUp('kp_data',[{key:'main',data:D}]);ss('ok');saveL();}
-  catch(e){ss('err');saveL();}
+  try{
+    await sUp('kp_data',[{key:'main',data:D}]);
+    ss('ok');
+  }catch(e){
+    ss('err');
+    dbOk=false;
+    console.warn('pushData failed:',e);
+  }
 }
 
 async function trySync(){
