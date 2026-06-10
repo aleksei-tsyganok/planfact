@@ -500,6 +500,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   <div class="logo">КП <span>/ Кассовый план</span></div>
   <div class="nav-tabs">
     <button class="ntab active" onclick="showView('dashboard',this)">Дашборд</button>
+    <button class="ntab" onclick="showView('forecast',this)">Прогноз</button>
     <button class="ntab" onclick="showView('settings',this)">Настройки</button>
   </div>
   <div class="sync-dot" id="sdot"></div>
@@ -529,6 +530,15 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   <div class="cf-wrap">
     <table class="cf-table" id="cfTable"></table>
   </div>
+</div>
+
+<!-- ════ FORECAST ════ -->
+<div class="view" id="view-forecast">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div style="font-size:18px;font-weight:800;color:var(--t1)">Прогноз на месяц</div>
+    <div style="font-size:12px;color:var(--t3)">Все плановые платежи, включая проведённые</div>
+  </div>
+  <div id="forecastContent"></div>
 </div>
 
 <!-- ════ SETTINGS ════ -->
@@ -678,6 +688,22 @@ async function initApp(){
       {id:'e_vvd3', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 3', pvzAddr:null, amount:amt, day:20, repeat:'monthly', taxable:false, color:old.color||'#e879f9'}
     );
   }
+  // migrate: rename ar category
+  D.items.forEach(i=>{ if(i.categoryKey==='ar'&&i.category==='Аренда + коммуналка'){ i.category='Аренда'; } });
+  // migrate: add Коммунальные платежи items if missing
+  const hasKom=D.items.some(i=>i.categoryKey==='kom');
+  if(!hasKom){
+    const komItems=PVZ_LIST.map(p=>({
+      id:'e_kom_'+p.key, type:'expense',
+      categoryKey:'kom', category:'Коммунальные платежи',
+      pvzAddr:p.key, amount:0, day:5,
+      repeat:'monthly', taxable:false, color:p.color,
+    }));
+    // Insert after last ar item
+    const lastArIdx=D.items.reduce((acc,it,i)=>it.categoryKey==='ar'?i:acc,-1);
+    if(lastArIdx>=0) D.items.splice(lastArIdx+1,0,...komItems);
+    else D.items.push(...komItems);
+  }
   // migrate: add Управление items if missing
   const hasMgmt=D.items.some(i=>i.categoryKey==='mgmt');
   if(!hasMgmt){
@@ -752,7 +778,7 @@ const HM_GROUPS=[
 // Категории без группировки (плоский список)
 const NO_GROUP_CATS=['ye','pp','dp']; // Яндекс Еда, Пункт Печати, DPD
 // Категории только группы без внутренних пунктов
-const GROUP_ONLY_EXP=['mgmt','knc']; // Управление, Канцелярия
+const GROUP_ONLY_EXP=['mgmt','knc','kom']; // Управление, Канцелярия
 function pvzGroup(pvzKey){
   return PVZ_GROUPS.find(g=>g.pvz.includes(pvzKey))||PVZ_GROUPS[2];
 }
@@ -770,7 +796,8 @@ const PVZ_SERVICES=[
 
 // Категории расходов
 const EXP_CATS=[
-  {key:'ar',  name:'Аренда + коммуналка',          defaultDay:5},
+  {key:'ar',  name:'Аренда',                       defaultDay:5},
+  {key:'kom', name:'Коммунальные платежи',          defaultDay:5},
   {key:'in',  name:'Интернет + камеры',            defaultDay:10},
   {key:'zp',  name:'Заработная плата',             defaultDay:5},
   {key:'mgmt',name:'Управление',                   defaultDay:5},
@@ -1035,6 +1062,7 @@ function renderAll(){
   renderCashflow(msb);
   renderSettings();
   renderOverdueDash();
+  renderForecast();
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
@@ -1099,10 +1127,17 @@ function getOverdueItems(){
   const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
   const result=[];
 
+  // Категории с групповым тумблером (toggleSvcDone) — показываем группой
+  // Если хотя бы один просрочен в группе — одна строка на всю категорию
+  const SVC_GROUP_CATS=['ye','dp','sl','yv'];
+  const addedSvcCats=new Set();
+
   for(const item of D.items){
     if(!(Number(item.amount)||0)) continue;
     const isCurMonth=curYear===cy&&curMonth===cm;
     if(!isCurMonth) continue;
+
+    const hasSvcTgl=SVC_GROUP_CATS.includes(item.categoryKey);
 
     if(item.repeat==='weekly'){
       const wdates=weeklyDates(item,cy,cm);
@@ -1111,6 +1146,40 @@ function getOverdueItems(){
           result.push({item, date:d, key:weeklyDoneKey(item.id,d), label:d+' числа'});
         }
       });
+    } else if(hasSvcTgl){
+      // Для групповых категорий — проверяем все items группы
+      // Добавляем одну строку на категорию если ещё не добавили
+      if(addedSvcCats.has(item.categoryKey)) continue;
+      const dlist=itemDays(item);
+      const isOverdueAny=dlist.some((d,i)=>{
+        const key=i===0?item.id:item.id+'_2';
+        return d<=cd&&!D.done[key];
+      });
+      if(isOverdueAny){
+        // Найти минимальную просроченную дату по всей категории
+        const catItems=D.items.filter(x=>x.categoryKey===item.categoryKey&&(Number(x.amount)||0)>0);
+        let minDate=cd;
+        catItems.forEach(ci=>{
+          itemDays(ci).forEach((d,i)=>{
+            const k=i===0?ci.id:ci.id+'_2';
+            if(d<=cd&&!D.done[k]&&d<minDate) minDate=d;
+          });
+        });
+        // Создаём виртуальную групповую запись
+        const svcIds=catItems.map(x=>x.id);
+        const allDone=svcIds.every(id=>D.done[id]);
+        result.push({
+          item:{...item, pvzAddr:null},
+          date:minDate,
+          key:'__svc__'+item.categoryKey,
+          label:minDate===cd?'сегодня':minDate+' числа',
+          isSvcGroup:true,
+          svcKey:item.categoryKey,
+          svcIds,
+          allDone,
+        });
+        addedSvcCats.add(item.categoryKey);
+      }
     } else {
       const dlist=itemDays(item);
       dlist.forEach((d,i)=>{
@@ -1144,27 +1213,39 @@ function renderOverdueDash(){
       <div class="overdue-dash-count">${items.length}</div>
     </div>`;
 
-  items.forEach(({item,date,key,label})=>{
+  items.forEach((entry)=>{ const {item,date,key,label}=entry;
     const isToday2=date===now;
     const pvz=item.pvzAddr?PVZ_LIST.find(p=>p.key===item.pvzAddr):null;
     const catName=item.category||'';
     const pvzName=pvz?pvz.name:'';
-    const amt=Number(item.amount)||0;
-    const amtCls=item.type==='income'?'color:var(--grn)':'color:var(--red)';
-    const sign=item.type==='income'?'+':'−';
-    const isDone=!!D.done[key];
+    const isDone=entry.isSvcGroup?entry.allDone:!!D.done[key];
+
+    // Для групповых категорий — сумма всех items группы
+    let dispAmt, dispSign, dispAmtCls;
+    if(entry.isSvcGroup){
+      dispAmt=D.items.filter(x=>x.categoryKey===entry.svcKey&&(Number(x.amount)||0)>0).reduce((s,x)=>s+(Number(x.amount)||0),0);
+      dispSign=item.type==='income'?'+':'−';
+      dispAmtCls=item.type==='income'?'color:var(--grn)':'color:var(--red)';
+    } else {
+      dispAmt=Number(item.amount)||0;
+      dispSign=item.type==='income'?'+':'−';
+      dispAmtCls=item.type==='income'?'color:var(--grn)':'color:var(--red)';
+    }
+
+    const onchange=entry.isSvcGroup
+      ? `toggleSvcDone('${entry.svcKey}')`
+      : `toggleOverdueDone('${key}','${item.id}')`;
+
     h+=`<div class="overdue-item" onclick="showView('settings',document.querySelectorAll('.ntab')[1])">
       <div class="ov-dot" style="background:${item.color||'#94a3b8'}"></div>
       <div style="flex:1;min-width:0;overflow:hidden">
-        <div style="font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catName}</div>
+        <div style="font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catName}${entry.isSvcGroup?' <span style="font-size:9px;color:var(--t3);font-weight:400">(все)</span>':''}</div>
         ${pvzName?`<div style="font-size:10px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${pvzName}</div>`:''}
         <div style="font-size:10px;color:${isToday2?'var(--acc)':'var(--amber)'};margin-top:1px;font-weight:600">${isToday2?'сегодня':label}</div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0">
-        <div style="font-size:12px;font-weight:700;${amtCls}">${sign}${fmt(amt)}</div>
-      </div>
+      <div style="font-size:12px;font-weight:700;${dispAmtCls};flex-shrink:0">${dispSign}${fmt(dispAmt)}</div>
       <div class="ov-tgl" onclick="event.stopPropagation()">
-        <label class="tg"><input type="checkbox" ${isDone?'checked':''} onchange="toggleOverdueDone('${key}','${item.id}')"><span class="tg-s"></span></label>
+        <label class="tg"><input type="checkbox" ${isDone?'checked':''} onchange="${onchange}"><span class="tg-s"></span></label>
       </div>
     </div>`;
   });
@@ -1180,6 +1261,172 @@ function toggleOverdueDone(key,itemId){
   renderSettings();
   const msb=getMonthStartBalance(curYear,curMonth);
   renderCashflow(msb); renderKPI(msb);
+}
+
+function renderForecast(){
+  const el=document.getElementById('forecastContent');
+  if(!el) return;
+
+  // Используем buildDailyCF с пустым done — все платежи включая ЗП со стоимостью смены
+  const savedDone=D.done;
+  D.done={};
+  const fcf=buildDailyCF(curYear,curMonth,getMonthStartBalance(curYear,curMonth));
+  D.done=savedDone;
+
+  // Агрегируем по ПВЗ из событий CF
+  const pvzMap={};
+  PVZ_LIST.forEach(p=>{ pvzMap[p.key]={pvz:p,inc:0,tax:0,exp:0}; });
+
+  fcf.daily.forEach(day=>{
+    day.events.forEach(ev=>{
+      if(ev.auto) return;
+      const item=D.items.find(i=>i.id===ev.id);
+      if(!item) return;
+      const pk=item.pvzAddr;
+      if(pk&&pvzMap[pk]){
+        if(ev.type==='income') pvzMap[pk].inc+=ev.amount;
+        else if(ev.type==='expense') pvzMap[pk].exp+=Math.abs(ev.amount);
+      }
+    });
+  });
+
+  // Налог по каждому ПВЗ (от taxable доходов, все вхождения)
+  const taxRate2=(D.settings.taxRate||7)/100;
+  PVZ_LIST.forEach(p=>{
+    let taxable=0;
+    D.items.filter(i=>i.type==='income'&&i.pvzAddr===p.key&&i.taxable).forEach(i=>{
+      const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:1;
+      taxable+=(Number(i.amount)||0)*occ;
+    });
+    pvzMap[p.key].tax=Math.round(taxable*taxRate2);
+  });
+
+  const pvzData=PVZ_LIST.map(p=>{
+    const d=pvzMap[p.key];
+    return {pvz:p, inc:Math.round(d.inc), tax:d.tax, exp:Math.round(d.exp), net:Math.round(d.inc-d.tax-d.exp)};
+  });
+
+  // Вне ПВЗ
+  let generalExp=0, otherInc=0;
+  fcf.daily.forEach(day=>{
+    day.events.forEach(ev=>{
+      if(ev.auto) return;
+      const item=D.items.find(i=>i.id===ev.id);
+      if(!item||item.pvzAddr) return;
+      if(ev.type==='income') otherInc+=ev.amount;
+      else if(ev.type==='expense') generalExp+=Math.abs(ev.amount);
+    });
+  });
+  otherInc=Math.round(otherInc); generalExp=Math.round(generalExp);
+
+  // Общий налог из CF
+  const totalTaxCF=Math.round(fcf.daily.reduce((s,d)=>
+    s+d.events.filter(e=>e.auto).reduce((ss,e)=>ss+Math.abs(e.amount),0),0));
+
+  const totalInc=pvzData.reduce((s,p)=>s+p.inc,0)+otherInc;
+  const totalTax=totalTaxCF;
+  const totalExp=pvzData.reduce((s,p)=>s+p.exp,0)+generalExp;
+  const net=totalInc-totalTax-totalExp;
+  const startBal=getMonthStartBalance(curYear,curMonth);
+
+  // ── HEADER SUMMARY ──
+  let h=`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:20px">
+    ${[
+      {l:'Все доходы',    v:'+'+fmt(totalInc),             c:'color:var(--grn)'},
+      {l:'Налог УСН '+((D.settings.taxRate)||7)+'%', v:'−'+fmt(totalTax), c:'color:var(--amber)'},
+      {l:'Все расходы',   v:'−'+fmt(totalExp),             c:'color:var(--red)'},
+      {l:'Итог месяца',   v:(net>=0?'+':'')+fmt(Math.abs(net)), c:net>=0?'color:var(--acc)':'color:var(--red)'},
+    ].map(k=>`<div style="background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);padding:12px 14px">
+      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:6px">${k.l}</div>
+      <div style="font-size:17px;font-weight:800;${k.c}">${k.v}</div>
+    </div>`).join('')}
+  </div>`;
+
+  // ── PVZ TABLE — используем настоящую HTML-таблицу с фиксированными колонками ──
+  h+=`<div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--t3);margin-bottom:8px">По каждому ПВЗ</div>`;
+  h+=`<div style="overflow-x:auto;border-radius:var(--r);border:1px solid var(--brd);margin-bottom:16px">
+  <table style="border-collapse:collapse;width:100%;min-width:480px;font-size:12px">
+    <thead>
+      <tr style="background:var(--s3);border-bottom:1px solid var(--brd)">
+        <th style="text-align:left;padding:8px 12px;font-size:10px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">ПВЗ</th>
+        <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Доходы</th>
+        <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Налог</th>
+        <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Расходы</th>
+        <th style="text-align:right;padding:8px 12px;font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Итог</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  pvzData.forEach(({pvz,inc,tax,exp,net:pnet},idx)=>{
+    const netCls=pnet>0?'var(--grn)':pnet<0?'var(--red)':'var(--t3)';
+    const sign=pnet>0?'+':pnet<0?'−':'';
+    const rowBg=idx%2===0?'background:var(--s2)':'background:rgba(255,255,255,.018)';
+    h+=`<tr style="${rowBg};border-bottom:1px solid var(--brd)">
+      <td style="padding:9px 12px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:7px;height:7px;border-radius:50%;background:${pvz.color};flex-shrink:0;box-shadow:0 0 0 2px ${pvz.color}33"></div>
+          <span style="font-size:12px;font-weight:500;color:var(--t1);white-space:nowrap">${pvz.name}</span>
+        </div>
+      </td>
+      <td style="padding:9px 12px;text-align:right;font-size:12px;font-weight:600;color:${inc?'var(--grn)':'var(--t4)'};white-space:nowrap">${inc?'+'+fmt(inc):'—'}</td>
+      <td style="padding:9px 12px;text-align:right;font-size:11px;color:${tax?'var(--amber)':'var(--t4)'};white-space:nowrap">${tax?'−'+fmt(tax):'—'}</td>
+      <td style="padding:9px 12px;text-align:right;font-size:12px;font-weight:600;color:${exp?'var(--red)':'var(--t4)'};white-space:nowrap">${exp?'−'+fmt(exp):'—'}</td>
+      <td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:800;color:${netCls};white-space:nowrap">${pnet!==0?sign+fmt(Math.abs(pnet)):'0₽'}</td>
+    </tr>`;
+  });
+
+  // Totals row
+  const pvzIncTotal=pvzData.reduce((s,p)=>s+p.inc,0);
+  const pvzTaxTotal=pvzData.reduce((s,p)=>s+p.tax,0);
+  const pvzExpTotal=pvzData.reduce((s,p)=>s+p.exp,0);
+  const pvzNet=pvzIncTotal-pvzTaxTotal-pvzExpTotal;
+  h+=`<tr style="background:var(--s3);border-top:1px solid var(--brd2)">
+    <td style="padding:9px 12px;font-size:11px;font-weight:700;color:var(--t2)">Итого по ПВЗ</td>
+    <td style="padding:9px 12px;text-align:right;font-size:12px;font-weight:700;color:var(--grn);white-space:nowrap">+${fmt(pvzIncTotal)}</td>
+    <td style="padding:9px 12px;text-align:right;font-size:11px;color:var(--amber);white-space:nowrap">−${fmt(pvzTaxTotal)}</td>
+    <td style="padding:9px 12px;text-align:right;font-size:12px;font-weight:700;color:var(--red);white-space:nowrap">−${fmt(pvzExpTotal)}</td>
+    <td style="padding:9px 12px;text-align:right;font-size:13px;font-weight:800;color:${pvzNet>=0?'var(--acc)':'var(--red)'};white-space:nowrap">${pvzNet>=0?'+':'−'}${fmt(Math.abs(pvzNet))}</td>
+  </tr>
+    </tbody>
+  </table></div>`;
+
+  // ── OTHER (non-PVZ) ──
+  if(otherInc||generalExp){
+    h+=`<div style="background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:16px">`;
+    h+=`<div style="padding:9px 16px;background:var(--s3);border-bottom:1px solid var(--brd);font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">Вне ПВЗ</div>`;
+    if(otherInc){
+      D.items.filter(i=>i.type==='income'&&!i.pvzAddr&&(Number(i.amount)||0)>0).forEach(i=>{
+        h+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--brd)">
+          <div style="width:6px;height:6px;border-radius:50%;background:${i.color};flex-shrink:0"></div>
+          <div style="flex:1;font-size:12px;color:var(--t1)">${i.category}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--grn)">+${fmt(Number(i.amount))}</div>
+        </div>`;
+      });
+    }
+    if(generalExp){
+      D.items.filter(i=>i.type==='expense'&&!i.pvzAddr&&(Number(i.amount)||0)>0).forEach(i=>{
+        h+=`<div style="display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--brd)">
+          <div style="width:6px;height:6px;border-radius:50%;background:${i.color};flex-shrink:0"></div>
+          <div style="flex:1;font-size:12px;color:var(--t1)">${i.category}</div>
+          <div style="font-size:12px;font-weight:600;color:var(--red)">−${fmt(Number(i.amount))}</div>
+        </div>`;
+      });
+    }
+    h+=`</div>`;
+  }
+
+  // ── FINAL RESULT ──
+  const finalNet=net+otherInc;
+  const finalNetReal=totalInc-totalTax-totalExp;
+  h+=`<div style="background:var(--s2);border:1px solid ${finalNetReal>=0?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)'};border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+    <div>
+      <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:4px">Итоговый прогноз месяца</div>
+      <div style="font-size:11px;color:var(--t3)">Баланс сейчас ${fmt(startBal)}</div>
+    </div>
+    <div style="font-size:30px;font-weight:800;color:${finalNetReal>=0?'var(--acc)':'var(--red)'}">${finalNetReal>=0?'+':''}${fmt(Math.abs(finalNetReal))}</div>
+  </div>`;
+
+  el.innerHTML=h;
 }
 
 function renderAccounts(){
