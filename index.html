@@ -768,8 +768,8 @@ const DEFAULT_ACCOUNTS=[
 const PVZ_LIST=[
   {key:'p01',name:'Ладо Кецховели 35',  color:'#34d399'},
   {key:'p02',name:'Краснодарская 37',   color:'#4ade80'},
-  {key:'p03',name:'Сопочная 36',        color:'#60a5fa'},
   {key:'p04',name:'Яковлева 46',        color:'#818cf8'},
+  {key:'p03',name:'Сопочная 36',        color:'#60a5fa'},
   {key:'p05',name:'Северная 9',         color:'#a78bfa'},
   {key:'p06',name:'Юшкова 40ас3',       color:'#f472b6'},
   {key:'p07',name:'Ольховая 2А',        color:'#fb923c'},
@@ -1291,7 +1291,7 @@ function renderForecast(){
 
   // Агрегируем по ПВЗ из событий CF
   const pvzMap={};
-  PVZ_LIST.forEach(p=>{ pvzMap[p.key]={pvz:p,inc:0,tax:0,exp:0}; });
+  PVZ_LIST.forEach(p=>{ pvzMap[p.key]={pvz:p,inc:0,exp:0}; });
 
   fcf.daily.forEach(day=>{
     day.events.forEach(ev=>{
@@ -1306,7 +1306,7 @@ function renderForecast(){
     });
   });
 
-  // Налог по каждому ПВЗ (от taxable доходов, все вхождения)
+  // Налог по каждому ПВЗ и сразу включаем в расходы
   const taxRate2=(D.settings.taxRate||7)/100;
   PVZ_LIST.forEach(p=>{
     let taxable=0;
@@ -1314,51 +1314,49 @@ function renderForecast(){
       const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:1;
       taxable+=(Number(i.amount)||0)*occ;
     });
-    pvzMap[p.key].tax=Math.round(taxable*taxRate2);
+    pvzMap[p.key].exp+=Math.round(taxable*taxRate2);
   });
 
   const pvzData=PVZ_LIST.map(p=>{
     const d=pvzMap[p.key];
-    return {pvz:p, inc:Math.round(d.inc), tax:d.tax, exp:Math.round(d.exp), net:Math.round(d.inc-d.tax-d.exp)};
+    return {pvz:p, inc:Math.round(d.inc), exp:Math.round(d.exp), net:Math.round(d.inc-d.exp)};
   });
 
   // Вне ПВЗ
+  const nonPvzTotals={}; // itemId → total for month
   let generalExp=0, otherInc=0;
   fcf.daily.forEach(day=>{
     day.events.forEach(ev=>{
       if(ev.auto) return;
       const item=D.items.find(i=>i.id===ev.id);
       if(!item||item.pvzAddr) return;
+      nonPvzTotals[ev.id]=(nonPvzTotals[ev.id]||0)+ev.amount;
       if(ev.type==='income') otherInc+=ev.amount;
       else if(ev.type==='expense') generalExp+=Math.abs(ev.amount);
     });
   });
   otherInc=Math.round(otherInc); generalExp=Math.round(generalExp);
 
-  // Налог считаем как ежемесячную нагрузку (не привязанную к кварталу)
-  // = сумма taxable доходов * ставка
+  // Налог на доходы вне ПВЗ — сразу включаем в расходы
   const taxBase2=D.settings.taxBase||'all';
-  let taxableTotal=0;
-  D.items.filter(i=>i.type==='income'&&i.taxable).forEach(i=>{
-    if(taxBase2==='pvz'&&!i.pvzAddr) return;
-    if(taxBase2==='pvz_w'&&!i.pvzAddr&&i.categoryKey!=='w') return;
+  let nonPvzTaxable=0;
+  D.items.filter(i=>i.type==='income'&&i.taxable&&!i.pvzAddr).forEach(i=>{
+    if(taxBase2==='pvz') return;
     const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:1;
-    taxableTotal+=(Number(i.amount)||0)*occ;
+    nonPvzTaxable+=(Number(i.amount)||0)*occ;
   });
-  const totalTaxCF=Math.round(taxableTotal*(D.settings.taxRate||7)/100);
+  generalExp+=Math.round(nonPvzTaxable*(D.settings.taxRate||7)/100);
 
   const totalInc=pvzData.reduce((s,p)=>s+p.inc,0)+otherInc;
-  const totalTax=totalTaxCF;
   const totalExp=pvzData.reduce((s,p)=>s+p.exp,0)+generalExp;
-  const net=totalInc-totalTax-totalExp;
+  const net=totalInc-totalExp;
   const startBal=getMonthStartBalance(curYear,curMonth);
 
   // ── SUMMARY — компактная строка вместо карточек ──
-  const finalNetReal=totalInc-totalTax-totalExp;
+  const finalNetReal=totalInc-totalExp;
   let h=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
     ${[
       {l:'Доходы', v:'+'+fmt(totalInc), c:'var(--grn)'},
-      {l:'Налог',  v:'−'+fmt(totalTax), c:'var(--amber)'},
       {l:'Расходы',v:'−'+fmt(totalExp), c:'var(--red)'},
       {l:'Итог',   v:(net>=0?'+':'')+fmt(Math.abs(net)), c:net>=0?'var(--acc)':'var(--red)'},
     ].map(k=>`<div style="background:var(--s2);border:1px solid var(--brd);border-radius:var(--rsm);padding:7px 12px;flex:1;min-width:80px">
@@ -1369,22 +1367,20 @@ function renderForecast(){
 
   // ── PVZ TABLE ──
   const pvzIncTotal=pvzData.reduce((s,p)=>s+p.inc,0);
-  const pvzTaxTotal=pvzData.reduce((s,p)=>s+p.tax,0);
   const pvzExpTotal=pvzData.reduce((s,p)=>s+p.exp,0);
-  const pvzNet=pvzIncTotal-pvzTaxTotal-pvzExpTotal;
+  const pvzNet=pvzIncTotal-pvzExpTotal;
 
   h+=`<div style="overflow-x:auto;border-radius:var(--r);border:1px solid var(--brd);margin-bottom:12px">
-  <table style="border-collapse:collapse;width:100%;min-width:420px">
+  <table style="border-collapse:collapse;width:100%;min-width:360px">
     <thead><tr style="background:var(--s3);border-bottom:1px solid var(--brd)">
       <th style="text-align:left;padding:6px 10px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">ПВЗ</th>
       <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Доходы</th>
-      <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Налог</th>
       <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Расходы</th>
       <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Итог</th>
     </tr></thead>
     <tbody>`;
 
-  pvzData.forEach(({pvz,inc,tax,exp,net:pnet},idx)=>{
+  pvzData.forEach(({pvz,inc,exp,net:pnet},idx)=>{
     const nc=pnet>0?'var(--grn)':pnet<0?'var(--red)':'var(--t3)';
     const sg=pnet>0?'+':pnet<0?'−':'';
     const bg=idx%2===0?'var(--s2)':'rgba(255,255,255,.015)';
@@ -1396,7 +1392,6 @@ function renderForecast(){
         </div>
       </td>
       <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:600;color:${inc?'var(--grn)':'var(--t4)'};white-space:nowrap">${inc?'+'+fmt(inc):'—'}</td>
-      <td style="padding:6px 10px;text-align:right;font-size:10px;color:${tax?'var(--amber)':'var(--t4)'};white-space:nowrap">${tax?'−'+fmt(tax):'—'}</td>
       <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:600;color:${exp?'var(--red)':'var(--t4)'};white-space:nowrap">${exp?'−'+fmt(exp):'—'}</td>
       <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:800;color:${nc};white-space:nowrap">${pnet!==0?sg+fmt(Math.abs(pnet)):'0₽'}</td>
     </tr>`;
@@ -1405,7 +1400,6 @@ function renderForecast(){
   h+=`<tr style="background:var(--s3);border-top:1px solid var(--brd2)">
     <td style="padding:6px 10px;font-size:10px;font-weight:700;color:var(--t2)">Итого</td>
     <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--grn);white-space:nowrap">+${fmt(pvzIncTotal)}</td>
-    <td style="padding:6px 10px;text-align:right;font-size:10px;color:var(--amber);white-space:nowrap">−${fmt(pvzTaxTotal)}</td>
     <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--red);white-space:nowrap">−${fmt(pvzExpTotal)}</td>
     <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:800;color:${pvzNet>=0?'var(--acc)':'var(--red)'};white-space:nowrap">${pvzNet>=0?'+':'−'}${fmt(Math.abs(pvzNet))}</td>
   </tr></tbody></table></div>`;
@@ -1418,14 +1412,18 @@ function renderForecast(){
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);flex:1">Вне ПВЗ</span>
         <span style="font-size:12px;font-weight:800;color:${nonPvzNet>=0?'var(--acc)':'var(--red)'}">${nonPvzNet>=0?'+':''}${fmt(nonPvzNet)}</span>
       </div>`;
-    [...D.items.filter(i=>i.type==='income'&&!i.pvzAddr&&(Number(i.amount)||0)>0),
-     ...D.items.filter(i=>i.type==='expense'&&!i.pvzAddr&&(Number(i.amount)||0)>0)
-    ].forEach(i=>{
-      const isInc=i.type==='income';
+    // По каждому item показываем сумму за месяц (с учётом повторений)
+    const nonPvzItems=[...D.items.filter(i=>i.type==='income'&&!i.pvzAddr&&(Number(i.amount)||0)>0),
+                       ...D.items.filter(i=>i.type==='expense'&&!i.pvzAddr&&(Number(i.amount)||0)>0)];
+    nonPvzItems.sort((a,b)=>a.category.localeCompare(b.category));
+    nonPvzItems.forEach(i=>{
+      const total=Math.round(nonPvzTotals[i.id]||0);
+      if(!total) return;
+      const isInc=total>0;
       h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--brd)">
         <div style="width:5px;height:5px;border-radius:50%;background:${i.color};flex-shrink:0"></div>
         <div style="flex:1;font-size:11px;color:var(--t1)">${i.category}</div>
-        <div style="font-size:11px;font-weight:600;color:${isInc?'var(--grn)':'var(--red)'}">${isInc?'+':'−'}${fmt(Number(i.amount))}</div>
+        <div style="font-size:11px;font-weight:600;color:${isInc?'var(--grn)':'var(--red)'}">${isInc?'+':'−'}${fmt(Math.abs(total))}</div>
       </div>`;
     });
     h+=`</div>`;
@@ -1959,11 +1957,12 @@ document.addEventListener('click',function(e){
     const val=isAcct?item.balance:item.amount;
     amt.innerHTML=`<input class="ie-amt" type="number" value="${val||0}" step="${isAcct?'1000':'100'}">`;
     const inp=amt.querySelector('input');
-    inp.focus(); inp.select();
+    const _initSy=window.scrollY;
+    inp.focus({preventScroll:true}); inp.select();
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); window.scrollTo(0,_sy);
+      pushData(); const _st=saveOpenState(), _sy=_initSy; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy)));
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -1984,13 +1983,15 @@ document.addEventListener('click',function(e){
     inp.type='text';
     inp.value=item.days?item.days.join(', '):(item.day||'1');
     inp.style.width='80px';
-    dayEl.textContent=''; dayEl.appendChild(inp); inp.focus(); inp.select();
+    dayEl.textContent=''; dayEl.appendChild(inp);
+    const _initSy=window.scrollY;
+    inp.focus({preventScroll:true}); inp.select();
     const save=()=>{
       const raw=inp.value.trim();
       const nums=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
       if(nums.length){item.days=nums; delete item.day;}
       else if(nums.length===1){item.days=nums;}
-      pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); window.scrollTo(0,_sy);
+      pushData(); const _st=saveOpenState(), _sy=_initSy; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy)));
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -2002,8 +2003,8 @@ document.addEventListener('click',function(e){
     if(!item) return;
     const sel=document.createElement('select'); sel.className='ie-rep';
     ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
-    rep.innerHTML=''; rep.appendChild(sel); sel.focus();
-    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); window.scrollTo(0,_sy); });
+    rep.innerHTML=''; rep.appendChild(sel); const _initSy=window.scrollY; sel.focus({preventScroll:true});
+    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); const _st=saveOpenState(), _sy=_initSy; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy))); });
     return;
   }
 });
@@ -2083,7 +2084,7 @@ function toggleCalDay(d){
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderSettings(); restoreOpenState(_st); window.scrollTo(0,_sy);
+  pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>requestAnimationFrame(()=>window.scrollTo(0,_sy)));
 }
 
 function closeDayCalPopup(){
