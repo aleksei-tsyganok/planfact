@@ -246,6 +246,8 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .item-row:hover{background:rgba(255,255,255,.02)}
 .item-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;cursor:pointer;transition:transform .1s}
 .item-dot:hover{transform:scale(1.4)}
+.item-dot-pvz{width:6px;height:6px;border-radius:50%;flex-shrink:0;cursor:pointer;transition:transform .1s;opacity:.6}
+.item-dot-pvz:hover{transform:scale(1.4)}
 .item-name{flex:1;font-size:13px;font-weight:500;color:var(--t1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .item-amount{font-size:13px;font-weight:600;min-width:90px;text-align:right;font-variant-numeric:tabular-nums}
 .item-amount.inc{color:var(--grn)}.item-amount.exp{color:var(--red)}.item-amount.tax{color:var(--amber)}
@@ -781,12 +783,12 @@ const PVZ_LIST=[
 
 // Подгруппы ПВЗ
 const PVZ_GROUPS=[
-  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04'],   color:'#34d399'},
-  {key:'AD',  name:'"А+Д" ПВЗ', pvz:['p03','p05','p06','p07'], color:'#818cf8'},
-  {key:'YM',  name:'"ЯМ" ПВЗ',  pvz:['p08','p09','p10','p11','p12','p13'], color:'#f87171'},
+  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04'],   color:'#a78bfa'},
+  {key:'AD',  name:'"А+Д" ПВЗ', pvz:['p03','p05','p06','p07'], color:'#38bdf8'},
+  {key:'YM',  name:'"ЯМ" ПВЗ',  pvz:['p08','p09','p10','p11','p12','p13'], color:'#fbbf24'},
 ];
 const HM_GROUPS=[
-  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04'],   color:'#34d399'},
+  {key:'A',   name:'"А" ПВЗ',    pvz:['p01','p02','p04'],   color:'#a78bfa'},
   {key:'REST',name:'Остальные', pvz:['p03','p05','p06','p07','p08','p09','p10','p11','p12','p13'], color:'#94a3b8'},
 ];
 // Категории без группировки (плоский список)
@@ -1389,7 +1391,7 @@ function renderForecast(){
     h+=`<tr style="background:${bg};border-bottom:1px solid var(--brd)">
       <td style="padding:6px 10px">
         <div style="display:flex;align-items:center;gap:6px">
-          <div style="width:6px;height:6px;border-radius:50%;background:${pvz.color};flex-shrink:0"></div>
+          <div style="width:6px;height:6px;border-radius:50%;background:${pvzGroup(pvz.key).color};flex-shrink:0"></div>
           <span style="font-size:11px;font-weight:500;color:var(--t1);white-space:nowrap">${pvz.name}</span>
         </div>
       </td>
@@ -1524,7 +1526,7 @@ function renderCashflow(msb){
     if(!Object.values(dm).some(v=>v>0)) continue;
     html+=`<tr class="row-expense"><td style="padding-left:12px">
       <div style="display:flex;align-items:center;gap:6px">
-        <div style="width:6px;height:6px;border-radius:50%;background:${pvz.color};flex-shrink:0"></div>
+        <div style="width:6px;height:6px;border-radius:50%;background:${pvzGroup(pvz.key).color};flex-shrink:0"></div>
         ${pvz.name}
       </div></td>`;
     for(const day of cols){
@@ -1744,7 +1746,7 @@ function renderSettings(){
           if(!pvz) continue;
           const isW=item.repeat==='weekly';
           incHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
-            <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="event.stopPropagation();openItemModal('income','${item.id}')"></div>
+            <div class="item-dot item-dot-pvz" style="background:${pvzGroup(item.pvzAddr).color}" onclick="event.stopPropagation();openItemModal('income','${item.id}')"></div>
             <div class="item-name" style="font-size:12px">${pvz.name}</div>
             <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
             <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
@@ -1789,7 +1791,7 @@ function renderSettings(){
             if(!pvz||!item) continue;
             const isW=item.repeat==='weekly';
             incHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:24px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
-              <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="event.stopPropagation();openItemModal('income','${item.id}')"></div>
+              <div class="item-dot item-dot-pvz" style="background:${pvzGroup(item.pvzAddr).color}" onclick="event.stopPropagation();openItemModal('income','${item.id}')"></div>
               <div class="item-name" style="font-size:12px">${pvz.name}</div>
               <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
               <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
@@ -1840,7 +1842,7 @@ function renderSettings(){
         const grpId='pvzg_exp_'+cat.key+'_'+grp.key;
 
         if(groupOnly){
-          const grpColors={'A':'#34d399','AD':'#818cf8','YM':'#f87171','REST':'#94a3b8'};
+          const grpColors={'A':'#a78bfa','AD':'#38bdf8','YM':'#fbbf24','REST':'#94a3b8'};
           const dotColor=grpColors[grp.key]||'#94a3b8';
           const firstItem=grpItems[0];
           const dl=itemDays(firstItem);
@@ -1865,7 +1867,7 @@ function renderSettings(){
             const tgls2=dl2.length>1?dl2.map((_,ii)=>doneToggleHtml(item.id,ii)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));
             const isW=item.repeat==='weekly';
             expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:28px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>`+
-              `<div style="width:4px;height:4px;border-radius:50%;background:${dotColor};opacity:.5;flex-shrink:0;margin-right:2px"></div>`+
+              `<div class="item-dot-pvz" style="background:${dotColor};margin-right:4px"></div>`+
               `<div class="item-name" style="font-size:12px;color:var(--t2)">${pvz.name}</div>`+
               `<div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>`+
               `<div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>`+
@@ -1888,7 +1890,7 @@ function renderSettings(){
             const isSal=item.categoryKey==='zp';
             const isW=item.repeat==='weekly';
             expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:24px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
-              <div class="item-dot" style="background:${pvz.color};opacity:.6" onclick="event.stopPropagation();openItemModal('expense','${item.id}')"></div>
+              <div class="item-dot item-dot-pvz" style="background:${pvzGroup(item.pvzAddr).color}" onclick="event.stopPropagation();openItemModal('expense','${item.id}')"></div>
               <div class="item-name" style="font-size:12px">${pvz.name}</div>
               <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
               <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
@@ -1928,8 +1930,7 @@ function toggleGroupDone(){
     if(allDone) delete D.done[id];
     else D.done[id] = true;
   });
-  pushData();
-  renderSettings();
+  pushData(); const _st=saveOpenState(); renderSettings(); restoreOpenState(_st);
   const msb = getMonthStartBalance(curYear, curMonth);
   renderCashflow(msb); renderKPI(msb);
 }
@@ -1962,7 +1963,7 @@ document.addEventListener('click',function(e){
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      pushData(); const _st=saveOpenState(); renderAll(); restoreOpenState(_st);
+      pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); window.scrollTo(0,_sy);
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -1989,7 +1990,7 @@ document.addEventListener('click',function(e){
       const nums=raw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
       if(nums.length){item.days=nums; delete item.day;}
       else if(nums.length===1){item.days=nums;}
-      pushData(); const _st=saveOpenState(); renderAll(); restoreOpenState(_st);
+      pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); window.scrollTo(0,_sy);
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -2002,7 +2003,7 @@ document.addEventListener('click',function(e){
     const sel=document.createElement('select'); sel.className='ie-rep';
     ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
     rep.innerHTML=''; rep.appendChild(sel); sel.focus();
-    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); const _st=saveOpenState(); renderAll(); restoreOpenState(_st); });
+    sel.addEventListener('change',()=>{ item.repeat=sel.value; pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); window.scrollTo(0,_sy); });
     return;
   }
 });
@@ -2082,7 +2083,7 @@ function toggleCalDay(d){
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); const _st=saveOpenState(); renderSettings(); restoreOpenState(_st);
+  pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderSettings(); restoreOpenState(_st); window.scrollTo(0,_sy);
 }
 
 function closeDayCalPopup(){
