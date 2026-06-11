@@ -1,29 +1,9 @@
-function showView(name,btn){
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  const tbb=document.getElementById('tbb-'+name);
-  if(tbb) tbb.classList.add('active');
-  if(name==='forecast') renderForecast();
-}<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Кассовый план</title>
-
-<!-- iOS PWA -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="КП">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#07090e">
-
-<!-- iOS иконки -->
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%2307090e'/><text x='90' y='115' font-size='80' font-family='system-ui' font-weight='800' fill='%232dd4a0' text-anchor='middle'>КП</text></svg>">
-
-<!-- Splash screen цвет -->
-<meta name="msapplication-navbutton-color" content="#07090e">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -53,8 +33,6 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
   min-height:100dvh;
-  overscroll-behavior:none;
-  -webkit-tap-highlight-color:transparent;
   overflow-anchor:none;
   scrollbar-gutter:stable;
   background-image:
@@ -66,9 +44,7 @@ body{
 /* ── TOPBAR ── */
 .topbar{
   position:sticky;top:0;z-index:50;
-  height:calc(54px + env(safe-area-inset-top));
-  padding-top:env(safe-area-inset-top);
-  display:flex;align-items:center;gap:12px;padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));
+  height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;
   background:rgba(7,9,14,0.88);
   backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
   border-bottom:1px solid var(--brd);
@@ -98,7 +74,7 @@ body{
 
 
 /* ── VIEWS ── */
-.view{display:none;padding:24px 20px;max-width:1240px;margin:0 auto;padding-bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px))}
+.view{display:none;padding:24px 20px;max-width:1240px;margin:0 auto}
 .view.active{display:block}
 @media(max-width:599px){.view{padding:14px 12px}}
 
@@ -1098,10 +1074,7 @@ function calcSafeWithdrawal(){
 // RENDER ALL
 // ══════════════════════════════════
 function renderAll(){
-  const _sy=document.documentElement.scrollTop;
-  const _ost=saveOpenState();
-  const _ml=document.getElementById('topbarMonthLabel');if(_ml) _ml.textContent=MONTHS[curMonth]+' '+curYear;
-  const _fml=document.getElementById('fcMonthLabel');if(_fml) _fml.textContent=MONTHS[curMonth]+' '+curYear;
+  const _ml=document.getElementById('topbarMonthLabel');if(_ml)_ml.textContent=MONTHS[curMonth]+' '+curYear;
   const msb=getMonthStartBalance(curYear,curMonth);
   renderKPI(msb);
   renderAccounts();
@@ -1112,8 +1085,6 @@ function renderAll(){
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
-  restoreOpenState(_ost);
-  setTimeout(()=>{ document.documentElement.scrollTop=_sy; },0);
 
 }
 
@@ -1995,17 +1966,9 @@ document.addEventListener('click',function(e){
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      // Minimal update — don't re-render settings, just update the display and KPI
-      amt.textContent=isAcct?fmt(v)||'0₽':fmt(v)||'—';
-      pushData();
-      renderKPI(getMonthStartBalance(curYear,curMonth));
-      renderOverdueDash();
-      renderForecast();
-      const msb=getMonthStartBalance(curYear,curMonth);
-      renderCashflow(msb);
-      renderAccounts();
+      pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderAll(); restoreOpenState(_st);
       document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
-      document.documentElement.scrollTop=_sy;
+      window.scrollTo(0,_sy);
       requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
     };
     inp.addEventListener('blur',save);
@@ -2026,7 +1989,7 @@ document.addEventListener('click',function(e){
     const sel=document.createElement('select'); sel.className='ie-rep';
     ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
     rep.innerHTML=''; rep.appendChild(sel); sel.focus();
-    sel.addEventListener('change',()=>{ item.repeat=sel.value; if(item.repeat==='weekly'){item._refYear=curYear;item._refMonth=curMonth;}else{delete item._refYear;delete item._refMonth;} pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>document.documentElement.scrollTop=_sy); });
+    sel.addEventListener('change',()=>{ item.repeat=sel.value; if(item.repeat==='weekly'){item._refYear=curYear;item._refMonth=curMonth;}else{delete item._refYear;delete item._refMonth;} pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>window.scrollTo(0,_sy)); });
     return;
   }
 });
@@ -2110,7 +2073,7 @@ function toggleCalDay(d){
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>document.documentElement.scrollTop=_sy);
+  pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
 
 function applyDayCal(){
@@ -2375,7 +2338,7 @@ function rerender(){
   restoreOpenState(_st);
   // disable CSS transitions on restored groups so height is immediate
   document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
-  document.documentElement.scrollTop=_sy;
+  window.scrollTo(0,_sy);
   // re-enable transitions after layout settles
   requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
 }
@@ -2394,12 +2357,12 @@ function togglePaid(){D.settings.paidToday=document.getElementById('paidToday').
 // NAV
 // ══════════════════════════════════
 function showView(id,btn){
-  const _sy=document.documentElement.scrollTop;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
-  btn.classList.add('active');
-  requestAnimationFrame(()=>document.documentElement.scrollTop=_sy);
+  const tbb=document.getElementById('tbb-'+id);
+  if(tbb) tbb.classList.add('active');
+  if(id==='forecast') renderForecast();
 }
 function chMonth(d){
   const _sy=document.documentElement.scrollTop;
@@ -2408,7 +2371,7 @@ function chMonth(d){
   if(curMonth<0){curMonth=11;curYear--;}
   renderAll();
   renderForecast();
-  requestAnimationFrame(()=>document.documentElement.scrollTop=_sy);
+  requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
 function chFcMonth(d){
   chMonth(d);
