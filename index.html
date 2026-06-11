@@ -1,9 +1,29 @@
-<!DOCTYPE html>
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');
+  const tbb=document.getElementById('tbb-'+name);
+  if(tbb) tbb.classList.add('active');
+  if(name==='forecast') renderForecast();
+}<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>Кассовый план</title>
+
+<!-- iOS PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="КП">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#07090e">
+
+<!-- iOS иконки -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%2307090e'/><text x='90' y='115' font-size='80' font-family='system-ui' font-weight='800' fill='%232dd4a0' text-anchor='middle'>КП</text></svg>">
+
+<!-- Splash screen цвет -->
+<meta name="msapplication-navbutton-color" content="#07090e">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -33,6 +53,8 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
   min-height:100dvh;
+  overscroll-behavior:none;
+  -webkit-tap-highlight-color:transparent;
   overflow-anchor:none;
   scrollbar-gutter:stable;
   background-image:
@@ -44,7 +66,9 @@ body{
 /* ── TOPBAR ── */
 .topbar{
   position:sticky;top:0;z-index:50;
-  height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;
+  height:calc(54px + env(safe-area-inset-top));
+  padding-top:env(safe-area-inset-top);
+  display:flex;align-items:center;gap:12px;padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right));
   background:rgba(7,9,14,0.88);
   backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
   border-bottom:1px solid var(--brd);
@@ -74,7 +98,7 @@ body{
 
 
 /* ── VIEWS ── */
-.view{display:none;padding:24px 20px;max-width:1240px;margin:0 auto}
+.view{display:none;padding:24px 20px;max-width:1240px;margin:0 auto;padding-bottom:max(24px,calc(env(safe-area-inset-bottom) + 16px))}
 .view.active{display:block}
 @media(max-width:599px){.view{padding:14px 12px}}
 
@@ -1076,8 +1100,8 @@ function calcSafeWithdrawal(){
 function renderAll(){
   const _sy=document.documentElement.scrollTop;
   const _ost=saveOpenState();
-  document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
-  document.getElementById('monthSub').textContent='';
+  const _ml=document.getElementById('topbarMonthLabel');if(_ml) _ml.textContent=MONTHS[curMonth]+' '+curYear;
+  const _fml=document.getElementById('fcMonthLabel');if(_fml) _fml.textContent=MONTHS[curMonth]+' '+curYear;
   const msb=getMonthStartBalance(curYear,curMonth);
   renderKPI(msb);
   renderAccounts();
