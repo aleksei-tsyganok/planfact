@@ -1141,6 +1141,8 @@ function calcSafeWithdrawal(){
 // RENDER ALL
 // ══════════════════════════════════
 function renderAll(){
+  const _sy=document.documentElement.scrollTop;
+  const _ost=saveOpenState();
   document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
   document.getElementById('monthSub').textContent='';
   const msb=getMonthStartBalance(curYear,curMonth);
@@ -1153,6 +1155,8 @@ function renderAll(){
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
+  restoreOpenState(_ost);
+  document.documentElement.scrollTop=_sy;
 
 }
 
@@ -1770,6 +1774,8 @@ function restoreOpenState(state){
 }
 
 function renderSettings(){
+  const _rsy=document.documentElement.scrollTop;
+  const _rost=saveOpenState();
   // ── Счета ──
   document.getElementById('settingAccounts').innerHTML=D.accounts.map(a=>`
     <div class="item-row">
@@ -1983,6 +1989,8 @@ function renderSettings(){
   }
 
   document.getElementById('settingExpenses').innerHTML=expHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет расходов</div>';
+  restoreOpenState(_rost);
+  document.documentElement.scrollTop=_rsy;
 }
 
 function toggleSvcDone(svcKey){
@@ -2034,10 +2042,15 @@ document.addEventListener('click',function(e){
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st);
-      document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
-      window.scrollTo(0,_sy);
-      requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
+      // Minimal update — no renderAll, no scroll jump
+      amt.textContent = fmt(v)||'—';
+      pushData();
+      const msb=getMonthStartBalance(curYear,curMonth);
+      renderKPI(msb);
+      renderAccounts();
+      renderCashflow(msb);
+      renderOverdueDash();
+      renderForecast();
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
