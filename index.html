@@ -47,35 +47,28 @@ body{
 /* ── TOPBAR ── */
 .topbar{
   position:sticky;top:0;z-index:50;
-  height:52px;
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 16px;
-  background:rgba(7,9,14,0.95);
+  height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;
+  background:rgba(7,9,14,0.88);
   backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
   border-bottom:1px solid var(--brd);
 }
-.topbar-center{display:flex;align-items:center;gap:8px}
-.topbar-month-label{font-size:17px;font-weight:700;color:var(--t1);letter-spacing:-.3px;min-width:120px;text-align:center}
-.mnav-sm{width:32px;height:32px;background:var(--s3);border:1px solid var(--brd);color:var(--t2);border-radius:8px;cursor:pointer;font-size:20px;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--f);}
-.mnav-sm:active{background:var(--s4)}
-.tab-bar{
-  position:fixed;bottom:0;left:0;right:0;z-index:100;
-  height:calc(58px + env(safe-area-inset-bottom));
-  padding-bottom:env(safe-area-inset-bottom);
-  display:flex;align-items:stretch;
-  background:rgba(7,9,14,0.96);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-top:1px solid var(--brd);
+.logo{
+  font-size:15px;font-weight:800;letter-spacing:-.6px;
+  background:linear-gradient(135deg,var(--acc) 0%,var(--blue) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
-.tbb{
-  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;border:none;background:none;color:var(--t3);cursor:pointer;
-  font-family:var(--f);font-size:10px;font-weight:500;letter-spacing:.02em;
-  padding:0 4px;-webkit-tap-highlight-color:transparent;transition:color .15s;
+.logo span{-webkit-text-fill-color:var(--t3);font-weight:400;font-size:13px;letter-spacing:0}
+.nav-tabs{
+  display:flex;gap:1px;
+  background:var(--s3);border:1px solid var(--brd);border-radius:var(--rsm);
+  padding:3px;margin-left:auto;
 }
-.tbb.active{color:var(--acc)}
-.tbb svg{flex-shrink:0}
-.tbb.active svg{stroke:var(--acc)}
+.ntab{
+  padding:5px 16px;border-radius:6px;border:none;background:none;
+  color:var(--t3);font-family:var(--f);font-size:12px;font-weight:500;
+  cursor:pointer;transition:all .15s;white-space:nowrap;letter-spacing:.01em;
+}
+.ntab.active{background:var(--s5);color:var(--t1);box-shadow:var(--shadow-sm)}
 .sync-dot{width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0;transition:background .3s}
 .sync-dot.ok{background:var(--grn)}
 .sync-dot.sync{background:var(--amber);animation:blink .9s ease-in-out infinite}
@@ -84,12 +77,12 @@ body{
 
 
 /* ── VIEWS ── */
-.view{display:none;padding:20px 16px;max-width:1240px;margin:0 auto;padding-bottom:calc(58px + env(safe-area-inset-bottom) + 20px)}
+.view{display:none;padding:24px 20px;max-width:1240px;margin:0 auto}
 .view.active{display:block}
 @media(max-width:599px){.view{padding:14px 12px}}
 
 /* ── KPI GRID ── */
-.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:10px;margin-bottom:24px}
 .kpi{
   background:var(--s2);
   border:1px solid var(--brd);
@@ -501,6 +494,49 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--s5);border-radius:4px}
 ::-webkit-scrollbar-thumb:hover{background:var(--s4)}
+
+/* ── TAB BAR (только мобильный) ── */
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  height:calc(58px + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  display:none;
+  background:rgba(7,9,14,0.96);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-top:1px solid var(--brd);
+}
+.tbb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;border:none;background:none;color:var(--t3);cursor:pointer;
+  font-family:var(--f);font-size:10px;font-weight:500;letter-spacing:.02em;
+  padding:0;-webkit-tap-highlight-color:transparent;transition:color .15s;
+}
+.tbb.active{color:var(--acc)}
+.tbb svg{flex-shrink:0;transition:stroke .15s}
+.tbb.active svg{stroke:var(--acc)}
+
+@media(max-width:768px){
+  /* Показываем таб-бар */
+  .tab-bar{display:flex}
+  /* Скрываем десктоп-навигацию в шапке */
+  .logo,.nav-tabs,.sync-label{display:none!important}
+  /* Шапка — только месяц по центру */
+  .topbar{
+    padding:calc(env(safe-area-inset-top) + 8px) 16px 8px;
+    height:auto;
+    justify-content:space-between;
+  }
+  .month-nav{
+    flex:1;display:flex;justify-content:center;margin-bottom:0!important;
+    padding:0!important;
+  }
+  /* Контент не прячется за таб-баром */
+  .view{padding-bottom:calc(58px + env(safe-area-inset-bottom) + 16px)!important}
+  /* KPI — 2 колонки */
+  .kpi-grid{grid-template-columns:repeat(2,1fr)!important}
+  /* PWA safe area */
+  body{overscroll-behavior:none}
+}
 </style>
 </head>
 <body>
@@ -511,10 +547,11 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 </div>
 
 <div class="topbar">
-  <div class="topbar-center">
-    <button class="mnav-sm" onclick="chMonth(-1)">&#8249;</button>
-    <div class="topbar-month-label" id="topbarMonthLabel">—</div>
-    <button class="mnav-sm" onclick="chMonth(1)">&#8250;</button>
+  <div class="logo">КП <span>/ Кассовый план</span></div>
+  <div class="nav-tabs">
+    <button class="ntab active" onclick="showView('dashboard',this)">Дашборд</button>
+    <button class="ntab" onclick="showView('forecast',this)">Прогноз</button>
+    <button class="ntab" onclick="showView('settings',this)">Настройки</button>
   </div>
   <div class="sync-dot" id="sdot" title="Статус синхронизации"></div>
 </div>
@@ -535,7 +572,12 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 
 <!-- ════ DASHBOARD ════ -->
 <div class="view active" id="view-dashboard">
-
+  <div class="month-nav">
+    <button class="mnav-btn" onclick="chMonth(-1)">‹</button>
+    <div class="month-label" id="monthLabel"></div>
+    <span class="month-sub" id="monthSub"></span>
+    <button class="mnav-btn" onclick="chMonth(1)">›</button>
+  </div>
   <div class="kpi-grid" id="kpiGrid"></div>
   <div class="free-money-bar" id="freeMoneyBar"></div>
   <div id="overdueDash"></div>
@@ -555,7 +597,11 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 
 <!-- ════ FORECAST ════ -->
 <div class="view" id="view-forecast">
-
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+    <button class="mnav-btn" onclick="chFcMonth(-1)">‹</button>
+    <div id="fcMonthLabel" style="font-size:18px;font-weight:800;color:var(--t1);min-width:160px;text-align:center"></div>
+    <button class="mnav-btn" onclick="chFcMonth(1)">›</button>
+  </div>
   <div id="forecastContent"></div>
 </div>
 
@@ -1088,8 +1134,8 @@ function calcSafeWithdrawal(){
 // RENDER ALL
 // ══════════════════════════════════
 function renderAll(){
-  const _tml=document.getElementById('topbarMonthLabel');if(_tml)_tml.textContent=MONTHS[curMonth]+' '+curYear;
-  const _fml=document.getElementById('fcMonthLabel');if(_fml)_fml.textContent=MONTHS[curMonth]+' '+curYear;
+  document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
+  document.getElementById('monthSub').textContent='';
   const msb=getMonthStartBalance(curYear,curMonth);
   renderKPI(msb);
   renderAccounts();
@@ -1981,7 +2027,7 @@ document.addEventListener('click',function(e){
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderAll(); restoreOpenState(_st);
+      pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st);
       document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
       window.scrollTo(0,_sy);
       requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
@@ -2004,7 +2050,7 @@ document.addEventListener('click',function(e){
     const sel=document.createElement('select'); sel.className='ie-rep';
     ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
     rep.innerHTML=''; rep.appendChild(sel); sel.focus();
-    sel.addEventListener('change',()=>{ item.repeat=sel.value; if(item.repeat==='weekly'){item._refYear=curYear;item._refMonth=curMonth;}else{delete item._refYear;delete item._refMonth;} pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>{document.documentElement.scrollTop=_sy;}); });
+    sel.addEventListener('change',()=>{ item.repeat=sel.value; if(item.repeat==='weekly'){item._refYear=curYear;item._refMonth=curMonth;}else{delete item._refYear;delete item._refMonth;} pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>window.scrollTo(0,_sy)); });
     return;
   }
 });
@@ -2088,7 +2134,7 @@ function toggleCalDay(d){
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); const _st=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>{document.documentElement.scrollTop=_sy;});
+  pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
 
 function applyDayCal(){
@@ -2348,7 +2394,7 @@ function delItem(cat,id){
 }
 
 function rerender(){
-  const _st=saveOpenState(), _sy=document.documentElement.scrollTop;
+  const _st=saveOpenState(), _sy=window.scrollY;
   renderAll();
   restoreOpenState(_st);
   // disable CSS transitions on restored groups so height is immediate
@@ -2372,21 +2418,26 @@ function togglePaid(){D.settings.paidToday=document.getElementById('paidToday').
 // NAV
 // ══════════════════════════════════
 function showView(id,btn){
+  const _sy=document.documentElement.scrollTop;
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.tbb').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ntab,.tbb').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
+  // desktop tabs
+  if(btn) btn.classList.add('active');
+  // mobile tbb
   const tb=document.getElementById('tbb-'+id);
   if(tb) tb.classList.add('active');
+  requestAnimationFrame(()=>{document.documentElement.scrollTop=_sy;});
   if(id==='forecast') renderForecast();
 }
 function chMonth(d){
-  const _sy=document.documentElement.scrollTop;
+  const _sy=window.scrollY;
   curMonth+=d;
   if(curMonth>11){curMonth=0;curYear++;}
   if(curMonth<0){curMonth=11;curYear--;}
   renderAll();
   renderForecast();
-  requestAnimationFrame(()=>{document.documentElement.scrollTop=_sy;});
+  requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
 function chFcMonth(d){
   chMonth(d);
