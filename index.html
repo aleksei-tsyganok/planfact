@@ -1724,8 +1724,6 @@ function restoreOpenState(state){
 }
 
 function renderSettings(){
-  const _rsScroll=document.documentElement.scrollTop;
-  const _rsState=saveOpenState();
   // ── Счета ──
   document.getElementById('settingAccounts').innerHTML=D.accounts.map(a=>`
     <div class="item-row">
@@ -1940,8 +1938,6 @@ function renderSettings(){
   }
 
   document.getElementById('settingExpenses').innerHTML=expHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет расходов</div>';
-  restoreOpenState(_rsState);
-  document.documentElement.scrollTop=_rsScroll;
 }
 
 function toggleSvcDone(svcKey){
@@ -1949,7 +1945,7 @@ function toggleSvcDone(svcKey){
   const ids = D.items.filter(i=>i.categoryKey===svcKey&&i.type==='income'&&(Number(i.amount)||0)>0).map(i=>i.id);
   const allDone = ids.every(id=>D.done[id]);
   ids.forEach(id=>{ if(allDone) delete D.done[id]; else D.done[id]=true; });
-  pushData(); renderSettings();
+  pushData(); const _s=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_s); document.documentElement.scrollTop=_sy;
   const msb=getMonthStartBalance(curYear,curMonth);
   renderCashflow(msb); renderKPI(msb);
 }
@@ -1960,7 +1956,7 @@ function toggleGroupDone(){
     if(allDone) delete D.done[id];
     else D.done[id] = true;
   });
-  pushData(); renderSettings();
+  pushData(); const _s=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_s); document.documentElement.scrollTop=_sy;
   const msb = getMonthStartBalance(curYear, curMonth);
   renderCashflow(msb); renderKPI(msb);
 }
@@ -2101,7 +2097,7 @@ function toggleCalDay(d){
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); renderSettings();
+  pushData(); const _s=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_s); document.documentElement.scrollTop=_sy;
 }
 
 function applyDayCal(){
@@ -2131,7 +2127,7 @@ function repeatLabel(r){return {monthly:'Мес.',weekly:'Нед.',quarterly:'К
 function toggleWeeklyDone(itemId,d){
   const key=weeklyDoneKey(itemId,d);
   if(D.done[key]) delete D.done[key]; else D.done[key]=true;
-  pushData(); renderSettings();
+  pushData(); const _s=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_s); document.documentElement.scrollTop=_sy;
   const msb=getMonthStartBalance(curYear,curMonth);
   renderCashflow(msb); renderKPI(msb);
 }
@@ -2142,7 +2138,7 @@ function toggleWeeklySub(id){
 function toggleDone(itemId, dateIdx){
   const key = dateIdx===1 ? itemId+'_2' : itemId;
   if(D.done[key]) delete D.done[key]; else D.done[key]=true;
-  pushData(); renderSettings(); renderCashflow(getMonthStartBalance(curYear,curMonth));
+  pushData(); const _s=saveOpenState(), _sy=document.documentElement.scrollTop; renderSettings(); restoreOpenState(_s); document.documentElement.scrollTop=_sy; renderCashflow(getMonthStartBalance(curYear,curMonth));
   // update KPI too
   const msb=getMonthStartBalance(curYear,curMonth);
   renderKPI(msb);
