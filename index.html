@@ -1614,7 +1614,16 @@ function renderCashflow(msb){
   document.getElementById('cfTable').innerHTML=html;
   setTimeout(()=>{
     const tc=document.querySelector('.cf-table th.today-col');
-    if(tc)tc.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    const scrollWrap=tc?tc.closest('.cf-wrap'):null;
+    if(tc&&scrollWrap){
+      // Scroll only the horizontal table container, never the page
+      const wrapRect=scrollWrap.getBoundingClientRect();
+      const tcRect=tc.getBoundingClientRect();
+      const offset=tcRect.left-wrapRect.left-(wrapRect.width/2)+(tcRect.width/2);
+      scrollWrap.scrollLeft+=offset;
+    } else if(tc){
+      tc.scrollIntoView({behavior:'smooth',block:'nearest',inline:'center'});
+    }
   },100);
 }
 
