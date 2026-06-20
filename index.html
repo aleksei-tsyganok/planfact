@@ -1091,6 +1091,8 @@ function calcSafeWithdrawal(){
 // RENDER ALL
 // ══════════════════════════════════
 function renderAll(){
+  const _sy=document.documentElement.scrollTop;
+  const _ost=saveOpenState();
   document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
   document.getElementById('monthSub').textContent='';
   const msb=getMonthStartBalance(curYear,curMonth);
@@ -1103,6 +1105,8 @@ function renderAll(){
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
+  restoreOpenState(_ost);
+  document.documentElement.scrollTop=_sy;
 
 }
 
@@ -1720,6 +1724,8 @@ function restoreOpenState(state){
 }
 
 function renderSettings(){
+  const _rsScroll=document.documentElement.scrollTop;
+  const _rsState=saveOpenState();
   // ── Счета ──
   document.getElementById('settingAccounts').innerHTML=D.accounts.map(a=>`
     <div class="item-row">
@@ -1934,6 +1940,8 @@ function renderSettings(){
   }
 
   document.getElementById('settingExpenses').innerHTML=expHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет расходов</div>';
+  restoreOpenState(_rsState);
+  document.documentElement.scrollTop=_rsScroll;
 }
 
 function toggleSvcDone(svcKey){
@@ -1941,7 +1949,7 @@ function toggleSvcDone(svcKey){
   const ids = D.items.filter(i=>i.categoryKey===svcKey&&i.type==='income'&&(Number(i.amount)||0)>0).map(i=>i.id);
   const allDone = ids.every(id=>D.done[id]);
   ids.forEach(id=>{ if(allDone) delete D.done[id]; else D.done[id]=true; });
-  pushData(); const _st=saveOpenState(); renderSettings(); restoreOpenState(_st);
+  pushData(); renderSettings();
   const msb=getMonthStartBalance(curYear,curMonth);
   renderCashflow(msb); renderKPI(msb);
 }
@@ -1952,7 +1960,7 @@ function toggleGroupDone(){
     if(allDone) delete D.done[id];
     else D.done[id] = true;
   });
-  pushData(); const _st=saveOpenState(); renderSettings(); restoreOpenState(_st);
+  pushData(); renderSettings();
   const msb = getMonthStartBalance(curYear, curMonth);
   renderCashflow(msb); renderKPI(msb);
 }
@@ -1985,10 +1993,11 @@ document.addEventListener('click',function(e){
     const save=()=>{
       const v=parseFloat(inp.value)||0;
       if(isAcct) item.balance=v; else item.amount=v;
-      pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st);
-      document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
-      window.scrollTo(0,_sy);
-      requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
+      amt.textContent=fmt(v)||'—';
+      pushData();
+      const msb=getMonthStartBalance(curYear,curMonth);
+      renderKPI(msb); renderAccounts(); renderCashflow(msb);
+      renderOverdueDash(); renderForecast();
     };
     inp.addEventListener('blur',save);
     inp.addEventListener('keydown',ev=>{ if(ev.key==='Enter') inp.blur(); });
@@ -2092,7 +2101,7 @@ function toggleCalDay(d){
   const popup = document.querySelector('.day-cal-popup');
   if(popup) popup.innerHTML = renderDayCalContent(sel);
   // save immediately on each click
-  pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderSettings(); restoreOpenState(_st); requestAnimationFrame(()=>window.scrollTo(0,_sy));
+  pushData(); renderSettings();
 }
 
 function applyDayCal(){
@@ -2122,7 +2131,7 @@ function repeatLabel(r){return {monthly:'Мес.',weekly:'Нед.',quarterly:'К
 function toggleWeeklyDone(itemId,d){
   const key=weeklyDoneKey(itemId,d);
   if(D.done[key]) delete D.done[key]; else D.done[key]=true;
-  pushData(); const _st=saveOpenState(); renderSettings(); restoreOpenState(_st);
+  pushData(); renderSettings();
   const msb=getMonthStartBalance(curYear,curMonth);
   renderCashflow(msb); renderKPI(msb);
 }
@@ -2133,7 +2142,7 @@ function toggleWeeklySub(id){
 function toggleDone(itemId, dateIdx){
   const key = dateIdx===1 ? itemId+'_2' : itemId;
   if(D.done[key]) delete D.done[key]; else D.done[key]=true;
-  pushData(); const _s=saveOpenState(); renderSettings(); restoreOpenState(_s); renderCashflow(getMonthStartBalance(curYear,curMonth));
+  pushData(); renderSettings(); renderCashflow(getMonthStartBalance(curYear,curMonth));
   // update KPI too
   const msb=getMonthStartBalance(curYear,curMonth);
   renderKPI(msb);
