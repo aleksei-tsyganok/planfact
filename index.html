@@ -157,6 +157,13 @@ body{
 .cal-bal.warn{background:rgba(251,191,36,.15);color:var(--amber)}
 .cal-empty{background:var(--s1);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd)}
 .cal-empty:nth-child(7n){border-right:none}
+@media(max-width:768px){
+  .cal-cell{padding:18px 3px 3px;min-height:54px}
+  .cal-day{font-size:9px;top:3px;right:3px}
+  .cal-inc,.cal-exp{font-size:8px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cal-bal{font-size:8px;padding:1px 3px;margin-top:2px;border-radius:2px}
+  .cal-dow{font-size:8px;padding:5px 2px;letter-spacing:0}
+}
 .settings-tabs{display:flex;gap:1px;background:var(--s3);border:1px solid var(--brd);border-radius:var(--rsm);padding:3px;margin-bottom:16px}
 .stab{flex:1;padding:7px 4px;border-radius:6px;border:none;background:none;color:var(--t3);font-family:var(--f);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
 .stab.active{background:var(--s5);color:var(--t1);box-shadow:var(--shadow-sm)}
