@@ -1479,36 +1479,77 @@ function renderFeed(){
   const lbl=document.getElementById('feedMonthLabel');if(lbl)lbl.textContent=MONTHS[curMonth]+' '+curYear;
   const now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),cd=now.getDate();
   const isCur=curYear===cy&&curMonth===cm;
-  const sv=D.done; D.done={};
+  const svDone=D.done; D.done={};
   const {daily}=buildDailyCF(curYear,curMonth,getMonthStartBalance(curYear,curMonth));
-  D.done=sv;
-  const sorted=[...daily].sort((a,b)=>isCur?b.d-a.d:a.d-b.d);
+  D.done=svDone;
   const DOWS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+
+  const isUndone=(ev,day)=>{
+    const item=D.items.find(i=>i.id===ev.id);
+    const dk=ev.id?(item&&item.repeat==='weekly'?weeklyDoneKey(ev.id,day):(ev.doneKey||ev.id)):null;
+    return dk&&!svDone[dk];
+  };
+
+  let overdueEvts=[];
+  const overdueKeys=new Set();
+  if(isCur){
+    for(const dd of daily){
+      if(dd.d>=cd) continue;
+      for(const ev of dd.events.filter(e=>!e.auto)){
+        if(isUndone(ev,dd.d)){
+          overdueEvts.push({...ev,_ovd:true,_planDay:dd.d});
+          overdueKeys.add((ev.doneKey||ev.id)+'_'+ev.amount);
+        }
+      }
+    }
+  }
+
+  const todayDD=isCur?daily.find(x=>x.d===cd):null;
+  const todayHasUndone=todayDD?todayDD.events.some(e=>!e.auto&&isUndone(e,cd)):false;
+
+  let scrollDay=null;
+  if(isCur){
+    if(overdueEvts.length||todayHasUndone) scrollDay=cd;
+    else{
+      for(const dd of daily){
+        if(dd.d<=cd) continue;
+        if(dd.events.some(e=>!e.auto&&isUndone(e,dd.d))){scrollDay=dd.d;break;}
+      }
+    }
+  }
+
+  const sorted=[...daily].sort((a,b)=>isCur?b.d-a.d:a.d-b.d);
+
   let h='',any=false;
   for(const dd of sorted){
-    const evs=dd.events.filter(e=>!e.auto);if(!evs.length)continue;any=true;
-    const past=isCur&&dd.d<cd,tod=isCur&&dd.d===cd;
+    let evs=dd.events.filter(e=>!e.auto);
+    const tod=isCur&&dd.d===cd;
+    if(isCur&&!tod) evs=evs.filter(e=>!overdueKeys.has((e.doneKey||e.id)+'_'+e.amount));
+    if(isCur&&tod&&overdueEvts.length) evs=[...overdueEvts,...evs];
+    if(!evs.length) continue;any=true;
+    const past=isCur&&dd.d<cd;
     const dow=DOWS[new Date(curYear,curMonth,dd.d).getDay()];
     const dlbl=tod?'Сегодня':`${dd.d} ${MONTHS[curMonth]}, ${dow}`;
     const bc=dd.balance<0?'var(--red)':dd.balance<50000?'var(--amber)':'var(--t2)';
-    h+=`<div style="margin-bottom:20px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd)"><div style="font-size:15px;font-weight:700;color:${tod?'var(--acc)':past?'var(--t1)':'var(--t2)'}">${dlbl}</div><div style="font-size:12px;color:${bc};font-weight:600">${fmt(dd.balance)}</div></div>`;
+    h+=`<div id="feed-day-${dd.d}" style="margin-bottom:20px;scroll-margin-top:80px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd)"><div style="font-size:15px;font-weight:700;color:${tod?'var(--acc)':past?'var(--t1)':'var(--t2)'}">${dlbl}</div><div style="font-size:12px;color:${bc};font-weight:600">${fmt(dd.balance)}</div></div>`;
     for(const ev of evs){
       const item=D.items.find(i=>i.id===ev.id);
       const pvz=item&&item.pvzAddr?PVZ_LIST.find(p=>p.key===item.pvzAddr):null;
       const isInc=ev.type==='income',col=isInc?'var(--grn)':'var(--red)';
       const dk=ev.id?(item&&item.repeat==='weekly'?weeklyDoneKey(ev.id,dd.d):(ev.doneKey||ev.id)):null;
-      const done=dk?!!D.done[dk]:false,ovd=past&&dk&&!done;
+      const done=dk?!!D.done[dk]:false,ovd=ev._ovd||(past&&dk&&!done);
       const name=(ev.name||'')+(pvz?' — '+pvz.name:'');
       const tgl=dk?`<label class="tg" onclick="event.stopPropagation()"><input type="checkbox" ${done?'checked':''} onchange="toggleFeedEv('${dk}',${dd.d})"><span class="tg-s"></span></label>`:'';
       h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${done?'var(--s1)':'var(--s2)'};border:1px solid var(--brd);border-radius:10px;margin-bottom:6px;${done?'opacity:.35':''}${ovd?';box-shadow:inset 3px 0 0 var(--amber)':''}">
         <div style="width:8px;height:8px;border-radius:50%;background:${ev.color||col};flex-shrink:0"></div>
-        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${done?'text-decoration:line-through':''}">${name}</div>${ovd?'<div style="font-size:10px;color:var(--amber);margin-top:2px">Не проведено</div>':''}</div>
+        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${done?'text-decoration:line-through':''}">${name}</div>${ovd?`<div style="font-size:10px;color:var(--amber);margin-top:2px">Не проведено, плановая дата ${ev._planDay} ${MONTHS[curMonth]}</div>`:''}</div>
         <div style="font-size:13px;font-weight:700;color:${col};flex-shrink:0;margin-right:8px">${isInc?'+':'−'}${fmt(Math.abs(ev.amount))}</div>
         ${tgl}</div>`;
     }
     h+=`</div>`;
   }
   el.innerHTML=any?h:'<div style="padding:40px;text-align:center;color:var(--t3)">Нет операций</div>';
+  if(scrollDay!==null) requestAnimationFrame(()=>{document.getElementById('feed-day-'+scrollDay)?.scrollIntoView({behavior:'smooth',block:'start'});});
 }
 function toggleFeedEv(key,day){
   if(D.done[key])delete D.done[key];else D.done[key]=true;
