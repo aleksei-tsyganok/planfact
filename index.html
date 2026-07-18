@@ -54,7 +54,23 @@ body{
 .sync-dot.ok{background:var(--grn)}
 .sync-dot.sync{background:var(--amber);animation:blink .9s ease-in-out infinite}
 .sync-dot.err{background:var(--red)}
-@media(min-width:769px){.tab-bar{display:none}}
+.tab-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  height:calc(58px + env(safe-area-inset-bottom));
+  padding-bottom:env(safe-area-inset-bottom);
+  display:none;align-items:stretch;
+  background:var(--bg);
+  border-top:1px solid var(--brd);
+}
+.tbb{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;border:none;background:none;color:var(--t3);cursor:pointer;
+  font-family:var(--f);font-size:10px;font-weight:500;letter-spacing:.02em;
+  padding:0;-webkit-tap-highlight-color:transparent;transition:color .15s;
+}
+.tbb.active{color:var(--acc)}
+.tbb svg{flex-shrink:0}
+.tbb.active svg{stroke:var(--acc)}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
 
@@ -188,7 +204,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .val-pos{color:var(--grn)}.val-neg{color:var(--red)}.val-zero{color:var(--t4)}
 
 /* ── MONTH NAV ── */
-.month-nav{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.month-nav{display:none;align-items:center;gap:10px;margin-bottom:22px}
 .mnav-btn{
   width:34px;height:34px;background:var(--s3);border:1px solid var(--brd);
   color:var(--t1);border-radius:var(--rsm);cursor:pointer;font-size:16px;
@@ -399,25 +415,24 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   box-shadow:var(--shadow-lg);
 }
 .cal-title{font-size:11px;font-weight:700;text-align:center;color:var(--t1);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.cal-dow{font-size:9px;font-weight:700;text-align:center;color:var(--t3);padding:6px 4px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--brd)}
-.cal-emp{height:0}
-.cal-cell{background:var(--s2);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);padding:22px 6px 6px;min-height:90px;box-sizing:border-box;position:relative;cursor:pointer}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));border-radius:14px;overflow:hidden;border:1px solid var(--brd);margin-bottom:24px;box-shadow:var(--shadow-md)}
+.cal-dow{font-size:9px;font-weight:700;text-align:center;color:var(--t3);padding:8px 2px;text-transform:uppercase;letter-spacing:.4px;background:var(--s3);border-bottom:1px solid var(--brd)}
+.cal-cell{background:var(--s2);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);padding:20px 4px 4px;min-height:76px;box-sizing:border-box;position:relative;cursor:pointer;transition:background .12s}
+.cal-cell:hover{background:var(--s3)}
 .cal-cell:nth-child(7n){border-right:none}
-.cal-cell.today{background:rgba(52,199,89,.07);box-shadow:inset 0 0 0 1px rgba(52,199,89,.35)}
+.cal-cell.today{background:rgba(52,199,89,.08);box-shadow:inset 0 0 0 1.5px rgba(52,199,89,.4)}
+.cal-cell.today:hover{background:rgba(52,199,89,.12)}
 .cal-cell.negative{background:rgba(255,69,58,.04)}
-.cal-cell.overdue-day{background:rgba(255,159,10,.08);box-shadow:inset 0 0 0 1px rgba(255,159,10,.4)}
-.cal-day{font-size:10px;font-weight:700;color:var(--t3);position:absolute;top:5px;right:6px;line-height:1}
-.cal-cell.today .cal-day{color:var(--acc)}
-.cal-inc,.cal-exp,.cal-wdr{font-size:10px;font-weight:600;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:14px}
-.cal-inc{color:var(--grn)}
-.cal-exp{color:var(--red)}
-.cal-wdr{color:#60a5fa}
-.cal-bal{font-size:10px;font-weight:700;padding:2px 4px;border-radius:3px;margin-top:3px;display:inline-block;line-height:1.3}
+.cal-cell.overdue-day{background:rgba(255,159,10,.07);box-shadow:inset 0 0 0 1.5px rgba(255,159,10,.35)}
+.cal-day{font-size:10px;font-weight:700;color:var(--t3);position:absolute;top:4px;right:5px;line-height:1}
+.cal-cell.today .cal-day{color:var(--acc);background:rgba(52,199,89,.18);border-radius:4px;padding:1px 3px}
+.cal-inc{font-size:9px;font-weight:600;color:var(--grn);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-exp{font-size:9px;font-weight:600;color:var(--red);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-bal{font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;margin-top:2px;display:inline-block;line-height:1.4;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cal-bal.pos{background:rgba(52,199,89,.15);color:var(--grn)}
 .cal-bal.neg{background:rgba(255,69,58,.18);color:var(--red)}
 .cal-bal.warn{background:rgba(255,159,10,.15);color:var(--amber)}
-.cal-empty{background:var(--s1);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd)}
+.cal-empty{background:var(--s1);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);opacity:.35}
 .cal-empty:nth-child(7n){border-right:none}
 .day-detail-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:20px}
 .day-detail-panel{background:var(--s2);border-radius:16px;width:100%;max-width:480px;padding:20px;max-height:80dvh;overflow-y:auto;border:1px solid var(--brd2);box-shadow:0 24px 60px rgba(0,0,0,.5)}
@@ -432,11 +447,12 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .stab{flex:1;padding:7px 4px;border-radius:6px;border:none;background:none;color:var(--t3);font-family:var(--f);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;text-align:center}
 .stab.active{background:var(--s5);color:var(--t1);box-shadow:var(--shadow-sm)}
 @media(max-width:768px){
-  .tab-bar{display:flex}.logo,.nav-tabs{display:none!important}
-  .topbar{padding:calc(env(safe-area-inset-top)+8px) 16px 8px;height:auto}
-  .month-nav{display:flex!important;justify-content:flex-start;margin-bottom:16px!important}
+  .tab-bar{display:flex;align-items:stretch}.logo,.nav-tabs,.desktop-month-nav{display:none!important}
+  .topbar{padding:calc(env(safe-area-inset-top)+8px) 16px 8px;height:auto;display:flex;align-items:center;justify-content:space-between}
+  .month-nav{display:flex!important;align-items:center;gap:8px;margin-bottom:16px!important}
   .view{padding-bottom:calc(58px + env(safe-area-inset-bottom) + 16px)!important}
   .kpi-grid{grid-template-columns:repeat(2,1fr)!important}
+  .desktop-month-nav{display:none!important}
   .cal-cell{padding:18px 3px 3px;min-height:68px}
   .cal-day{font-size:9px;top:3px;right:3px}
   .cal-inc,.cal-exp,.cal-wdr{font-size:8px;line-height:1.3}
@@ -457,6 +473,11 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 
 <div class="topbar">
   <div class="logo" style="font-size:14px;font-weight:700;letter-spacing:.02em"><b style="color:var(--acc)">ПЛАТЁЖНЫЙ</b> <span style="color:var(--t1)">КАЛЕНДАРЬ</span></div>
+  <div class="desktop-month-nav" style="display:flex;align-items:center;gap:6px">
+    <button class="mnav-btn" onclick="chMonth(-1)">‹</button>
+    <div id="desktopMonthLabel" style="font-size:14px;font-weight:600;color:var(--t1);min-width:120px;text-align:center"></div>
+    <button class="mnav-btn" onclick="chMonth(1)">›</button>
+  </div>
   <div class="nav-tabs">
     <button class="ntab active" onclick="showView('dashboard',this)">Дашборд</button>
     <button class="ntab" onclick="showView('forecast',this)">Прогноз</button>
@@ -885,6 +906,11 @@ function isWe(y,m,d){const w=getWd(y,m,d);return w===0||w===6;}
 function isToday(y,m,d){const t=new Date();return t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===d;}
 function workdays(y,m,f,t){let n=0;for(let d=f;d<=t;d++){const w=getWd(y,m,d);if(w>=1&&w<=5)n++;}return n;}
 function itemDays(item){return (item.days&&item.days.length)?item.days:[item.day||1];}
+function effectiveAmount(item){
+  const base=itemAmount(item);
+  if(item&&item.sharePercent) return base*item.sharePercent/100;
+  return base;
+}
 function itemAmount(item){
   if(item.composite&&item.subItems) return item.subItems.reduce((s,si)=>s+(Number(si.amount)||0),0);
   return Number(item.amount)||0;
@@ -969,9 +995,10 @@ function buildDailyCF(year,month,startOverride){
     for(const d of occur){
       const dk=item.id+'_d'+d;
       if(isCurMonth&&D.done[dk]) continue;
-      addEvent(d,item.category,amt,'income',item.color,item.id,{doneKey:dk});
-      if(taxR>0&&amt>0){
-        addEvent(d,'Налог',-Math.round(amt*taxR),'tax','#fbbf24',item.id+'_tax',{auto:true});
+      const _effAmt=item.sharePercent?Math.round(amt*item.sharePercent/100):amt;
+      addEvent(d,item.category,_effAmt,'income',item.color,item.id,{doneKey:dk,sharePercent:item.sharePercent||null,fullAmount:item.sharePercent?amt:null});
+      if(taxR>0&&_effAmt>0){
+        addEvent(d,'Налог',-Math.round(_effAmt*taxR),'tax','#fbbf24',item.id+'_tax',{auto:true});
       }
     }
   }
@@ -991,7 +1018,8 @@ function buildDailyCF(year,month,startOverride){
     for(const d of occur){
       const dk=item.id+'_d'+d;
       if(isCurMonth&&D.done[dk]) continue;
-      addEvent(d,item.category,-amt,'expense',item.color,item.id,{doneKey:dk});
+      const _effExpAmt=item.sharePercent?Math.round(amt*item.sharePercent/100):amt;
+    addEvent(d,item.category,-_effExpAmt,'expense',item.color,item.id,{doneKey:dk,sharePercent:item.sharePercent||null,fullAmount:item.sharePercent?amt:null});
     }
   }
 
@@ -1121,6 +1149,7 @@ function calcSafeWithdrawal(){
 // ══════════════════════════════════
 function renderAll(){
   document.getElementById('monthLabel').textContent=MONTHS[curMonth]+' '+curYear;
+  const _dml=document.getElementById('desktopMonthLabel');if(_dml)_dml.textContent=MONTHS[curMonth]+' '+curYear;
   document.getElementById('monthSub').textContent='';
   const msb=getMonthStartBalance(curYear,curMonth);
   renderKPI(msb);
@@ -1542,16 +1571,49 @@ function renderFeed(){
       const done=dk?!!D.done[dk]:false,ovd=ev._ovd||(past&&dk&&!done);
       const name=ev.name||'';
       const tgl=dk?`<label class="tg" onclick="event.stopPropagation()"><input type="checkbox" ${done?'checked':''} onchange="toggleFeedEv('${dk}',${dd.d})"><span class="tg-s"></span></label>`:'';
-      h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${done?'var(--s1)':'var(--s2)'};border:1px solid var(--brd);border-radius:10px;margin-bottom:6px;${done?'opacity:.35':''}${ovd?';box-shadow:inset 3px 0 0 var(--amber)':''}">
-        <div style="width:8px;height:8px;border-radius:50%;background:${ev.color||col};flex-shrink:0"></div>
-        <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${done?'text-decoration:line-through':''}">${name}</div>${ovd?`<div style="font-size:10px;color:var(--amber);margin-top:2px">Не проведено, плановая дата ${ev._planDay} ${MONTHS[curMonth]}</div>`:''}</div>
-        <div style="font-size:13px;font-weight:700;color:${col};flex-shrink:0;margin-right:8px">${isInc?'+':'−'}${fmt(Math.abs(ev.amount))}</div>
-        ${tgl}</div>`;
+      const _isWithdr=ev.type==='withdrawal';
+      const _bgGrad=done?'var(--s1)':_isWithdr?'linear-gradient(135deg,rgba(58,159,191,.025) 0%,var(--s2) 50%)':isInc?'linear-gradient(135deg,rgba(52,199,89,.025) 0%,var(--s2) 50%)':'linear-gradient(135deg,rgba(255,69,58,.025) 0%,var(--s2) 50%)';
+      const _fid='fr_'+ev.id+'_'+dd.d;
+      const _fi2=D.items.find(i=>i.id===ev.id);
+      const _subs2=(_fi2&&_fi2.composite&&_fi2.subItems)||[];
+      let _compH='';
+      if(_subs2.length){
+        const _sh=_subs2.map(s=>{
+          return '<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)">'
+            +'<div style="flex:1;min-width:0"><div style="font-size:12px;color:var(--t1)">'+escH(s.name||'')+'</div>'
+            +(s.comment?'<div style="font-size:10px;color:var(--t2);margin-top:1px">'+escH(s.comment)+'</div>':'')
+            +'</div><div style="font-size:12px;font-weight:600;color:'+(isInc?'var(--grn)':'var(--red)')+'">'+fmt(Number(s.amount)||0)+'</div></div>';
+        }).join('');
+        _compH='<div onclick="toggleFeedRow(\''+_fid+'\')" style="padding:6px 14px;border-top:1px solid var(--brd);font-size:11px;color:var(--t3);cursor:pointer;display:flex;justify-content:space-between">'
+          +'<span>Состав ('+_subs2.length+')</span><span id="'+_fid+'_arr">▾</span></div>'
+          +'<div id="'+_fid+'" style="display:none;padding:0 14px 8px">'+_sh+'</div>';
+      }
+      h+=`<div style="background:${_bgGrad};border:1px solid ${done?'var(--brd)':_isWithdr?'rgba(58,159,191,.08)':isInc?'rgba(52,199,89,.08)':'rgba(255,69,58,.08)'};border-radius:10px;margin-bottom:6px;${done?'opacity:.35':''}${ovd?';box-shadow:inset 3px 0 0 var(--amber)':''}">
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:56px;box-sizing:border-box">
+          <div style="width:8px;height:8px;border-radius:50%;background:${ev.color||col};flex-shrink:0"></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${done?'text-decoration:line-through':''}">${name}</div>
+            ${ev.sharePercent?`<div style="font-size:10px;color:var(--t2);margin-top:1px">Доля ${ev.sharePercent}% · полн. ${fmt(ev.fullAmount)}</div>`:''}
+            ${ovd?'<div style="font-size:10px;color:var(--amber);margin-top:2px">Не проведено</div>':''}
+          </div>
+          <div style="font-size:13px;font-weight:700;color:${col};flex-shrink:0;margin-right:8px">${isInc?'+':'−'}${fmt(Math.abs(ev.amount))}</div>
+          ${tgl}
+        </div>
+        ${_compH} 
+      </div>`
     }
     h+=`</div>`;
   }
   el.innerHTML=any?h:'<div style="padding:40px;text-align:center;color:var(--t3)">Нет операций</div>';
   if(scrollDay!==null) requestAnimationFrame(()=>{document.getElementById('feed-day-'+scrollDay)?.scrollIntoView({behavior:'smooth',block:'start'});});
+}
+function toggleFeedRow(id){
+  const el=document.getElementById(id);
+  const arr=document.getElementById(id+'_arr');
+  if(!el)return;
+  const open=el.style.display==='none';
+  el.style.display=open?'block':'none';
+  if(arr)arr.textContent=open?'▴':'▾';
 }
 function toggleFeedEv(key,day){
   if(D.done[key])delete D.done[key];else D.done[key]=true;
@@ -1560,12 +1622,12 @@ function toggleFeedEv(key,day){
   renderCashflow(msb);renderKPI(msb);renderOverdueDash();renderFeed();
 }
 function renderAccounts(){
-  const total=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
-  document.getElementById('accountsGrid').innerHTML=D.accounts.map(a=>`
-    <div class="acct-card" onclick="inlineEditBalance(event,'${a.id}')">
-      <div class="acct-name"><div class="acct-dot" style="background:${a.color}"></div>${a.name}</div>
+  const total=D.accounts.filter(a=>a.acctType!=='partner').reduce((s,a)=>s+(Number(a.balance)||0),0);
+  const _card=a=>`<div class="acct-card" onclick="inlineEditBalance(event,'${a.id}')">
+      <div class="acct-name"><div class="acct-dot" style="background:${a.color}"></div>${a.name}${a.acctType==='partner'?'<span style="font-size:9px;font-weight:500;color:var(--blue);border:1px solid rgba(58,159,191,.3);border-radius:20px;padding:1px 7px;margin-left:6px;white-space:nowrap">партнёр</span>':''}</div>
       <div class="acct-val" id="aval-${a.id}">${fmt(a.balance)||'0₽'}</div>
-    </div>`).join('')+`
+    </div>`;
+  document.getElementById('accountsGrid').innerHTML=D.accounts.map(_card).join('')+`
     <div class="acct-card" style="border-style:dashed;cursor:default;display:flex;flex-direction:column;justify-content:flex-end">
       <div class="acct-name"><div class="acct-dot" style="background:var(--acc)"></div>Итого</div>
       <div class="acct-val" style="color:var(--acc)">${fmt(total)||'0₽'}</div>
@@ -1712,16 +1774,20 @@ function restoreOpenState(state){
 
 function renderSettings(){
   // ── Счета ──
-  document.getElementById('settingAccounts').innerHTML=D.accounts.map(a=>`
-    <div class="item-row">
+  const _accts=D.accounts.filter(a=>a.acctType!=='partner');
+  const _prtns=D.accounts.filter(a=>a.acctType==='partner');
+  const _aRow=a=>`<div class="item-row">
       <div class="item-dot" style="background:${a.color}" onclick="openItemModal('account','${a.id}')"></div>
-      <div class="item-name">${a.name}</div>
+      <div class="item-name">${a.name}${a.acctType==='partner'?'<span style="font-size:10px;font-weight:500;color:var(--blue);border:1px solid rgba(58,159,191,.35);border-radius:20px;padding:2px 8px;margin-left:8px;letter-spacing:.01em">партнёр</span>':''}</div>
       <div class="item-amount" data-id="${a.id}" data-acct>${fmt(a.balance)||'0₽'}</div>
       <button class="item-edit" onclick="openItemModal('account','${a.id}')">✎</button>
-    </div>`).join('');
+    </div>`;
+  document.getElementById('settingAccounts').innerHTML=
+    (_accts.length?'<div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 4px">Счета</div>'+_accts.map(_aRow).join(''):'')
+    +(_prtns.length?'<div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;padding:10px 16px 4px;border-top:1px solid var(--brd)">Партнёры</div>'+_prtns.map(_aRow).join(''):'');
 
   // ── Доходы (плитки) ──
-  const incItems=D.items.filter(i=>i.type==='income');
+  const incItems=D.items.filter(i=>i.type==='income').sort((a,b)=>(a.days?a.days[0]:a.day||99)-(b.days?b.days[0]:b.day||99));
   let incHtml='';
   for(const item of incItems){
     const total=itemAmount(item);
@@ -1770,7 +1836,7 @@ function renderSettings(){
   document.getElementById('settingIncome').innerHTML=incHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет доходов</div>';
 
   // ── Расходы (плитки) ──
-  const expItems=D.items.filter(i=>i.type==='expense');
+  const expItems=D.items.filter(i=>i.type==='expense').sort((a,b)=>(a.days?a.days[0]:a.day||99)-(b.days?b.days[0]:b.day||99));
   let expHtml='';
   for(const item of expItems){
     const total=itemAmount(item);
@@ -2213,9 +2279,15 @@ function openItemModal(type,id){
   if(type==='account'){
     titleTxt=isEdit?`Счёт: ${mo.name}`:'Новый счёт';
     body=`
+      <div class="frow"><label class="flabel">Тип</label>
+        <select class="fselect" id="mAcctType">
+          <option value="account" ${isEdit&&mo&&mo.acctType==='partner'?'':'selected'}>Счёт</option>
+          <option value="partner" ${isEdit&&mo&&mo.acctType==='partner'?'selected':''}>Партнёр</option>
+        </select>
+      </div>
       <div class="frow"><label class="flabel">Название</label>
-        <input class="finput" id="mName" value="${isEdit?mo.name:''}" placeholder="Название счёта"></div>
-      <div class="frow"><label class="flabel">Текущий остаток, ₽</label>
+        <input class="finput" id="mName" value="${isEdit?mo.name:''}" placeholder="Название / партнёр"></div>
+      <div class="frow"><label class="flabel">Текущий баланс, ₽</label>
         <input class="finput" id="mBalance" type="number" value="${isEdit?mo.balance:''}" placeholder="0"></div>`;
     btns=isEdit?
       `<button class="mbtn danger" onclick="delItem('account','${id}')">Удалить</button>
@@ -2266,7 +2338,30 @@ function openItemModal(type,id){
       </div>
       ${isIncome?`
       <div class="frow"><label class="flabel">Налог УСН, %</label>
-        <input class="finput" id="mTaxRate" type="number" value="${isEdit&&mo?(mo.taxRate||0):7}" placeholder="7" step="0.5"></div>`:''}`;
+        <input class="finput" id="mTaxRate" type="number" value="${isEdit&&mo?(mo.taxRate||0):7}" placeholder="7" step="0.5"></div>`:''}
+      <div class="frow" style="align-items:center">
+        <label class="flabel" style="flex:1">Совместный бизнес</label>
+        <label class="tg"><input type="checkbox" id="mShared" ${isEdit&&mo&&mo.sharePercent?'checked':''} onchange="document.getElementById('mSharePct').style.display=this.checked?'flex':'none';document.getElementById('mPartnerFields').style.display=this.checked?'block':'none'"><span class="tg-s"></span></label>
+      </div>
+      <div class="frow" id="mSharePct" style="display:${isEdit&&mo&&mo.sharePercent?'flex':'none'}">
+        <label class="flabel">Моя доля, %</label>
+        <input class="finput" id="mShareVal" type="number" min="1" max="99" value="${isEdit&&mo&&mo.sharePercent?mo.sharePercent:50}" placeholder="50" step="1">
+      </div>
+      <div id="mPartnerFields" style="display:${isEdit&&mo&&mo.sharePercent?'block':'none'}">
+        <div class="frow"><label class="flabel">Партнёр</label>
+          <select class="fselect" id="mPartnerId">
+            <option value="">— не указан —</option>
+            ${D.accounts.filter(a=>a.acctType==='partner').map(a=>`<option value="${a.id}" ${isEdit&&mo&&mo.partnerId===a.id?'selected':''}>${escH(a.name)}</option>`).join('')}
+          </select>
+        </div>
+
+      </div>
+      <div class="frow"><label class="flabel">Счёт получения</label>
+        <select class="fselect" id="mAcctId">
+          <option value="">— не указан —</option>
+          ${D.accounts.map(a=>`<option value="${a.id}" ${isEdit&&mo&&mo.acctId===a.id?'selected':''}>${escH(a.name)}${a.acctType==='partner'?' (партнёр)':''}</option>`).join('')}
+        </select>
+      </div>`;
     btns=isEdit?
       `<button class="mbtn danger" onclick="delItem('item','${id}')">Удалить</button>
        <button class="mbtn" onclick="closeModal()">Отмена</button>
@@ -2330,12 +2425,13 @@ function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function saveAccount(){
   const name=document.getElementById('mName').value.trim();
   const balance=parseFloat(document.getElementById('mBalance').value)||0;
+  const acctType=document.getElementById('mAcctType')?.value||'account';
   if(!name){showToast('Введите название');return;}
   if(editingId){
     const a=D.accounts.find(x=>x.id===editingId);
-    if(a){a.name=name;a.balance=balance;}
+    if(a){a.name=name;a.balance=balance;a.acctType=acctType;}
   } else {
-    D.accounts.push({id:uid(),name,balance,color:'#94a3b8'});
+    D.accounts.push({id:uid(),name,balance,color:'#94a3b8',acctType});
   }
   closeModal(); pushData(); rerender(); showToast('✓ Сохранено');
 }
@@ -2352,7 +2448,12 @@ function saveItem(){
 
   const catKey=name.toLowerCase().replace(/[^a-zа-яё0-9]/g,'_');
 
-  const itemData={category:name,categoryKey:catKey,icon:_modalIcon,taxRate};
+  const mShared=document.getElementById('mShared');
+  const sharePercent=mShared&&mShared.checked?(parseFloat(document.getElementById('mShareVal')?.value)||50):null;
+  const acctId=document.getElementById('mAcctId')?.value||null;
+  const partnerId=mShared&&mShared.checked?(document.getElementById('mPartnerId')?.value||null):null;
+  const moneyTo=mShared&&mShared.checked?(document.getElementById('mMoneyTo')?.value||'split'):null;
+  const itemData={category:name,categoryKey:catKey,icon:_modalIcon,taxRate,sharePercent,acctId,partnerId,moneyTo};
   if(days&&days.length) itemData.days=days;
 
   if(isComposite){
