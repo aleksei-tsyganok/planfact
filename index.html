@@ -1154,9 +1154,11 @@ function renderAll(){
   const msb=getMonthStartBalance(curYear,curMonth);
   renderKPI(msb);
   renderAccounts();
+  renderFreeMoneyBar(msb);
   renderCashflow(msb);
   renderSettings();
   renderOverdueDash();
+  renderFreeMoneyBar(msb);
   renderFeed();
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
@@ -1400,6 +1402,66 @@ function toggleFeedEv(key,day){
   const msb=getMonthStartBalance(curYear,curMonth);
   renderCashflow(msb);renderKPI(msb);renderOverdueDash();renderFeed();
 }
+function calcSafeWithdrawal(){
+  const now=new Date();
+  const cy=now.getFullYear(), cm=now.getMonth();
+  const currentTotal=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
+  let minBalance=Infinity, minMonth=cm, minYear=cy;
+  const cf0=buildDailyCF(cy,cm,currentTotal);
+  for(const day of cf0.daily){ if(day.balance<minBalance){minBalance=day.balance;minMonth=cm;minYear=cy;} }
+  let carryBal=cf0.daily[cf0.daily.length-1]?.balance||currentTotal;
+  let scanM=cm+1, scanY=cy;
+  if(scanM>11){scanM=0;scanY++;}
+  for(let i=0;i<12;i++){
+    const cf=buildDailyCF(scanY,scanM,carryBal);
+    for(const day of cf.daily){ if(day.balance<minBalance){minBalance=day.balance;minMonth=scanM;minYear=scanY;} }
+    carryBal=cf.daily[cf.daily.length-1]?.balance||carryBal;
+    scanM++; if(scanM>11){scanM=0;scanY++;}
+  }
+  const buffer=Number(D.settings.buffer)||0;
+  const safe=Math.max(0,Math.floor(minBalance)-buffer);
+  return {safe, minBalance:Math.floor(minBalance), minMonth, minYear};
+}
+
+function renderFreeMoneyBar(msb){
+  const el=document.getElementById('freeMoneyBar');
+  if(!el) return;
+  const {safe, minBalance, minMonth, minYear}=calcSafeWithdrawal();
+  const buffer=Number(D.settings.buffer)||0;
+  const now=new Date(), cy=now.getFullYear(), cm=now.getMonth();
+  const isCurMin=minYear===cy&&minMonth===cm;
+  const minLabel=isCurMin?MONTHS[minMonth]+' '+minYear:MONTHS[minMonth]+' '+minYear;
+  const safeCls=safe>50000?'ok':safe>0?'warn':'bad';
+  const safeDesc=safe<=0
+    ?`⚠ Вывод невозможен — разрыв в ${minLabel} (мин. остаток ${fmt(minBalance)})`
+    :`Узкое место: ${minLabel} — минимальный остаток ${fmt(minBalance)}`;
+  const endBal=(()=>{const cf=buildDailyCF(curYear,curMonth,msb);return cf.daily[cf.daily.length-1]?.balance||msb;})();
+  el.innerHTML=`
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <button onclick="openWithdrawSettings()" style="background:none;border:none;color:var(--t3);font-size:16px;cursor:pointer;padding:0;line-height:1" title="Настройки">⚙</button>
+        <div class="fm-label" style="margin-bottom:0">Можно вывести из оборота сейчас</div>
+      </div>
+      <div class="fm-val ${safeCls}">${safe>0?fmt(safe):'0'}</div>
+      <div class="fm-desc">${safeDesc}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:flex-end;flex-shrink:0">
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:3px">Баланс сейчас</div>
+        <div style="font-size:16px;font-weight:700;color:var(--t2)">${fmt(D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0))}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:3px">Конец месяца</div>
+        <div style="font-size:16px;font-weight:700;color:${endBal<0?'var(--red)':endBal<50000?'var(--amber)':'var(--t2)'}">${fmt(endBal)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:3px">Страховой буфер</div>
+        <div style="font-size:15px;font-weight:700;color:var(--t2)">${fmt(buffer)} ₽</div>
+      </div>
+    </div>`;
+}
+
+
 function renderAccounts(){
   const total=D.accounts.filter(a=>a.acctType!=='partner').reduce((s,a)=>s+(Number(a.balance)||0),0);
   const _card=a=>`<div class="acct-card" onclick="inlineEditBalance(event,'${a.id}')">
