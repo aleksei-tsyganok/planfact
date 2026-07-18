@@ -11,7 +11,7 @@
   --s1:#111214;--s2:#18191c;--s3:#1f2023;--s4:#26272b;--s5:#2e2f33;
   --brd:rgba(255,255,255,.07);--brd2:rgba(255,255,255,.13);--brd3:rgba(255,255,255,.2);
   --acc:#34c759;--acc-d:rgba(52,199,89,.15);--acc-m:rgba(52,199,89,.25);
-  --blue:#3a9fbf;--blue-d:rgba(58,159,191,.12);
+  --blue:#1a6fb5;--blue-d:rgba(58,159,191,.12);
   --red:#ff453a;--red-d:rgba(255,69,58,.12);
   --amber:#ff9f0a;--amber-d:rgba(255,159,10,.12);
   --grn:#34c759;--grn-d:rgba(52,199,89,.12);
@@ -354,7 +354,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .finput,.fselect{
   width:100%;background:var(--s3);border:1.5px solid var(--brd);border-radius:10px;
   padding:12px 14px;color:var(--t1);font-family:var(--f);font-size:14px;
-  outline:none;transition:border-color .15s,background .15s;-webkit-appearance:none;appearance:none;
+  outline:none;appearance:auto;text-overflow:ellipsis;overflow:hidden;
 }
 .finput:focus,.fselect:focus{border-color:var(--acc);background:var(--s4)}
 .finput::placeholder{color:var(--t3)}
@@ -426,12 +426,8 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 .cal-cell.overdue-day{background:rgba(255,159,10,.07);box-shadow:inset 0 0 0 1.5px rgba(255,159,10,.35)}
 .cal-day{font-size:10px;font-weight:700;color:var(--t3);position:absolute;top:4px;right:5px;line-height:1}
 .cal-cell.today .cal-day{color:var(--acc);background:rgba(52,199,89,.18);border-radius:4px;padding:1px 3px}
-.cal-inc{font-size:9px;font-weight:600;color:var(--grn);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-exp{font-size:9px;font-weight:600;color:var(--red);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-bal{font-size:9px;font-weight:700;padding:1px 4px;border-radius:4px;margin-top:2px;display:inline-block;line-height:1.4;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.cal-bal.pos{background:rgba(52,199,89,.15);color:var(--grn)}
-.cal-bal.neg{background:rgba(255,69,58,.18);color:var(--red)}
-.cal-bal.warn{background:rgba(255,159,10,.15);color:var(--amber)}
+.cal-row{font-size:9px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:13px}
+.cal-bal-row{font-size:9px;font-weight:700;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;padding:1px 3px;border-radius:3px;display:inline-block;background:rgba(255,255,255,.04)}
 .cal-empty{background:var(--s1);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);opacity:.35}
 .cal-empty:nth-child(7n){border-right:none}
 .day-detail-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:20px}
@@ -480,7 +476,6 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   </div>
   <div class="nav-tabs">
     <button class="ntab active" onclick="showView('dashboard',this)">Дашборд</button>
-    <button class="ntab" onclick="showView('forecast',this)">Прогноз</button>
     <button class="ntab" onclick="showView('feed',this)">Лента</button>
     <button class="ntab" onclick="showView('settings',this)">Настройки</button>
   </div>
@@ -490,10 +485,6 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   <button class="tbb active" id="tbb-dashboard" onclick="showView('dashboard',this)">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
     <span>Дашборд</span>
-  </button>
-  <button class="tbb" id="tbb-forecast" onclick="showView('forecast',this)">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    <span>Прогноз</span>
   </button>
   <button class="tbb" id="tbb-feed" onclick="showView('feed',this)">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
@@ -532,15 +523,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   <div id="feedContent"></div>
 </div>
 
-<!-- ════ FORECAST ════ -->
-<div class="view" id="view-forecast">
-  <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
-    <button class="mnav-btn" onclick="chFcMonth(-1)">‹</button>
-    <div id="fcMonthLabel" style="font-size:18px;font-weight:800;color:var(--t1);min-width:160px;text-align:center"></div>
-    <button class="mnav-btn" onclick="chFcMonth(1)">›</button>
-  </div>
-  <div id="forecastContent"></div>
-</div>
+
 
 <!-- ════ SETTINGS ════ -->
 <div class="view" id="view-settings">
@@ -945,11 +928,27 @@ function occDays(item,year,month){
       for(let d=1;d<=daysInMonth;d++) result.push(d);
       break;
     case 'weekly': {
-      const refYear=item._refYear!==undefined?item._refYear:year;
-      const refMonth=item._refMonth!==undefined?item._refMonth:month;
-      for(const d0 of dlist){
-        const refDow=new Date(refYear,refMonth,Math.min(d0,daysInMonth)).getDay();
-        for(const d2 of weeklyDatesForDow(refDow,year,month)) result.push(d2);
+      // weekDays: 1=Пн..6=Сб, 7=Вс (UI) → JS getDay: Пн=1..Сб=6, Вс=0
+      const _wds=item.weekDays&&item.weekDays.length?item.weekDays:null;
+      if(_wds){
+        const _seen=new Set();
+        for(const wd of _wds){
+          const js=wd===7?0:wd;
+          if(_seen.has(js)) continue;
+          _seen.add(js);
+          for(const d2 of weeklyDatesForDow(js,year,month)) result.push(d2);
+        }
+      } else {
+        // Legacy items without weekDays
+        const refYear=item._refYear!==undefined?item._refYear:year;
+        const refMonth=item._refMonth!==undefined?item._refMonth:month;
+        const _seen=new Set();
+        for(const d0 of dlist){
+          const refDow=new Date(refYear,refMonth,Math.min(d0,daysInMonth)).getDay();
+          if(_seen.has(refDow)) continue;
+          _seen.add(refDow);
+          for(const d2 of weeklyDatesForDow(refDow,year,month)) result.push(d2);
+        }
       }
       break;
     }
@@ -1157,7 +1156,6 @@ function renderAll(){
   renderCashflow(msb);
   renderSettings();
   renderOverdueDash();
-  renderForecast();
   renderFeed();
   // restore tax settings inputs
   document.getElementById('taxRate').value=D.settings.taxRate||7;
@@ -1189,7 +1187,10 @@ function renderKPI(msb){
 
   document.getElementById('freeMoneyBar').innerHTML=`
     <div style="flex:1;min-width:0">
-      <div class="fm-label">Можно вывести из оборота сейчас</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div class="fm-label" style="margin-bottom:0">Можно вывести из оборота сейчас</div>
+        <button onclick="openWithdrawSettings()" style="background:var(--s4);border:1px solid var(--brd);border-radius:8px;color:var(--t2);font-size:11px;padding:3px 10px;cursor:pointer;font-family:var(--f);flex-shrink:0">⚙ Настройки</button>
+      </div>
       <div class="fm-val ${safeCls}">${safe > 0 ? fmt(safe) : '0₽'}</div>
       <div class="fm-desc">${safeDesc}</div>
     </div>
@@ -1338,181 +1339,15 @@ function toggleOverdueDone(key,itemId){
   renderCashflow(msb); renderKPI(msb);
 }
 
-function renderForecast(){
-  const el=document.getElementById('forecastContent');
-  if(!el) return;
-
-  const fcLbl=document.getElementById('fcMonthLabel');
-  if(fcLbl) fcLbl.textContent=MONTHS[curMonth]+' '+curYear;
-
-  const savedDone=D.done;
-  D.done={};
-  const fcf=buildDailyCF(curYear,curMonth,getMonthStartBalance(curYear,curMonth));
-  D.done=savedDone;
-
-  // Агрегируем по группам ПВЗ из событий CF
-  const pvzMap={};
-  PVZ_LIST.forEach(p=>{ pvzMap[p.key]={pvz:p,inc:0,exp:0}; });
-
-  fcf.daily.forEach(day=>{
-    day.events.forEach(ev=>{
-      if(ev.auto) return;
-      const item=D.items.find(i=>i.id===ev.id);
-      if(!item) return;
-      if(item.composite&&item.subItems){
-        for(const sub of item.subItems){
-          const pvz=PVZ_LIST.find(p=>p.name===sub.name||p.key===sub.name);
-          if(pvz&&pvzMap[pvz.key]){
-            const subAmt=(Number(sub.amount)||0);
-            const total=itemAmount(item);
-            if(total>0) {
-              const share=subAmt/total;
-              if(ev.type==='income') pvzMap[pvz.key].inc+=ev.amount*share;
-              else if(ev.type==='expense') pvzMap[pvz.key].exp+=Math.abs(ev.amount)*share;
-            }
-          }
-        }
-      }
-    });
-  });
-
-  const taxRate2=(D.settings.taxRate||7)/100;
-  PVZ_LIST.forEach(p=>{
-    let taxable=0;
-    D.items.filter(i=>i.type==='income'&&itemAmount(i)>0&&(i.taxRate||0)>0).forEach(i=>{
-      if(i.composite&&i.subItems){
-        const sub=i.subItems.find(s=>s.name===p.name||s.name===p.key);
-        if(sub){
-          const occ=occDays(i,curYear,curMonth).length;
-          taxable+=(Number(sub.amount)||0)*occ;
-        }
-      }
-    });
-    pvzMap[p.key].exp+=Math.round(taxable*taxRate2);
-  });
-
-  const pvzData=PVZ_LIST.map(p=>{
-    const d=pvzMap[p.key];
-    return {pvz:p, inc:Math.round(d.inc), exp:Math.round(d.exp), net:Math.round(d.inc-d.exp)};
-  });
-
-  // Вне ПВЗ
-  const nonPvzTotals={};
-  let generalExp=0, otherInc=0;
-  fcf.daily.forEach(day=>{
-    day.events.forEach(ev=>{
-      if(ev.auto) return;
-      const item=D.items.find(i=>i.id===ev.id);
-      if(!item||item.composite) return;
-      nonPvzTotals[ev.id]=(nonPvzTotals[ev.id]||0)+ev.amount;
-      if(ev.type==='income') otherInc+=ev.amount;
-      else if(ev.type==='expense') generalExp+=Math.abs(ev.amount);
-    });
-  });
-  otherInc=Math.round(otherInc); generalExp=Math.round(generalExp);
-
-  const nonPvzItems=[...D.items.filter(i=>i.type==='income'&&!i.composite&&itemAmount(i)>0),
-                     ...D.items.filter(i=>i.type==='expense'&&!i.composite&&itemAmount(i)>0)];
-  let nonPvzTaxable=0;
-  nonPvzItems.filter(i=>i.type==='income'&&(i.taxRate||0)>0).forEach(i=>{
-    const occ=occDays(i,curYear,curMonth).length;
-    nonPvzTaxable+=itemAmount(i)*occ;
-  });
-  generalExp+=Math.round(nonPvzTaxable*taxRate2);
-
-  const totalInc=pvzData.reduce((s,p)=>s+p.inc,0)+otherInc;
-  const totalExp=pvzData.reduce((s,p)=>s+p.exp,0)+generalExp;
-  const net=totalInc-totalExp;
-  const startBal=getMonthStartBalance(curYear,curMonth);
-
-  const finalNetReal=totalInc-totalExp;
-  let h=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-    ${[
-      {l:'Доходы', v:'+'+fmt(totalInc), c:'var(--grn)'},
-      {l:'Расходы',v:'−'+fmt(totalExp), c:'var(--red)'},
-      {l:'Итог',   v:(net>=0?'+':'')+fmt(Math.abs(net)), c:net>=0?'var(--acc)':'var(--red)'},
-    ].map(k=>`<div style="background:var(--s2);border:1px solid var(--brd);border-radius:var(--rsm);padding:7px 12px;flex:1;min-width:80px">
-      <div style="font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--t3);margin-bottom:3px">${k.l}</div>
-      <div style="font-size:13px;font-weight:800;color:${k.c};white-space:nowrap">${k.v}</div>
-    </div>`).join('')}
-  </div>`;
-
-  const pvzIncTotal=pvzData.reduce((s,p)=>s+p.inc,0);
-  const pvzExpTotal=pvzData.reduce((s,p)=>s+p.exp,0);
-  const pvzNet=pvzIncTotal-pvzExpTotal;
-
-  h+=`<div style="overflow-x:auto;border-radius:var(--r);border:1px solid var(--brd);margin-bottom:12px">
-  <table style="border-collapse:collapse;width:100%;min-width:360px">
-    <thead><tr style="background:var(--s3);border-bottom:1px solid var(--brd)">
-      <th style="text-align:left;padding:6px 10px;font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">ПВЗ</th>
-      <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:700;color:var(--grn);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Доходы</th>
-      <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Расходы</th>
-      <th style="text-align:right;padding:6px 10px;font-size:9px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap">Итог</th>
-    </tr></thead>
-    <tbody>`;
-
-  pvzData.forEach(({pvz,inc,exp,net:pnet},idx)=>{
-    const nc=pnet>0?'var(--grn)':pnet<0?'var(--red)':'var(--t3)';
-    const sg=pnet>0?'+':pnet<0?'−':'';
-    const bg=idx%2===0?'var(--s2)':'rgba(255,255,255,.015)';
-    h+=`<tr style="background:${bg};border-bottom:1px solid var(--brd)">
-      <td style="padding:6px 10px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <div style="width:6px;height:6px;border-radius:50%;background:${pvzGroup(pvz.key).color};flex-shrink:0"></div>
-          <span style="font-size:11px;font-weight:500;color:var(--t1);white-space:nowrap">${pvz.name}</span>
-        </div>
-      </td>
-      <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:600;color:${inc?'var(--grn)':'var(--t4)'};white-space:nowrap">${inc?'+'+fmt(inc):'—'}</td>
-      <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:600;color:${exp?'var(--red)':'var(--t4)'};white-space:nowrap">${exp?'−'+fmt(exp):'—'}</td>
-      <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:800;color:${nc};white-space:nowrap">${pnet!==0?sg+fmt(Math.abs(pnet)):'0₽'}</td>
-    </tr>`;
-  });
-
-  h+=`<tr style="background:var(--s3);border-top:1px solid var(--brd2)">
-    <td style="padding:6px 10px;font-size:10px;font-weight:700;color:var(--t2)">Итого</td>
-    <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--grn);white-space:nowrap">+${fmt(pvzIncTotal)}</td>
-    <td style="padding:6px 10px;text-align:right;font-size:11px;font-weight:700;color:var(--red);white-space:nowrap">−${fmt(pvzExpTotal)}</td>
-    <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:800;color:${pvzNet>=0?'var(--acc)':'var(--red)'};white-space:nowrap">${pvzNet>=0?'+':'−'}${fmt(Math.abs(pvzNet))}</td>
-  </tr></tbody></table></div>`;
-
-  if(otherInc||generalExp){
-    const nonPvzNet=otherInc-generalExp;
-    h+=`<div style="background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:12px">
-      <div style="display:flex;align-items:center;padding:7px 12px;background:var(--s3);border-bottom:1px solid var(--brd);gap:8px">
-        <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);flex:1">Вне ПВЗ</span>
-        <span style="font-size:12px;font-weight:800;color:${nonPvzNet>=0?'var(--acc)':'var(--red)'}">${nonPvzNet>=0?'+':''}${fmt(nonPvzNet)}</span>
-      </div>`;
-    nonPvzItems.sort((a,b)=>a.category.localeCompare(b.category));
-    nonPvzItems.forEach(i=>{
-      const total=Math.round(nonPvzTotals[i.id]||0);
-      if(!total) return;
-      const isInc=total>0;
-      h+=`<div style="display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--brd)">
-        <div style="width:5px;height:5px;border-radius:50%;background:${i.color};flex-shrink:0"></div>
-        <div style="flex:1;font-size:11px;color:var(--t1)">${i.category}</div>
-        <div style="font-size:11px;font-weight:600;color:${isInc?'var(--grn)':'var(--red)'}">${isInc?'+':'−'}${fmt(Math.abs(total))}</div>
-      </div>`;
-    });
-    h+=`</div>`;
-  }
-
-  h+=`<div style="background:var(--s2);border:1px solid ${finalNetReal>=0?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)'};border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
-    <div>
-      <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:3px">Итог месяца</div>
-      <div style="font-size:11px;color:var(--t3)">Баланс сейчас ${fmt(startBal)}</div>
-    </div>
-    <div style="font-size:30px;font-weight:800;color:${finalNetReal>=0?'var(--acc)':'var(--red)'}">${finalNetReal>=0?'+':''}${fmt(Math.abs(finalNetReal))}</div>
-  </div>`;
-
-  el.innerHTML=h;
-}
 
 function renderFeed(){
   const el=document.getElementById('feedContent');if(!el)return;
   const lbl=document.getElementById('feedMonthLabel');if(lbl)lbl.textContent=MONTHS[curMonth]+' '+curYear;
   const now=new Date(),cy=now.getFullYear(),cm=now.getMonth(),cd=now.getDate();
   const isCur=curYear===cy&&curMonth===cm;
-  const svDone=D.done; D.done={};
+  // Build CF with empty done to get ALL planned occurrences
+  const svDone=Object.assign({},D.done);
+  D.done={};
   const {daily}=buildDailyCF(curYear,curMonth,getMonthStartBalance(curYear,curMonth));
   D.done=svDone;
   const DOWS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
@@ -1522,33 +1357,24 @@ function renderFeed(){
     return dk&&!svDone[dk];
   };
 
-  let overdueEvts=[];
+
+
+    // Collect overdue (past undone) events to show under today
+  const overdueEvts=[];
   const overdueKeys=new Set();
   if(isCur){
     for(const dd of daily){
       if(dd.d>=cd) continue;
       for(const ev of dd.events.filter(e=>!e.auto)){
-        if(isUndone(ev,dd.d)){
+        const _dk=ev.doneKey||(ev.id+(ev.repeat==='weekly'?'_w'+dd.d:''));
+        if(!svDone[_dk]){
           overdueEvts.push({...ev,_ovd:true,_planDay:dd.d});
-          overdueKeys.add(ev.doneKey||ev.id+'_d'+dd.d);
+          overdueKeys.add(_dk);
         }
       }
     }
   }
-
-  const todayDD=isCur?daily.find(x=>x.d===cd):null;
-  const todayHasUndone=todayDD?todayDD.events.some(e=>!e.auto&&isUndone(e,cd)):false;
-
-  let scrollDay=null;
-  if(isCur){
-    if(overdueEvts.length||todayHasUndone) scrollDay=cd;
-    else{
-      for(const dd of daily){
-        if(dd.d<=cd) continue;
-        if(dd.events.some(e=>!e.auto&&isUndone(e,dd.d))){scrollDay=dd.d;break;}
-      }
-    }
-  }
+  let scrollDay=cd;
 
   const sorted=[...daily].sort((a,b)=>isCur?b.d-a.d:a.d-b.d);
 
@@ -1556,7 +1382,9 @@ function renderFeed(){
   for(const dd of sorted){
     let evs=dd.events.filter(e=>!e.auto);
     const tod=isCur&&dd.d===cd;
-    if(isCur&&!tod) evs=evs.filter(e=>!overdueKeys.has(e.doneKey||e.id+'_d'+dd.d));
+    // Past days: hide overdue (they show under today), skip if empty
+    if(isCur&&!tod) evs=evs.filter(e=>!overdueKeys.has(e.doneKey||(e.id+(e.repeat==='weekly'?'_w'+dd.d:''))));
+    // Today: prepend overdue events from past days
     if(isCur&&tod&&overdueEvts.length) evs=[...overdueEvts,...evs];
     if(!evs.length) continue;any=true;
     const past=isCur&&dd.d<cd;
@@ -1568,7 +1396,7 @@ function renderFeed(){
       const item=D.items.find(i=>i.id===ev.id);
       const isInc=ev.type==='income',isWdr=ev.type==='withdrawal',col=isInc?'var(--grn)':isWdr?'#60a5fa':'var(--red)';
       const dk=ev.doneKey||ev.id+'_d'+dd.d;
-      const done=dk?!!D.done[dk]:false,ovd=ev._ovd||(past&&dk&&!done);
+      const done=dk?!!svDone[dk]:false,ovd=ev._ovd||(past&&dk&&!done);
       const name=ev.name||'';
       const tgl=dk?`<label class="tg" onclick="event.stopPropagation()"><input type="checkbox" ${done?'checked':''} onchange="toggleFeedEv('${dk}',${dd.d})"><span class="tg-s"></span></label>`:'';
       const _isWithdr=ev.type==='withdrawal';
@@ -1592,9 +1420,9 @@ function renderFeed(){
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:56px;box-sizing:border-box">
           <div style="width:8px;height:8px;border-radius:50%;background:${ev.color||col};flex-shrink:0"></div>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${done?'text-decoration:line-through':''}">${name}</div>
+            <div style="font-size:clamp(11px,3.2vw,13px);font-weight:500;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;${done?'text-decoration:line-through':''}">${name}</div>
             ${ev.sharePercent?`<div style="font-size:10px;color:var(--t2);margin-top:1px">Доля ${ev.sharePercent}% · полн. ${fmt(ev.fullAmount)}</div>`:''}
-            ${ovd?'<div style="font-size:10px;color:var(--amber);margin-top:2px">Не проведено</div>':''}
+            ${ovd?`<div style='font-size:10px;color:var(--amber);margin-top:2px'>Не проведено · Плановая дата: ${ev._planDay||dd.d} ${MONTHS[curMonth]}</div>`:``}
           </div>
           <div style="font-size:13px;font-weight:700;color:${col};flex-shrink:0;margin-right:8px">${isInc?'+':'−'}${fmt(Math.abs(ev.amount))}</div>
           ${tgl}
@@ -1624,7 +1452,11 @@ function toggleFeedEv(key,day){
 function renderAccounts(){
   const total=D.accounts.filter(a=>a.acctType!=='partner').reduce((s,a)=>s+(Number(a.balance)||0),0);
   const _card=a=>`<div class="acct-card" onclick="inlineEditBalance(event,'${a.id}')">
-      <div class="acct-name"><div class="acct-dot" style="background:${a.color}"></div>${a.name}${a.acctType==='partner'?'<span style="font-size:9px;font-weight:500;color:var(--blue);border:1px solid rgba(58,159,191,.3);border-radius:20px;padding:1px 7px;margin-left:6px;white-space:nowrap">партнёр</span>':''}</div>
+      <div class="acct-name" style="flex-wrap:nowrap;overflow:hidden">
+        <div class="acct-dot" style="background:${a.color};flex-shrink:0"></div>
+        <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${a.name}</span>
+        ${a.acctType==='partner'?'<span style="font-size:9px;font-weight:500;color:var(--blue);border:1px solid rgba(58,159,191,.3);border-radius:20px;padding:1px 6px;margin-left:4px;white-space:nowrap;flex-shrink:0">партнёр</span>':''}
+      </div>
       <div class="acct-val" id="aval-${a.id}">${fmt(a.balance)||'0₽'}</div>
     </div>`;
   document.getElementById('accountsGrid').innerHTML=D.accounts.map(_card).join('')+`
@@ -1637,12 +1469,16 @@ function renderAccounts(){
 function renderCashflow(msb){
   const el=document.getElementById('calGrid');
   if(!el) return;
+  // Build with empty done to show ALL planned ops (including already done ones)
+  const _savedDone=D.done; D.done={};
   const {daily}=buildDailyCF(curYear,curMonth,msb);
+  D.done=_savedDone;
   const dayMap={};
   for(const d of daily){
     const tax=d.events.filter(e=>e.auto).reduce((s,e)=>s+Math.abs(e.amount),0);
     const wdr=d.events.filter(e=>e.type==='withdrawal').reduce((s,e)=>s+Math.abs(e.amount),0);
-    dayMap[d.d]={inc:d.income,exp:Math.abs(d.expense)+tax,wdr,bal:d.balance};
+    const exp=Math.abs(d.expense)+tax-wdr;
+    dayMap[d.d]={inc:d.income,exp:exp>0?exp:0,wdr,bal:d.balance};
   }
   const now=new Date(),isCur=(curYear===now.getFullYear()&&curMonth===now.getMonth());
   const today=isCur?now.getDate():0;
@@ -1654,21 +1490,35 @@ function renderCashflow(msb){
   for(let day=1;day<=days;day++){
     const dm=dayMap[day]||{inc:0,exp:0,wdr:0,bal:0};
     const isToday=day===today;
+    const isPast=isCur&&day<today;
+    const _dEvs2=(daily.find(x=>x.d===day)||{events:[]}).events.filter(e=>!e.auto);
+    const _allDone=_dEvs2.length>0&&_dEvs2.every(ev=>{
+      const _it2=D.items.find(i=>i.id===ev.id);
+      const dk=ev.doneKey||(_it2&&_it2.repeat==='weekly'?weeklyDoneKey(ev.id,day):ev.id);
+      return dk&&!!D.done[dk];
+    });
+    const _isGrey=isPast&&(_dEvs2.length===0||_allDone);
     const dEvs=(daily.find(x=>x.d===day)||{events:[]}).events;
-    const hasOvd=isCur&&day<today&&dEvs.some(ev=>{
+    const hasOvd=!isToday&&isPast&&dEvs.some(ev=>{
       if(ev.auto)return false;
       const dk=ev.doneKey||ev.id+'_d'+day;
       return dk&&!D.done[dk];
     });
+    const hasOps=dm.wdr>0||dm.inc>0||dm.exp>0;
     const cls=isToday?'today':hasOvd?'overdue-day':dm.bal<0?'negative':'';
     const balCls=dm.bal<0?'neg':dm.bal<50000?'warn':'pos';
-    const hasOps=dm.wdr>0||dm.inc>0||dm.exp>0;
+    // past days: grey text; 4 fixed rows always rendered
+    const gc=_isGrey?'color:var(--t3)':'';
+    const incC=_isGrey?'var(--t3)':dm.inc>0?'var(--grn)':'transparent';
+    const expC=_isGrey?'var(--t3)':dm.exp>0?'var(--red)':'transparent';
+    const wdrC=_isGrey?'var(--t3)':dm.wdr>0?'var(--blue)':'transparent';
+    const balColor=_isGrey?'var(--t3)':dm.bal<0?'var(--red)':dm.bal<50000?'var(--amber)':'var(--grn)';
     h+=`<div class="cal-cell ${cls}" onclick="showDayDetail(${day})">
       <div class="cal-day">${day}</div>
-      <div class="cal-wdr">${dm.wdr>0?'−'+fmt(dm.wdr):''}</div>
-      <div class="cal-inc">${dm.inc>0?'+'+fmt(dm.inc):''}</div>
-      <div class="cal-exp">${dm.exp>0?'−'+fmt(dm.exp):''}</div>
-      ${hasOps?`<div class="cal-bal ${balCls}">${fmt(dm.bal)}</div>`:''}
+      <div class="cal-row" style="color:${incC}">${dm.inc>0?'+'+fmt(dm.inc):'​'}</div>
+      <div class="cal-row" style="color:${expC}">${dm.exp>0?'−'+fmt(dm.exp):'​'}</div>
+      <div class="cal-row" style="color:${wdrC}">${dm.wdr>0?'−'+fmt(dm.wdr):'​'}</div>
+      ${hasOps?`<div class="cal-bal-row" style="color:${balColor}">${fmt(dm.bal)}</div>`:'<div class="cal-bal-row" style="visibility:hidden">0</div>'}
     </div>`;
   }
   const total=firstDow+days,rem=total%7===0?0:7-(total%7);
@@ -1988,6 +1838,78 @@ function toggleCatTile(id){
   body.classList.toggle('open');
   if(tile) tile.classList.toggle('open');
 }
+function onRepeatChange(){
+  const r=document.getElementById('mRepeat')?.value;
+  const cal=document.getElementById('mDayCalBlock');
+  const wk=document.getElementById('mDayWeekBlock');
+  const block=document.getElementById('mDayBlock');
+  if(!cal) return;
+  if(r==='lastDay'){block.style.display='none';}
+  else if(r==='weekly'){block.style.display='';cal.style.display='none';wk.style.display='';}
+  else{block.style.display='';cal.style.display='';wk.style.display='none';}
+}
+function toggleDay(d){
+  const btn=document.getElementById('mDayBtn'+d);
+  if(!btn) return;
+  const sel=btn.dataset.sel==='1';
+  btn.dataset.sel=sel?'0':'1';
+  btn.style.background=sel?'var(--s3)':'var(--acc-d)';
+  btn.style.borderColor=sel?'var(--brd)':'var(--acc)';
+  btn.style.color=sel?'var(--t2)':'var(--acc)';
+}
+function toggleWeekDay(d){
+  const btn=document.getElementById('mWdBtn'+d);
+  if(!btn) return;
+  const sel=btn.dataset.sel==='1';
+  btn.dataset.sel=sel?'0':'1';
+  btn.style.background=sel?'var(--s3)':'var(--acc-d)';
+  btn.style.borderColor=sel?'var(--brd)':'var(--acc)';
+  btn.style.color=sel?'var(--t2)':'var(--acc)';
+}
+function openWithdrawSettings(){
+  const s=D.settings;
+  const buf=s.buffer||0;
+  const cats=s.wdrawBudget||[];
+  const catsHtml=cats.map((cat,i)=>`
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <input class="finput" style="flex:1;font-size:13px;padding:8px 10px" placeholder="Категория" value="${escH(cat.name||'')}" oninput="D.settings.wdrawBudget[${i}].name=this.value">
+      <input class="finput" style="width:110px;font-size:13px;padding:8px 10px" type="number" placeholder="0" value="${cat.amount||''}" oninput="D.settings.wdrawBudget[${i}].amount=parseFloat(this.value)||0">
+      <button onclick="D.settings.wdrawBudget.splice(${i},1);openWithdrawSettings()" style="background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:0 4px">✕</button>
+    </div>`).join('');
+  const totalBudget=cats.reduce((s,c)=>s+(Number(c.amount)||0),0);
+
+  const html=`<div class="day-detail-overlay" onclick="this.remove()">
+    <div class="day-detail-panel" onclick="event.stopPropagation()" style="max-width:520px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div style="font-size:16px;font-weight:700;color:var(--t1)">Настройки вывода</div>
+        <button onclick="this.closest('.day-detail-overlay').remove()" style="background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Страховой буфер</div>
+      <div style="display:flex;gap:8px;align-items:center;margin-bottom:20px">
+        <input class="finput" id="wdBuf" type="number" step="1000" value="${buf}" placeholder="0" style="flex:1;font-size:15px;font-weight:600;padding:10px 12px">
+        <span style="color:var(--t2);font-size:14px">₽</span>
+      </div>
+      <div style="font-size:12px;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Бюджет расходов на месяц</div>
+      <div style="font-size:11px;color:var(--t2);margin-bottom:10px">Суммы из этого бюджета вычитаются при расчёте доступного вывода</div>
+      <div id="wdCatsList">${catsHtml}</div>
+      <button onclick="D.settings.wdrawBudget=D.settings.wdrawBudget||[];D.settings.wdrawBudget.push({name:'',amount:0});openWithdrawSettings()" style="width:100%;background:var(--s3);border:1px dashed var(--brd2);border-radius:10px;padding:10px;color:var(--acc);font-family:var(--f);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:16px">+ Добавить категорию</button>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding-top:12px;border-top:1px solid var(--brd)">
+        <div style="font-size:12px;color:var(--t2)">Итого бюджет: <b style="color:var(--t1)">${fmt(totalBudget)}</b></div>
+        <button onclick="
+          D.settings.buffer=parseFloat(document.getElementById('wdBuf').value)||0;
+          pushData();rerender();
+          this.closest('.day-detail-overlay').remove();
+        " style="background:var(--acc);border:none;border-radius:10px;color:#000;font-family:var(--f);font-size:13px;font-weight:700;padding:10px 24px;cursor:pointer">Сохранить</button>
+      </div>
+    </div>
+  </div>`;
+  document.querySelector('.day-detail-overlay')?.remove();
+  const el=document.createElement('div');
+  el.innerHTML=html;
+  document.body.appendChild(el.firstElementChild);
+  if(!D.settings.wdrawBudget) D.settings.wdrawBudget=[];
+}
+
 function toggleCat(el){
   const body=el.nextElementSibling;
   if(!body||!body.classList.contains('cat-body')) return;
@@ -2304,17 +2226,32 @@ function openItemModal(type,id){
     _modalSubItems=(isEdit&&mo&&mo.subItems)?mo.subItems.map(s=>({name:s.name||'',amount:Number(s.amount)||0})):[];
     _modalIcon=(isEdit&&mo&&mo.icon)?mo.icon:(type==='withdrawal'?'💸':'💰');
     const subItemsHtml=renderModalSubItems();
-    const iconGridHtml=ICON_PRESETS.map(ic=>`<div class="icon-opt${_modalIcon===ic?' sel':''}" onclick="pickIcon('${ic}')">${ic}</div>`).join('');
 
     body=`
+      <div class="frow" style="align-items:center">
+        <label class="flabel" style="flex:1">Совместный бизнес</label>
+        <label class="tg"><input type="checkbox" id="mShared" ${isEdit&&mo&&mo.sharePercent?'checked':''} onchange="document.getElementById('mSharePct').style.display=this.checked?'flex':'none';document.getElementById('mPartnerFields').style.display=this.checked?'block':'none';refreshModalSubItems()"><span class="tg-s"></span></label>
+      </div>
+      <div class="frow" id="mSharePct" style="display:${isEdit&&mo&&mo.sharePercent?'flex':'none'}">
+        <label class="flabel">Моя доля, %</label>
+        <input class="finput" id="mShareVal" type="number" min="1" max="99" value="${isEdit&&mo&&mo.sharePercent?mo.sharePercent:50}" placeholder="50" step="1">
+      </div>
+      <div id="mPartnerFields" style="display:${isEdit&&mo&&mo.sharePercent?'block':'none'}">
+        <div class="frow"><label class="flabel">Партнёр</label>
+          <select class="fselect" id="mPartnerId">
+            <option value="">— не указан —</option>
+            ${D.accounts.filter(a=>a.acctType==='partner').map(a=>`<option value="${a.id}" ${isEdit&&mo&&mo.partnerId===a.id?'selected':''}>${escH(a.name)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
       <div class="frow"><label class="flabel">Название</label>
         <input class="finput" id="mName" value="${isEdit?(mo.category||''):''}" placeholder="Название операции"></div>
       <div class="frow"><label class="flabel">Иконка</label>
         <div style="display:flex;gap:8px;align-items:center">
-          <div id="mIconPreview" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm);background:var(--s3);font-size:22px;border:1.5px solid var(--brd)">${_modalIcon}</div>
-          <input class="finput" id="mIconInput" style="width:60px;text-align:center;font-size:20px" maxlength="4" value="${_modalIcon}" onchange="pickIcon(this.value)">
-        </div>
-        <div class="icon-grid" id="mIconGrid">${iconGridHtml}</div></div>
+          <div id="mIconPreview" style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm);background:var(--s3);font-size:24px;border:1.5px solid var(--brd);cursor:pointer" onclick="document.getElementById('mIconInput').focus()">${_modalIcon}</div>
+          <input class="finput" id="mIconInput" style="width:70px;text-align:center;font-size:22px;padding:6px" maxlength="4" value="${_modalIcon}" placeholder="😊" oninput="pickIcon(this.value)">
+          <span style="font-size:11px;color:var(--t3)">Введите любой эмодзи</span>
+        </div></div>
       <div class="frow"><label class="flabel">Тип</label>
         <select class="fselect" id="mComposite">
           <option value="0" ${!isComposite?'selected':''}>Цельный</option>
@@ -2331,31 +2268,25 @@ function openItemModal(type,id){
         </div>
       </div>
       <div class="frow-grid">
-        <div class="frow"><label class="flabel">Дни месяца</label>
-          <input class="finput" id="mDay" type="text" value="${isEdit&&mo?(mo.days?mo.days.join(', '):(mo.day||'1')):'1'}" placeholder="1, 15, 20"></div>
         <div class="frow"><label class="flabel">Повторение</label>
-          <select class="fselect" id="mRepeat">${repeatOpts}</select></div>
+          <select class="fselect" id="mRepeat" onchange="onRepeatChange()">${repeatOpts}</select></div>
+        <div id="mDayBlock">
+          <div id="mDayCalBlock" class="frow" style="flex-direction:column;gap:6px">
+            <label class="flabel">Дни месяца (можно несколько)</label>
+            <div id="mDayPicker" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:2px">${(()=>{
+              const _sel=new Set(isEdit&&mo?(mo.days||[mo.day]).filter(Boolean).map(Number):[1]);
+              return Array.from({length:31},(_,i)=>i+1).map(d=>`<button type="button" onclick="toggleDay(${d})" id="mDayBtn${d}" style="width:32px;height:32px;border-radius:8px;border:1px solid ${_sel.has(d)?'var(--acc)':'var(--brd)'};background:${_sel.has(d)?'var(--acc-d)':'var(--s3)'};color:${_sel.has(d)?'var(--acc)':'var(--t2)'};font-size:12px;font-weight:600;cursor:pointer;font-family:var(--f)">${d}</button>`).join('');
+            })()}</div>
+          </div>
+          <div id="mDayWeekBlock" class="frow" style="display:none;flex-direction:column;gap:6px">
+            <label class="flabel">День недели</label>
+            <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:2px">${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((d,i)=>`<button type="button" onclick="toggleWeekDay(${i+1})" id="mWdBtn${i+1}" style="width:36px;height:32px;border-radius:8px;border:1px solid var(--brd);background:var(--s3);color:var(--t2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--f)">${d}</button>`).join('')}</div>
+          </div>
+        </div>
       </div>
       ${isIncome?`
       <div class="frow"><label class="flabel">Налог УСН, %</label>
         <input class="finput" id="mTaxRate" type="number" value="${isEdit&&mo?(mo.taxRate||0):7}" placeholder="7" step="0.5"></div>`:''}
-      <div class="frow" style="align-items:center">
-        <label class="flabel" style="flex:1">Совместный бизнес</label>
-        <label class="tg"><input type="checkbox" id="mShared" ${isEdit&&mo&&mo.sharePercent?'checked':''} onchange="document.getElementById('mSharePct').style.display=this.checked?'flex':'none';document.getElementById('mPartnerFields').style.display=this.checked?'block':'none'"><span class="tg-s"></span></label>
-      </div>
-      <div class="frow" id="mSharePct" style="display:${isEdit&&mo&&mo.sharePercent?'flex':'none'}">
-        <label class="flabel">Моя доля, %</label>
-        <input class="finput" id="mShareVal" type="number" min="1" max="99" value="${isEdit&&mo&&mo.sharePercent?mo.sharePercent:50}" placeholder="50" step="1">
-      </div>
-      <div id="mPartnerFields" style="display:${isEdit&&mo&&mo.sharePercent?'block':'none'}">
-        <div class="frow"><label class="flabel">Партнёр</label>
-          <select class="fselect" id="mPartnerId">
-            <option value="">— не указан —</option>
-            ${D.accounts.filter(a=>a.acctType==='partner').map(a=>`<option value="${a.id}" ${isEdit&&mo&&mo.partnerId===a.id?'selected':''}>${escH(a.name)}</option>`).join('')}
-          </select>
-        </div>
-
-      </div>
       <div class="frow"><label class="flabel">Счёт получения</label>
         <select class="fselect" id="mAcctId">
           <option value="">— не указан —</option>
@@ -2373,6 +2304,25 @@ function openItemModal(type,id){
   document.getElementById('iModalTitle').textContent=titleTxt;
   document.getElementById('iModalBody').innerHTML=body;
   document.getElementById('iModalBtns').innerHTML=btns;
+  // Init day button selections
+  if(type!=='account'){
+    const _mo2=isEdit?mo:null;
+    const _selDays=new Set(_mo2&&_mo2.days?_mo2.days.map(Number):_mo2&&_mo2.day?[Number(_mo2.day)]:[1]);
+    document.querySelectorAll('[id^="mDayBtn"]').forEach(b=>{
+      const d=parseInt(b.id.replace('mDayBtn',''));
+      if(_selDays.has(d)){b.dataset.sel='1';b.style.background='var(--acc-d)';b.style.borderColor='var(--acc)';b.style.color='var(--acc)';}
+      else{b.dataset.sel='0';}
+    });
+    const _rep=_mo2?.repeat||'monthly';
+    if(_rep==='weekly'){
+      const _wds2=_mo2?.weekDays||[_mo2?.weekDay||1];
+      _wds2.forEach(wd=>{
+        const b=document.getElementById('mWdBtn'+wd);
+        if(b){b.dataset.sel='1';b.style.background='var(--acc-d)';b.style.borderColor='var(--acc)';b.style.color='var(--acc)';}
+      });
+    }
+    onRepeatChange();
+  }
 
   const compSel=document.getElementById('mComposite');
   if(compSel){
@@ -2402,11 +2352,20 @@ function pickIcon(ic){
 }
 
 function renderModalSubItems(){
+  const _isShared=document.getElementById('mShared')?.checked;
   return _modalSubItems.map((s,i)=>`
-    <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-      <input class="finput" style="flex:1;font-size:12px;padding:6px 8px" placeholder="Название" value="${escH(s.name||'')}" oninput="_modalSubItems[${i}].name=this.value">
-      <input class="finput" style="width:100px;font-size:12px;padding:6px 8px" type="number" placeholder="0" value="${s.amount||''}" oninput="_modalSubItems[${i}].amount=parseFloat(this.value)||0">
-      <button onclick="_modalSubItems.splice(${i},1);refreshModalSubItems()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+    <div style="margin-bottom:8px;background:var(--s3);border-radius:8px;padding:8px">
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+        <input class="finput" style="flex:1;font-size:12px;padding:6px 8px" placeholder="Название" value="${escH(s.name||'')}" oninput="_modalSubItems[${i}].name=this.value">
+        <input class="finput" style="width:90px;font-size:12px;padding:6px 8px" type="number" placeholder="0" value="${s.amount||''}" oninput="_modalSubItems[${i}].amount=parseFloat(this.value)||0">
+        <button onclick="_modalSubItems.splice(${i},1);refreshModalSubItems()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+      </div>
+      ${_isShared?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:10px;color:var(--t2)">Моя доля</span>
+        <input class="finput" style="width:70px;font-size:12px;padding:4px 8px" type="number" min="1" max="99" placeholder="50" value="${s.sharePercent||50}" oninput="_modalSubItems[${i}].sharePercent=parseFloat(this.value)||50">
+        <span style="font-size:10px;color:var(--t2)">%</span>
+      </div>`:''}
+      <input class="finput" style="width:100%;font-size:11px;padding:5px 8px;color:var(--t2)" placeholder="Комментарий (необязательно)" value="${escH(s.comment||'')}" oninput="_modalSubItems[${i}].comment=this.value">
     </div>`).join('');
 }
 
@@ -2440,9 +2399,18 @@ function saveItem(){
   const name=document.getElementById('mName').value.trim();
   if(!name){showToast('Введите название');return;}
   const isComposite=document.getElementById('mComposite').value==='1';
-  const daysRaw=document.getElementById('mDay').value.trim();
-  const days=daysRaw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
-  const repeat=document.getElementById('mRepeat').value;
+  const repeat=document.getElementById('mRepeat')?.value||'monthly';
+  let days=[];
+  if(repeat==='lastDay'){
+    const _ld=new Date(curYear,curMonth+1,0).getDate();
+    days=[_ld];
+  } else if(repeat==='weekly'){
+    document.querySelectorAll('[id^="mWdBtn"]').forEach(b=>{if(b.dataset.sel==='1') days.push(parseInt(b.id.replace('mWdBtn','')));});
+    if(!days.length) days=[1];
+  } else {
+    document.querySelectorAll('[id^="mDayBtn"]').forEach(b=>{if(b.dataset.sel==='1') days.push(parseInt(b.id.replace('mDayBtn','')));});
+    if(!days.length) days=[1];
+  }
   const taxRateEl=document.getElementById('mTaxRate');
   const taxRate=taxRateEl?parseFloat(taxRateEl.value)||0:0;
 
@@ -2453,7 +2421,8 @@ function saveItem(){
   const acctId=document.getElementById('mAcctId')?.value||null;
   const partnerId=mShared&&mShared.checked?(document.getElementById('mPartnerId')?.value||null):null;
   const moneyTo=mShared&&mShared.checked?(document.getElementById('mMoneyTo')?.value||'split'):null;
-  const itemData={category:name,categoryKey:catKey,icon:_modalIcon,taxRate,sharePercent,acctId,partnerId,moneyTo};
+  const weekDays=repeat==='weekly'?[...days]:undefined;
+  const itemData={category:name,categoryKey:catKey,icon:_modalIcon,taxRate,sharePercent,acctId,partnerId,moneyTo,weekDays};
   if(days&&days.length) itemData.days=days;
 
   if(isComposite){
@@ -2518,7 +2487,6 @@ function showView(id,btn){
   document.querySelectorAll('.tbb,.ntab').forEach(b=>b.classList.remove('active'));
   document.getElementById('view-'+id).classList.add('active');
   ['tbb-','dtbb-'].forEach(p=>{const b=document.getElementById(p+id);if(b)b.classList.add('active');});
-  if(id==='forecast') renderForecast();
   if(id==='feed') renderFeed();
 }
 function chMonth(d){
@@ -2527,7 +2495,6 @@ function chMonth(d){
   if(curMonth>11){curMonth=0;curYear++;}
   if(curMonth<0){curMonth=11;curYear--;}
   renderAll();
-  renderForecast();
   requestAnimationFrame(()=>window.scrollTo(0,_sy));
 }
 function chFcMonth(d){
