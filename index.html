@@ -1366,7 +1366,7 @@ function renderFeed(){
       h+=`<div style="background:${_bgGrad};border:1px solid ${done?'var(--brd)':_isWithdr?'rgba(58,159,191,.08)':isInc?'rgba(52,199,89,.08)':'rgba(255,69,58,.08)'};border-radius:10px;margin-bottom:6px;${done?'opacity:.35':''}${ovd?';box-shadow:inset 3px 0 0 var(--amber)':''}">
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;min-height:56px;box-sizing:border-box">
           ${(()=>{const _fit2=D.items.find(i=>i.id===ev.id);
-          if(_fit2&&_fit2.iconUrl) return `<div style="width:24px;height:24px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--s3)"><img src="${_fit2.iconUrl}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.style.display='none'"></div>`;
+          if(_fit2&&_fit2.iconUrl) return `<div style="width:24px;height:24px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--s3)"><img src="${_fit2.iconUrl}" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.parentElement.style.display='none'"></div>`;
           if(_fit2&&_fit2.icon&&_fit2.icon.length<=4) return `<span style="font-size:16px;flex-shrink:0;line-height:1;width:24px;text-align:center">${_fit2.icon}</span>`;
           return `<div style="width:8px;height:8px;border-radius:50%;background:${ev.color||col};flex-shrink:0"></div>`;
         })()}
@@ -1603,7 +1603,7 @@ function renderSettings(){
     const repStr=repeatLabel(item.repeat);
 
     incHtml+=`<div class="cat-tile inc${ovd?' overdue-tile':''}" onclick="toggleCatTile('${tileId}')">
-      <div class="tile-icon" style="overflow:hidden">${item.iconUrl?`<img src="${item.iconUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit" onerror="this.style.display='none'">`:item.icon||'💰'}</div>
+      <div class="tile-icon" style="overflow:hidden">${item.iconUrl?`<img src="${item.iconUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display='none'">`:item.icon||'💰'}</div>
       <div style="flex:1;min-width:0">
         <div class="ct-name">${escH(item.category)}</div>
         <div style="font-size:10px;color:var(--t3);margin-top:1px">${dayStr} · ${repStr}${item.taxRate>0?' · УСН '+item.taxRate+'%':''}</div>
