@@ -54,6 +54,7 @@ body{
 .sync-dot.ok{background:var(--grn)}
 .sync-dot.sync{background:var(--amber);animation:blink .9s ease-in-out infinite}
 .sync-dot.err{background:var(--red)}
+.tab-bar{display:none}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
 
@@ -253,28 +254,36 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   white-space:nowrap;text-transform:uppercase;letter-spacing:.05em;
 }
 
-/* ── CAT HEADER ── */
-.cat-header{
-  display:flex;align-items:center;gap:8px;padding:11px 18px;
-  cursor:pointer;user-select:none;border-bottom:1px solid var(--brd);
+/* ── CARD TILES ── */
+.cat-tile{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  cursor:pointer;user-select:none;border-bottom:none;
   position:relative;border-left:3px solid transparent;
-  transition:background .12s;
+  transition:background .12s;border-radius:10px;margin-bottom:8px;
+  background:rgba(255,255,255,.03);border:1px solid var(--brd);
+  border-left:3px solid transparent;
 }
-.cat-header::before{
-  content:'▶';font-size:8px;color:var(--t3);
-  transition:transform .15s;flex-shrink:0;
-}
-.cat-header.collapsed::before{transform:rotate(0deg)}
-.cat-header:not(.collapsed)::before{transform:rotate(90deg)}
-.cat-header:hover{background:rgba(255,255,255,.02)}
-.cat-header.inc{border-left-color:var(--grn)}
-.cat-header.exp{border-left-color:var(--red)}
-.cat-body{
-  overflow:hidden;transition:max-height .2s ease;
-  border-left:2px solid var(--brd);margin-left:16px;
-}
-.cat-body.collapsed{max-height:0!important;border-left-color:transparent}
-.cat-body .item-row{padding-left:14px}
+.cat-tile::before{content:'▶';font-size:8px;color:var(--t3);transition:transform .15s;flex-shrink:0}
+.cat-tile.open::before{transform:rotate(90deg)}
+.cat-tile:hover{background:rgba(255,255,255,.02)}
+.cat-tile.inc{border-left:3px solid var(--grn)}
+.cat-tile.exp{border-left:3px solid var(--red)}
+.cat-tile.overdue-tile{box-shadow:inset 3px 0 0 var(--amber);background:rgba(251,191,36,0.06)!important}
+.cat-tile.overdue-tile .ct-name{color:var(--amber)!important}
+.cat-tile-body{overflow:hidden;max-height:0;transition:max-height .25s ease;border-left:2px solid var(--brd);margin:0 0 8px 12px;border-radius:0 0 8px 8px}
+.cat-tile-body.open{max-height:5000px}
+.cat-tile-body .item-row{padding-left:14px}
+.ct-name{flex:1;font-size:13px;font-weight:600;color:var(--t1)}
+.ct-amount{font-size:13px;font-weight:700;flex-shrink:0}
+.ct-arrow{font-size:10px;color:var(--t3);flex-shrink:0}
+.sub-items{overflow:hidden;max-height:0;transition:max-height .25s ease;border-top:1px solid var(--brd);background:rgba(0,0,0,.08)}
+.sub-items.open{max-height:2000px}
+/* ── ICON PICKER ── */
+.icon-grid{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.icon-opt{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm);border:1.5px solid var(--brd);cursor:pointer;font-size:18px;transition:all .1s;background:var(--s3)}
+.icon-opt:hover{border-color:var(--brd3);background:var(--s4)}
+.icon-opt.sel{border-color:var(--acc);background:var(--acc-d);box-shadow:0 0 8px rgba(52,199,89,.2)}
+.tile-icon{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm);background:var(--s3);font-size:20px;flex-shrink:0}
 
 /* ── INLINE EDIT ── */
 .ie-amt{
@@ -391,93 +400,19 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
 }
 .cal-title{font-size:11px;font-weight:700;text-align:center;color:var(--t1);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
-.cal-wd{font-size:8px;font-weight:700;text-align:center;color:var(--t3);padding:3px 0;letter-spacing:.05em}
+.cal-dow{font-size:9px;font-weight:700;text-align:center;color:var(--t3);padding:6px 4px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--brd)}
 .cal-emp{height:0}
-.cal-day{
-  font-size:12px;font-weight:600;text-align:center;padding:6px 2px;
-  border-radius:7px;cursor:pointer;color:var(--t2);transition:all .1s;
-}
-.cal-day:hover{background:var(--s5);color:var(--t1)}
-.cal-day.sel{background:var(--acc);color:var(--bg);font-weight:800}
-
-/* ── MOBILE ── */
-@media(max-width:599px){
-  body{font-size:13px}
-  .cf-table{font-size:11px}
-  .cf-table td{padding:7px 8px}
-  .cf-table td:first-child{padding:7px 10px;min-width:130px}
-  .cf-table th{padding:7px 8px}
-  .cf-table th:first-child{min-width:130px}
-  .kpi-grid{gap:8px;margin-bottom:18px;grid-template-columns:repeat(2,1fr)}
-  .kpi{padding:12px 14px}.kpi-label{font-size:9px}.kpi-val{font-size:18px}
-  .accounts-grid{gap:8px;margin-bottom:18px;grid-template-columns:repeat(2,1fr)}
-  .acct-card{padding:12px 14px}.acct-val{font-size:17px}
-  .item-row{padding:10px 14px;gap:8px}
-  .item-name{font-size:12px}.item-amount{font-size:12px;min-width:70px}
-  .settings-section{margin-bottom:14px}
-  .settings-section-title{padding:11px 14px}
-  .month-nav{gap:8px;margin-bottom:16px}.month-label{font-size:17px}
-  .fm-val{font-size:24px}
-  .free-money-bar{padding:14px 16px;margin-bottom:18px}
-  .modal{padding:18px 16px 32px}
-  .finput,.fselect{font-size:13px;padding:11px 12px}
-  .topbar{padding:0 14px}
-  .cf-wrap{margin-bottom:18px}
-  .cat-header{padding:10px 14px}
-  .cat-body{margin-left:12px}
-}
-
-/* ── SCROLLBAR ── */
-.item-row.overdue{background:rgba(251,191,36,0.07)!important;box-shadow:inset 3px 0 0 var(--amber);}
-.cat-header.overdue-cat{box-shadow:inset 3px 0 0 var(--amber);background:rgba(251,191,36,0.06)!important;}
-.overdue-dash{background:var(--s2);border:1px solid rgba(251,191,36,0.25);border-radius:var(--r);margin-bottom:20px;overflow:hidden;}
-.overdue-dash-title{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid rgba(251,191,36,0.15);background:rgba(251,191,36,0.06);}
-.overdue-dash-title span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--amber);}
-.overdue-dash-count{background:var(--amber);color:var(--bg);font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;flex-shrink:0;}
-.overdue-item{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--brd);cursor:pointer;transition:background .1s;}
-.overdue-item:last-child{border-bottom:none;}
-.overdue-item:active{background:var(--s3);}
-.ov-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.ov-name{font-size:13px;color:var(--t1);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.ov-date{font-size:11px;color:var(--amber);font-weight:600;flex-shrink:0;}
-.ov-amt{font-size:13px;font-weight:600;flex-shrink:0;}
-.ov-tgl{flex-shrink:0;}
-.cat-header.overdue-cat>div:first-child{color:var(--amber)!important;}
-.item-row.overdue .item-name{color:var(--amber)!important;}
-.weekly-sub{overflow:hidden;max-height:0;transition:max-height .25s ease;background:rgba(0,0,0,.15);}
-.pvz-group-header{display:flex;align-items:center;gap:10px;padding:8px 16px 8px 14px;cursor:pointer;border-bottom:1px solid var(--brd);background:var(--s3);user-select:none;-webkit-tap-highlight-color:transparent;border-left:3px solid var(--s5);}
-.pvz-group-header:active{background:var(--s4);}
-.pvz-group-name{font-size:12px;font-weight:700;color:var(--t2);flex:1;letter-spacing:.01em;font-style:italic;}
-.pvz-group-sum{font-size:12px;font-weight:600;}
-.pvz-group-arrow{font-size:10px;color:var(--t3);transition:transform .2s;flex-shrink:0;}
-.pvz-group-header.open .pvz-group-arrow{transform:rotate(180deg);}
-.pvz-group-header.open{border-left-color:var(--acc);}
-.pvz-group-header.overdue-group{border-left-color:var(--amber)!important;background:rgba(251,191,36,0.06);}
-.pvz-group-header.overdue-group .pvz-group-name{color:var(--amber);}
-.pvz-group-body{overflow:hidden;max-height:0;transition:max-height .25s ease;}
-.pvz-group-body.open{max-height:2000px;}
-.pvz-dot-glow{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.weekly-sub.open{max-height:500px;}
-.weekly-row{display:flex;align-items:center;gap:10px;padding:7px 20px 7px 36px;border-bottom:1px solid var(--brd);}
-.weekly-row:last-child{border-bottom:none;}
-.weekly-date{font-size:12px;color:var(--t2);flex:1;}
-.weekly-row.overdue-w .weekly-date{color:var(--amber);}
-.weekly-row.done-w .weekly-date{color:var(--t4);text-decoration:line-through;}
-::-webkit-scrollbar{width:4px;height:4px}
-.tab-bar{position:fixed;bottom:0;left:0;right:0;z-index:100;height:calc(58px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);display:none;background:var(--bg);border-top:1px solid var(--brd)}
-.tbb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:none;background:none;color:var(--t3);cursor:pointer;font-family:var(--f);font-size:10px;font-weight:500;padding:0;-webkit-tap-highlight-color:transparent;transition:color .15s}
-.tbb.active{color:var(--acc)}.tbb svg{flex-shrink:0}.tbb.active svg{stroke:var(--acc)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);border-radius:var(--r);overflow:hidden;border:1px solid var(--brd);margin-bottom:24px}
-.cal-dow{background:var(--s3);padding:8px 4px;font-size:9px;font-weight:700;color:var(--t3);text-align:center;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--brd)}
-.cal-cell{background:var(--s2);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);padding:22px 6px 5px;min-height:80px;box-sizing:border-box;position:relative;cursor:pointer}
+.cal-cell{background:var(--s2);border-right:1px solid var(--brd);border-bottom:1px solid var(--brd);padding:22px 6px 6px;min-height:90px;box-sizing:border-box;position:relative;cursor:pointer}
 .cal-cell:nth-child(7n){border-right:none}
 .cal-cell.today{background:rgba(52,199,89,.07);box-shadow:inset 0 0 0 1px rgba(52,199,89,.35)}
 .cal-cell.negative{background:rgba(255,69,58,.04)}
 .cal-cell.overdue-day{background:rgba(255,159,10,.08);box-shadow:inset 0 0 0 1px rgba(255,159,10,.4)}
 .cal-day{font-size:10px;font-weight:700;color:var(--t3);position:absolute;top:5px;right:6px;line-height:1}
 .cal-cell.today .cal-day{color:var(--acc)}
-.cal-inc{font-size:10px;font-weight:600;color:var(--grn);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.cal-exp{font-size:10px;font-weight:600;color:var(--red);line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-inc,.cal-exp,.cal-wdr{font-size:10px;font-weight:600;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:14px}
+.cal-inc{color:var(--grn)}
+.cal-exp{color:var(--red)}
+.cal-wdr{color:#60a5fa}
 .cal-bal{font-size:10px;font-weight:700;padding:2px 4px;border-radius:3px;margin-top:3px;display:inline-block;line-height:1.3}
 .cal-bal.pos{background:rgba(52,199,89,.15);color:var(--grn)}
 .cal-bal.neg{background:rgba(255,69,58,.18);color:var(--red)}
@@ -502,9 +437,9 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   .month-nav{display:flex!important;justify-content:flex-start;margin-bottom:16px!important}
   .view{padding-bottom:calc(58px + env(safe-area-inset-bottom) + 16px)!important}
   .kpi-grid{grid-template-columns:repeat(2,1fr)!important}
-  .cal-cell{padding:18px 3px 3px;min-height:54px}
+  .cal-cell{padding:18px 3px 3px;min-height:68px}
   .cal-day{font-size:9px;top:3px;right:3px}
-  .cal-inc,.cal-exp{font-size:8px;line-height:1.3}
+  .cal-inc,.cal-exp,.cal-wdr{font-size:8px;line-height:1.3}
   .cal-bal{font-size:8px;padding:1px 3px}
   .cal-dow{font-size:8px;padding:5px 2px;letter-spacing:0}
 }
@@ -559,8 +494,6 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   </div>
   <div class="kpi-grid" id="kpiGrid"></div>
   <div class="free-money-bar" id="freeMoneyBar"></div>
-  <div id="overdueDash"></div>
-
   <div class="section-head">
     <div class="section-title">Остатки по счетам</div>
     <button class="sec-action" onclick="showView('settings',document.querySelectorAll('.ntab')[1])">Настроить →</button>
@@ -593,6 +526,7 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
   <div class="settings-tabs">
     <button class="stab active" id="stab-inc" onclick="switchSettingsTab('inc')">Доходы</button>
     <button class="stab" id="stab-exp" onclick="switchSettingsTab('exp')">Расходы</button>
+    <button class="stab" id="stab-wdr" onclick="switchSettingsTab('wdr')">Вывод</button>
     <button class="stab" id="stab-acc" onclick="switchSettingsTab('acc')">Счета</button>
   </div>
   <div id="stab-section-acc" style="display:none">
@@ -611,6 +545,12 @@ tr.row-total td:first-child{background:var(--s3)!important;color:var(--t2)}
     <div class="settings-section">
       <div class="settings-section-title"><div class="ss-title">Расходы</div><button class="ss-add-btn" onclick="openItemModal('expense')">+ Добавить</button></div>
       <div id="settingExpenses"></div>
+    </div>
+  </div>
+  <div id="stab-section-wdr" style="display:none">
+    <div class="settings-section">
+      <div class="settings-section-title"><div class="ss-title">Вывод в личное</div><button class="ss-add-btn" onclick="openItemModal('withdrawal')">+ Добавить</button></div>
+      <div id="settingWithdrawals"></div>
     </div>
   </div>
 </div>
@@ -645,7 +585,6 @@ const sPat=(t,q,b)=>fetch(`${SB}/rest/v1/${t}?${q}`,{method:'PATCH',headers:{...
 const MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_G=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const WD=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-const COLORS=['#34d399','#4ade80','#60a5fa','#818cf8','#a78bfa','#f472b6','#fb923c','#fbbf24','#f87171','#38bdf8','#a3e635','#e879f9','#94a3b8','#67e8f9','#c084fc'];
 const LS='kp_v1';
 
 // ══════════════════════════════════
@@ -660,7 +599,6 @@ let D = {
 };
 let curYear=new Date().getFullYear(), curMonth=new Date().getMonth();
 let dbOk=false, editingId=null, modalType=null;
-let selColor=COLORS[0];
 
 // ══════════════════════════════════
 // SYNC
@@ -743,6 +681,45 @@ async function initApp(){
     const lastZpIdx=D.items.reduce((acc,it,i)=>it.categoryKey==='zp'?i:acc,-1);
     if(lastZpIdx>=0) D.items.splice(lastZpIdx+1,0,...mgmtItems);
     else D.items.push(...mgmtItems);
+  }
+  // migrate v2: old model (pvzAddr per item) → new model (composite operations)
+  if(D.items.length && D.items[0].pvzAddr!==undefined && D.items[0].composite===undefined){
+    const oldItems=D.items;
+    const newItems=[];
+    const grouped={}; // key: catKey+'_'+grpKey → items[]
+    const simpleItems=[];
+    for(const it of oldItems){
+      if(it.pvzAddr){
+        const grp=PVZ_GROUPS.find(g=>g.pvz.includes(it.pvzAddr));
+        const gk=grp?grp.key:'other';
+        const mk=it.categoryKey+'_'+gk;
+        if(!grouped[mk]) grouped[mk]={catKey:it.categoryKey,catName:it.category,type:it.type,grpKey:gk,items:[],taxRate:it.taxable?7:0,repeat:it.repeat||'monthly',color:catColor(it.categoryKey,it.type),day:it.day,days:it.days};
+        grouped[mk].items.push(it);
+      } else {
+        simpleItems.push(it);
+      }
+    }
+    for(const [mk,g] of Object.entries(grouped)){
+      const total=g.items.reduce((s,i)=>s+(Number(i.amount)||0),0);
+      const first=g.items[0];
+      newItems.push({
+        id:first.id.replace(/_[^_]+$/,'_'+g.grpKey), type:g.type,
+        categoryKey:g.catKey, category:g.catName,
+        composite:true, composition:g.grpKey,
+        subItems:g.items.map(i=>({name:(PVZ_LIST.find(p=>p.key===i.pvzAddr)||{}).name||i.pvzAddr,amount:Number(i.amount)||0})),
+        amount:total||0, day:g.day, days:g.days,
+        repeat:g.repeat, taxRate:g.taxRate, color:g.color,
+      });
+    }
+    for(const it of simpleItems){
+      const newIt={...it};
+      delete newIt.pvzAddr;
+      newIt.composite=false;
+      if(it.taxable!==undefined) newIt.taxRate=it.taxable?7:0;
+      delete newIt.taxable;
+      newItems.push(newIt);
+    }
+    D.items=newItems;
   }
   D.settings=D.settings||{taxRate:7,taxBase:'all'};
   saveL();
@@ -838,43 +815,64 @@ const PVZ_SERVICES=[
 
 // Категории расходов
 const EXP_CATS=[
-  {key:'ar',  name:'Аренда',                       defaultDay:5},
-  {key:'kom', name:'Коммунальные платежи',          defaultDay:5},
-  {key:'in',  name:'Интернет + камеры',            defaultDay:10},
-  {key:'zp',  name:'Заработная плата',             defaultDay:5},
-  {key:'mgmt',name:'Управление',                   defaultDay:5},
-  {key:'knc', name:'Канцелярия / хоз / ремонт',    defaultDay:15},
+  {key:'ar',  name:'Аренда',                       defaultDay:5, color:'#f87171'},
+  {key:'kom', name:'Коммунальные платежи',          defaultDay:5, color:'#fb923c'},
+  {key:'in',  name:'Интернет + камеры',            defaultDay:10, color:'#38bdf8'},
+  {key:'zp',  name:'Заработная плата',             defaultDay:5, color:'#fbbf24'},
+  {key:'mgmt',name:'Управление',                   defaultDay:5, color:'#a78bfa'},
+  {key:'knc', name:'Канцелярия / хоз / ремонт',    defaultDay:15, color:'#60a5fa'},
 ];
 
+const REPEAT_OPTIONS=[
+  {key:'once',      label:'Без повтора'},
+  {key:'daily',     label:'Каждый день'},
+  {key:'weekly',    label:'Каждую неделю'},
+  {key:'monthly',   label:'Каждый месяц'},
+  {key:'quarterly', label:'Каждый квартал'},
+  {key:'yearly',    label:'Каждый год'},
+  {key:'lastDay',   label:'Каждый последний день месяца'},
+];
+
+const ICON_PRESETS=[
+  '💰','📦','🏠','⚡','👥','💻','🚗','🍕','📄','🔧',
+  '💳','📊','🎯','🛒','🏪','📦','🛃','📮','✂️','🧹',
+  '📱','🎮','🎓','💊','🏋️','🎵','✈️','☕','🍷','🎁',
+];
+
+function catColor(categoryKey, type){
+  const all=[...PVZ_SERVICES,...EXP_CATS];
+  const c=all.find(x=>x.key===categoryKey);
+  return c?c.color:(type==='income'?'#34d399':'#f87171');
+}
+
 const DEFAULT_ITEMS=[
-  // ── ДОХОДЫ ПВЗ (категория + ПВЗ) ──
-  ...PVZ_SERVICES.flatMap(s=>{
-    const svcPvzKeys={'ye':['p12','p08','p11','p09','p10'],'yv':['p01','p04','p07','p05','p03'],'sl':['p01','p13']}[s.key];
-    return (svcPvzKeys?PVZ_LIST.filter(p=>svcPvzKeys.includes(p.key)):PVZ_LIST)
-    .map(p=>({
-      id:'i_'+s.key+'_'+p.key, type:'income',
-      categoryKey:s.key, category:s.name,
-      pvzAddr:p.key, amount:0, day:s.day,
-      repeat:'monthly', taxable:true, color:p.color,
-    }));
-  }),
-  // ── ДРУГИЕ ДОХОДЫ ──
-  {id:'i_w',    type:'income', categoryKey:'w',    category:'W',                   pvzAddr:null, amount:0, day:5,  repeat:'monthly', taxable:true,  color:'#4ade80'},
-  {id:'i_rent', type:'income', categoryKey:'rent', category:'Аренда Стасовой 50г', pvzAddr:null, amount:0, day:5,  repeat:'monthly', taxable:false, color:'#a3e635'},
-  // ── РАСХОДЫ (категория + ПВЗ) ──
-  ...EXP_CATS.flatMap(cat=>
-    PVZ_LIST.map(p=>({
-      id:'e_'+cat.key+'_'+p.key, type:'expense',
-      categoryKey:cat.key, category:cat.name,
-      pvzAddr:p.key, amount:0,
-      day:cat.key==='zp'?null:cat.defaultDay,
-      repeat:'monthly', taxable:false, color:p.color,
-    }))
-  ),
-  // ── ОБЩИЕ РАСХОДЫ (без привязки к ПВЗ) ──
-  {id:'e_vvd1', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 1', pvzAddr:null, amount:0, day:1, repeat:'monthly', taxable:false, color:'#e879f9'},
-  {id:'e_vvd2', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 2', pvzAddr:null, amount:0, day:10, repeat:'monthly', taxable:false, color:'#e879f9'},
-  {id:'e_vvd3', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 3', pvzAddr:null, amount:0, day:20, repeat:'monthly', taxable:false, color:'#e879f9'},
+  // ── ДОХОДЫ (составные — пустые, пользователь заполняет подстатьи) ──
+  ...PVZ_SERVICES.map(s=>({
+    id:'i_'+s.key, type:'income',
+    categoryKey:s.key, category:s.name,
+    composite:true,
+    subItems:[],
+    amount:0, day:s.day, repeat:'monthly', taxRate:7, color:s.color,
+    icon:s.key==='ag'?'💰':s.key==='ye'?'🍕':s.key==='yv'?'🤝':s.key==='sl'?'📦':s.key==='hm'?'👔':s.key==='pp'?'📄':s.key==='dp'?'📮':'💰',
+  })),
+  // ── ДРУГИЕ ДОХОДЫ (цельные) ──
+  {id:'i_w', type:'income', categoryKey:'w', category:'W', composite:false, amount:0, day:5, repeat:'monthly', taxRate:7, color:'#4ade80', icon:'💼'},
+  {id:'i_rent', type:'income', categoryKey:'rent', category:'Аренда Стасовой 50г', composite:false, amount:0, day:5, repeat:'monthly', taxRate:0, color:'#a3e635', icon:'🏠'},
+  // ── РАСХОДЫ (составные — пустые, пользователь заполняет подстатьи) ──
+  ...EXP_CATS.filter(cat=>cat.key!=='zp').map(cat=>({
+    id:'e_'+cat.key, type:'expense',
+    categoryKey:cat.key, category:cat.name,
+    composite:true,
+    subItems:[],
+    amount:0, day:cat.defaultDay, repeat:'monthly', taxRate:0, color:cat.color,
+    icon:cat.key==='ar'?'🏠':cat.key==='kom'?'⚡':cat.key==='in'?'💻':cat.key==='knc'?'📄':'📦',
+  })),
+  // ── ЗП (составные — пустые, пользователь заполняет стоимость смен) ──
+  {id:'e_zp', type:'expense', categoryKey:'zp', category:'Заработная плата', composite:true, subItems:[], amount:0, day:null, repeat:'monthly', taxRate:0, color:'#fbbf24', icon:'👥', _zp:true},
+  // ── ОБЩИЕ РАСХОДЫ (цельные) ──
+  {id:'e_vvd1', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 1', composite:false, amount:0, day:1, repeat:'monthly', taxRate:0, color:'#e879f9', icon:'💳'},
+  {id:'e_vvd2', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 2', composite:false, amount:0, day:10, repeat:'monthly', taxRate:0, color:'#e879f9', icon:'💳'},
+  {id:'e_vvd3', type:'expense', categoryKey:'vvd', category:'Вывод себе (личное) 3', composite:false, amount:0, day:20, repeat:'monthly', taxRate:0, color:'#e879f9', icon:'💳'},
 ];
 
 // ══════════════════════════════════
@@ -887,6 +885,11 @@ function isWe(y,m,d){const w=getWd(y,m,d);return w===0||w===6;}
 function isToday(y,m,d){const t=new Date();return t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===d;}
 function workdays(y,m,f,t){let n=0;for(let d=f;d<=t;d++){const w=getWd(y,m,d);if(w>=1&&w<=5)n++;}return n;}
 function itemDays(item){return (item.days&&item.days.length)?item.days:[item.day||1];}
+function itemAmount(item){
+  if(item.composite&&item.subItems) return item.subItems.reduce((s,si)=>s+(Number(si.amount)||0),0);
+  return Number(item.amount)||0;
+}
+function lastDayOfMonth(y,m){return new Date(y,m+1,0).getDate();}
 function fmt(n,plus){
   if(n===null||n===undefined||n===0)return n===0?'0₽':'';
   const s=Math.abs(n).toLocaleString('ru-RU');
@@ -906,51 +909,69 @@ function showToast(m){const t=document.getElementById('toast');t.textContent=m;t
 // ══════════════════════════════════
 // CASHFLOW LOGIC
 // ══════════════════════════════════
+function occDays(item,year,month){
+  const dlist=itemDays(item);
+  const daysInMonth=getDays(year,month);
+  const lastD=lastDayOfMonth(year,month);
+  const result=[];
+  switch(item.repeat){
+    case 'daily':
+      for(let d=1;d<=daysInMonth;d++) result.push(d);
+      break;
+    case 'weekly': {
+      const refYear=item._refYear!==undefined?item._refYear:year;
+      const refMonth=item._refMonth!==undefined?item._refMonth:month;
+      for(const d0 of dlist){
+        const refDow=new Date(refYear,refMonth,Math.min(d0,daysInMonth)).getDay();
+        for(const d2 of weeklyDatesForDow(refDow,year,month)) result.push(d2);
+      }
+      break;
+    }
+    case 'quarterly':
+      for(const d0 of dlist) result.push(Math.min(d0,daysInMonth));
+      break;
+    case 'yearly':
+      for(const d0 of dlist) result.push(Math.min(d0,daysInMonth));
+      break;
+    case 'lastDay':
+      result.push(lastD);
+      break;
+    case 'once':
+    case 'monthly':
+    default:
+      for(const d0 of dlist) result.push(Math.min(d0,daysInMonth));
+      break;
+  }
+  return result;
+}
+
 function buildDailyCF(year,month,startOverride){
   const days=getDays(year,month);
-  const taxRate=(D.settings.taxRate||7)/100;
-  const taxBase=D.settings.taxBase||'all';
+  const now_=new Date(), cy_=now_.getFullYear(), cm_=now_.getMonth();
+  const isCurMonth=(year===cy_&&month===cm_);
 
-  // starting balance — use override if given, else current accounts sum
   const rawBalance=D.accounts.reduce((s,a)=>s+(Number(a.balance)||0),0);
   const startBalance=startOverride!==undefined?startOverride:rawBalance;
 
-  // build day-level events
   const events={};
   for(let d=1;d<=days;d++)events[d]=[];
 
-  // income items
-  const now_=new Date(), cy_=now_.getFullYear(), cm_=now_.getMonth();
-  const isCurMonth=(year===cy_&&month===cm_);
-  const incomes=D.items.filter(i=>i.type==='income'&&(Number(i.amount)||0)>0);
+  function addEvent(d,name,amount,type,color,id,extra){
+    if(d<1||d>days) return;
+    events[d].push({name,amount,type,color,id,...(extra||{})});
+  }
+
+  const incomes=D.items.filter(i=>i.type==='income'&&itemAmount(i)>0);
   for(const item of incomes){
-    const amt=Number(item.amount);
-    const dlist=itemDays(item);
-    for(let di=0;di<dlist.length;di++){
-      const d0=dlist[di];
-      // done key: first date = itemId, second date = itemId_2
-      const doneKey=di===0?item.id:item.id+'_2';
-      const isDone=isCurMonth&&D.done[doneKey];
-      if(isDone) continue; // skip — already processed
-      if(item.repeat==='weekly'){
-        const refYear=item._refYear!==undefined?item._refYear:year;
-        const refMonth=item._refMonth!==undefined?item._refMonth:month;
-        const refDow=new Date(refYear,refMonth,d0).getDay();
-        for(const d2 of weeklyDatesForDow(refDow,year,month)){
-          if(isCurMonth&&D.done[weeklyDoneKey(item.id,d2)]) continue;
-          events[d2].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id});
-          if(item.taxable&&amt>0){
-            const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
-            if(taxOk) events[d2].push({name:'Налог',amount:-Math.round(amt*taxRate),type:'tax',color:'#fbbf24',auto:true});
-          }
-        }
-      } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
-        const d=Math.min(d0,days);
-        events[d].push({name:item.category,amount:amt,type:'income',color:item.color,id:item.id,doneKey:doneKey});
-        if(item.taxable&&amt>0){
-          const taxOk=taxBase==='all'||(taxBase==='pvz'&&item.pvzAddr)||(taxBase==='pvz_w'&&(item.pvzAddr||item.categoryKey==='w'));
-          if(taxOk) events[d].push({name:'Налог',amount:-Math.round(amt*taxRate),type:'tax',color:'#fbbf24',auto:true});
-        }
+    const amt=itemAmount(item);
+    const occur=occDays(item,year,month);
+    const taxR=(item.taxRate||0)/100;
+    for(const d of occur){
+      const dk=item.id+'_d'+d;
+      if(isCurMonth&&D.done[dk]) continue;
+      addEvent(d,item.category,amt,'income',item.color,item.id,{doneKey:dk});
+      if(taxR>0&&amt>0){
+        addEvent(d,'Налог',-Math.round(amt*taxR),'tax','#fbbf24',item.id+'_tax',{auto:true});
       }
     }
   }
@@ -958,54 +979,55 @@ function buildDailyCF(year,month,startOverride){
   // compute total tax for KPI
   let taxableIncome=0;
   for(const item of incomes){
-    if(!item.taxable)continue;
-    if(taxBase==='pvz'&&!item.pvzAddr)continue;
-    if(taxBase==='pvz_w'&&!item.pvzAddr&&item.categoryKey!=='w')continue;
-    taxableIncome+=Number(item.amount)||0;
+    if((item.taxRate||0)<=0) continue;
+    taxableIncome+=itemAmount(item);
   }
-  const taxAmount=Math.round(taxableIncome*taxRate);
+  const taxAmount=Math.round(taxableIncome*((D.settings.taxRate||7)/100));
 
-  // expense items — salary is handled separately
-  const expenses=D.items.filter(i=>i.type==='expense'&&(Number(i.amount)||0)>0&&i.categoryKey!=='zp');
+  const expenses=D.items.filter(i=>i.type==='expense'&&itemAmount(i)>0&&i.categoryKey!=='zp'&&!i._zp);
   for(const item of expenses){
-    const dlist=itemDays(item);
-    for(let di=0;di<dlist.length;di++){
-      const d0=dlist[di];
-      const doneKey=di===0?item.id:item.id+'_2';
-      const isDone=isCurMonth&&D.done[doneKey];
-      if(isDone) continue;
-      const d=Math.min(d0,days);
-      if(item.repeat==='weekly'){
-        const refYear=item._refYear!==undefined?item._refYear:year;
-        const refMonth=item._refMonth!==undefined?item._refMonth:month;
-        const refDow=new Date(refYear,refMonth,d0).getDay();
-        for(const d2 of weeklyDatesForDow(refDow,year,month)){
-          if(isCurMonth&&D.done[weeklyDoneKey(item.id,d2)]) continue;
-          events[d2].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id});
-        }
-      } else if(item.repeat==='monthly'||item.repeat===undefined||item.repeat==='once'){
-        events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id,doneKey:doneKey});
-      } else if(item.repeat==='quarterly'){
-        events[d].push({name:item.category,amount:-Number(item.amount),type:'expense',color:item.color,id:item.id,doneKey:doneKey});
-      }
+    const amt=itemAmount(item);
+    const occur=occDays(item,year,month);
+    for(const d of occur){
+      const dk=item.id+'_d'+d;
+      if(isCurMonth&&D.done[dk]) continue;
+      addEvent(d,item.category,-amt,'expense',item.color,item.id,{doneKey:dk});
     }
   }
 
-  // salary: auto 5th & 20th from shiftCost
-  const salaryItems=D.items.filter(i=>i.categoryKey==='zp'&&(Number(i.amount)||0)>0);
+  const salaryItems=D.items.filter(i=>i.categoryKey==='zp'&&(itemAmount(i)>0||i._zp));
   if(salaryItems.length){
     let pm=month-1,py=year; if(pm<0){pm=11;py--;}
     const pmd=getDays(py,pm);
     const days5=pmd-15;
     const days20=15;
     for(const item of salaryItems){
-      const sc=Number(item.amount)||0;
-      const pvzName=(PVZ_LIST.find(p=>p.key===item.pvzAddr)||{}).name||item.pvzAddr||'';
-      const d5=Math.min(5,days), d20=Math.min(20,days);
-      const done1=isCurMonth&&D.done[item.id];
-      const done2=isCurMonth&&D.done[item.id+'_2'];
-      if(!done1&&d5<=days) events[d5].push({name:pvzName+' — аванс',amount:-Math.round(sc*days5),type:'expense',color:item.color,id:item.id,doneKey:item.id});
-      if(!done2&&d20<=days) events[d20].push({name:pvzName+' — зп',amount:-Math.round(sc*days20),type:'expense',color:item.color,id:item.id,doneKey:item.id+'_2'});
+      const sc=itemAmount(item);
+      if(!sc) continue;
+      const subItems=item.composite&&item.subItems?item.subItems:[{name:'',amount:sc}];
+      for(const sub of subItems){
+        const subAmt=Number(sub.amount)||0;
+        if(!subAmt) continue;
+        const subName=sub.name||'';
+        const prefix=subName?subName+' — ':'';
+        const d5=Math.min(5,days), d20=Math.min(20,days);
+        const doneKey1=item.id+'_d'+d5+(subName?'_'+subName:'');
+        const doneKey2=item.id+'_d'+d20+(subName?'_'+subName:'');
+        if(!(isCurMonth&&D.done[doneKey1])&&d5<=days) addEvent(d5,prefix+'аванс',-Math.round(subAmt*days5),'expense',item.color,item.id,{doneKey:doneKey1});
+        if(!(isCurMonth&&D.done[doneKey2])&&d20<=days) addEvent(d20,prefix+'зп',-Math.round(subAmt*days20),'expense',item.color,item.id,{doneKey:doneKey2});
+      }
+    }
+  }
+
+  // Withdrawals (вывод в личное пользование)
+  const withdrawals=D.items.filter(i=>i.type==='withdrawal'&&itemAmount(i)>0);
+  for(const item of withdrawals){
+    const amt=itemAmount(item);
+    const occur=occDays(item,year,month);
+    for(const d of occur){
+      const dk=item.id+'_d'+d;
+      if(isCurMonth&&D.done[dk]) continue;
+      addEvent(d,item.category,-amt,'withdrawal',item.color,item.id,{doneKey:dk});
     }
   }
 
@@ -1171,72 +1193,55 @@ function renderKPI(msb){
 function getOverdueItems(){
   const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
   const result=[];
+  const isCurMonth=curYear===cy&&curMonth===cm;
+  if(!isCurMonth) return result;
 
-  // Категории с групповым тумблером (toggleSvcDone) — показываем группой
-  // Если хотя бы один просрочен в группе — одна строка на всю категорию
-  const SVC_GROUP_CATS=['ye','dp','sl','yv'];
   const addedSvcCats=new Set();
 
   for(const item of D.items){
-    if(!(Number(item.amount)||0)) continue;
-    const isCurMonth=curYear===cy&&curMonth===cm;
-    if(!isCurMonth) continue;
+    if(!itemAmount(item) && !(item._zp)) continue;
+    const hasCompItem=item.composite&&item.subItems;
+    const hasSvcTgl=['ye','dp','sl','yv'].includes(item.categoryKey);
 
-    const hasSvcTgl=SVC_GROUP_CATS.includes(item.categoryKey);
-
-    if(item.repeat==='weekly'){
-      const wdates=weeklyDates(item,cy,cm);
-      wdates.forEach(d=>{
-        if(d<=cd&&!D.done[weeklyDoneKey(item.id,d)]){
-          result.push({item, date:d, key:weeklyDoneKey(item.id,d), label:d+' числа'});
-        }
-      });
-    } else if(hasSvcTgl){
-      // Для групповых категорий — проверяем все items группы
-      // Добавляем одну строку на категорию если ещё не добавили
+    if(hasSvcTgl){
       if(addedSvcCats.has(item.categoryKey)) continue;
-      const dlist=itemDays(item);
-      const isOverdueAny=dlist.some((d,i)=>{
-        const key=i===0?item.id:item.id+'_2';
-        return d<=cd&&!D.done[key];
-      });
-      if(isOverdueAny){
-        // Найти минимальную просроченную дату по всей категории
-        const catItems=D.items.filter(x=>x.categoryKey===item.categoryKey&&(Number(x.amount)||0)>0);
-        let minDate=cd;
-        catItems.forEach(ci=>{
-          itemDays(ci).forEach((d,i)=>{
-            const k=i===0?ci.id:ci.id+'_2';
-            if(d<=cd&&!D.done[k]&&d<minDate) minDate=d;
-          });
-        });
-        // Создаём виртуальную групповую запись
-        const svcIds=catItems.map(x=>x.id);
-        const allDone=svcIds.every(id=>D.done[id]);
+      const catItems=D.items.filter(x=>x.categoryKey===item.categoryKey);
+      const allIds=catItems.map(x=>x.id);
+      let minDate=cd;
+      let anyOverdue=false;
+      for(const ci of catItems){
+        const occur=occDays(ci,cy,cm);
+        for(const d of occur){
+          if(d<=cd&&!D.done[ci.id+'_d'+d]){
+            anyOverdue=true;
+            if(d<minDate) minDate=d;
+          }
+        }
+      }
+      if(anyOverdue){
         result.push({
-          item:{...item, pvzAddr:null},
+          item:{...item, _svcGroup:true},
           date:minDate,
           key:'__svc__'+item.categoryKey,
           label:minDate===cd?'сегодня':minDate+' числа',
           isSvcGroup:true,
           svcKey:item.categoryKey,
-          svcIds,
-          allDone,
+          allDone:allIds.every(id=>{
+            return occDays(D.items.find(x=>x.id===id)||item,cy,cm).every(d=>D.done[id+'_d'+d]);
+          }),
         });
         addedSvcCats.add(item.categoryKey);
       }
     } else {
-      const dlist=itemDays(item);
-      dlist.forEach((d,i)=>{
-        const key=i===0?item.id:item.id+'_2';
-        if(d<=cd&&!D.done[key]){
-          result.push({item, date:d, key, label:d+' числа'});
+      const occur=occDays(item,cy,cm);
+      for(const d of occur){
+        if(d<=cd&&!D.done[item.id+'_d'+d]){
+          result.push({item, date:d, key:item.id+'_d'+d, label:d+' числа'});
         }
-      });
+      }
     }
   }
 
-  // Sort: today first, then by date desc
   return result.sort((a,b)=>{
     const now2=new Date().getDate();
     if(a.date===now2&&b.date!==now2) return -1;
@@ -1260,21 +1265,18 @@ function renderOverdueDash(){
 
   items.forEach((entry)=>{ const {item,date,key,label}=entry;
     const isToday2=date===now;
-    const pvz=item.pvzAddr?PVZ_LIST.find(p=>p.key===item.pvzAddr):null;
     const catName=item.category||'';
-    const pvzName=pvz?pvz.name:'';
     const isDone=entry.isSvcGroup?entry.allDone:!!D.done[key];
 
-    // Для групповых категорий — сумма всех items группы
     let dispAmt, dispSign, dispAmtCls;
     if(entry.isSvcGroup){
-      dispAmt=D.items.filter(x=>x.categoryKey===entry.svcKey&&(Number(x.amount)||0)>0).reduce((s,x)=>s+(Number(x.amount)||0),0);
-      dispSign=item.type==='income'?'+':'−';
-      dispAmtCls=item.type==='income'?'color:var(--grn)':'color:var(--red)';
+      dispAmt=D.items.filter(x=>x.categoryKey===entry.svcKey).reduce((s,x)=>s+itemAmount(x),0);
+      dispSign='+';
+      dispAmtCls='color:var(--grn)';
     } else {
-      dispAmt=Number(item.amount)||0;
+      dispAmt=itemAmount(item);
       dispSign=item.type==='income'?'+':'−';
-      dispAmtCls=item.type==='income'?'color:var(--grn)':'color:var(--red)';
+      dispAmtCls=item.type==='income'?'color:var(--grn)':item.type==='withdrawal'?'color:#60a5fa':'color:var(--red)';
     }
 
     const onchange=entry.isSvcGroup
@@ -1285,7 +1287,6 @@ function renderOverdueDash(){
       <div class="ov-dot" style="background:${item.color||'#94a3b8'}"></div>
       <div style="flex:1;min-width:0;overflow:hidden">
         <div style="font-size:12px;font-weight:600;color:var(--t1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${catName}${entry.isSvcGroup?' <span style="font-size:9px;color:var(--t3);font-weight:400">(все)</span>':''}</div>
-        ${pvzName?`<div style="font-size:10px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px">${pvzName}</div>`:''}
         <div style="font-size:10px;color:${isToday2?'var(--acc)':'var(--amber)'};margin-top:1px;font-weight:600">${isToday2?'сегодня':label}</div>
       </div>
       <div style="font-size:12px;font-weight:700;${dispAmtCls};flex-shrink:0">${dispSign}${fmt(dispAmt)}</div>
@@ -1312,17 +1313,15 @@ function renderForecast(){
   const el=document.getElementById('forecastContent');
   if(!el) return;
 
-  // Update month label
   const fcLbl=document.getElementById('fcMonthLabel');
   if(fcLbl) fcLbl.textContent=MONTHS[curMonth]+' '+curYear;
 
-  // Используем buildDailyCF с пустым done — все платежи включая ЗП со стоимостью смены
   const savedDone=D.done;
   D.done={};
   const fcf=buildDailyCF(curYear,curMonth,getMonthStartBalance(curYear,curMonth));
   D.done=savedDone;
 
-  // Агрегируем по ПВЗ из событий CF
+  // Агрегируем по группам ПВЗ из событий CF
   const pvzMap={};
   PVZ_LIST.forEach(p=>{ pvzMap[p.key]={pvz:p,inc:0,exp:0}; });
 
@@ -1331,21 +1330,34 @@ function renderForecast(){
       if(ev.auto) return;
       const item=D.items.find(i=>i.id===ev.id);
       if(!item) return;
-      const pk=item.pvzAddr;
-      if(pk&&pvzMap[pk]){
-        if(ev.type==='income') pvzMap[pk].inc+=ev.amount;
-        else if(ev.type==='expense') pvzMap[pk].exp+=Math.abs(ev.amount);
+      if(item.composite&&item.subItems){
+        for(const sub of item.subItems){
+          const pvz=PVZ_LIST.find(p=>p.name===sub.name||p.key===sub.name);
+          if(pvz&&pvzMap[pvz.key]){
+            const subAmt=(Number(sub.amount)||0);
+            const total=itemAmount(item);
+            if(total>0) {
+              const share=subAmt/total;
+              if(ev.type==='income') pvzMap[pvz.key].inc+=ev.amount*share;
+              else if(ev.type==='expense') pvzMap[pvz.key].exp+=Math.abs(ev.amount)*share;
+            }
+          }
+        }
       }
     });
   });
 
-  // Налог по каждому ПВЗ и сразу включаем в расходы
   const taxRate2=(D.settings.taxRate||7)/100;
   PVZ_LIST.forEach(p=>{
     let taxable=0;
-    D.items.filter(i=>i.type==='income'&&i.pvzAddr===p.key&&i.taxable).forEach(i=>{
-      const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:itemDays(i).length;
-      taxable+=(Number(i.amount)||0)*occ;
+    D.items.filter(i=>i.type==='income'&&itemAmount(i)>0&&(i.taxRate||0)>0).forEach(i=>{
+      if(i.composite&&i.subItems){
+        const sub=i.subItems.find(s=>s.name===p.name||s.name===p.key);
+        if(sub){
+          const occ=occDays(i,curYear,curMonth).length;
+          taxable+=(Number(sub.amount)||0)*occ;
+        }
+      }
     });
     pvzMap[p.key].exp+=Math.round(taxable*taxRate2);
   });
@@ -1356,13 +1368,13 @@ function renderForecast(){
   });
 
   // Вне ПВЗ
-  const nonPvzTotals={}; // itemId → total for month
+  const nonPvzTotals={};
   let generalExp=0, otherInc=0;
   fcf.daily.forEach(day=>{
     day.events.forEach(ev=>{
       if(ev.auto) return;
       const item=D.items.find(i=>i.id===ev.id);
-      if(!item||item.pvzAddr) return;
+      if(!item||item.composite) return;
       nonPvzTotals[ev.id]=(nonPvzTotals[ev.id]||0)+ev.amount;
       if(ev.type==='income') otherInc+=ev.amount;
       else if(ev.type==='expense') generalExp+=Math.abs(ev.amount);
@@ -1370,22 +1382,20 @@ function renderForecast(){
   });
   otherInc=Math.round(otherInc); generalExp=Math.round(generalExp);
 
-  // Налог на доходы вне ПВЗ — сразу включаем в расходы
-  const taxBase2=D.settings.taxBase||'all';
+  const nonPvzItems=[...D.items.filter(i=>i.type==='income'&&!i.composite&&itemAmount(i)>0),
+                     ...D.items.filter(i=>i.type==='expense'&&!i.composite&&itemAmount(i)>0)];
   let nonPvzTaxable=0;
-  D.items.filter(i=>i.type==='income'&&i.taxable&&!i.pvzAddr).forEach(i=>{
-    if(taxBase2==='pvz') return;
-    const occ=i.repeat==='weekly'?weeklyDates(i,curYear,curMonth).length:itemDays(i).length;
-    nonPvzTaxable+=(Number(i.amount)||0)*occ;
+  nonPvzItems.filter(i=>i.type==='income'&&(i.taxRate||0)>0).forEach(i=>{
+    const occ=occDays(i,curYear,curMonth).length;
+    nonPvzTaxable+=itemAmount(i)*occ;
   });
-  generalExp+=Math.round(nonPvzTaxable*(D.settings.taxRate||7)/100);
+  generalExp+=Math.round(nonPvzTaxable*taxRate2);
 
   const totalInc=pvzData.reduce((s,p)=>s+p.inc,0)+otherInc;
   const totalExp=pvzData.reduce((s,p)=>s+p.exp,0)+generalExp;
   const net=totalInc-totalExp;
   const startBal=getMonthStartBalance(curYear,curMonth);
 
-  // ── SUMMARY — компактная строка вместо карточек ──
   const finalNetReal=totalInc-totalExp;
   let h=`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
     ${[
@@ -1398,7 +1408,6 @@ function renderForecast(){
     </div>`).join('')}
   </div>`;
 
-  // ── PVZ TABLE ──
   const pvzIncTotal=pvzData.reduce((s,p)=>s+p.inc,0);
   const pvzExpTotal=pvzData.reduce((s,p)=>s+p.exp,0);
   const pvzNet=pvzIncTotal-pvzExpTotal;
@@ -1437,7 +1446,6 @@ function renderForecast(){
     <td style="padding:6px 10px;text-align:right;font-size:12px;font-weight:800;color:${pvzNet>=0?'var(--acc)':'var(--red)'};white-space:nowrap">${pvzNet>=0?'+':'−'}${fmt(Math.abs(pvzNet))}</td>
   </tr></tbody></table></div>`;
 
-  // ── ВНЕ ПВЗ ──
   if(otherInc||generalExp){
     const nonPvzNet=otherInc-generalExp;
     h+=`<div style="background:var(--s2);border:1px solid var(--brd);border-radius:var(--r);overflow:hidden;margin-bottom:12px">
@@ -1445,9 +1453,6 @@ function renderForecast(){
         <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--t2);flex:1">Вне ПВЗ</span>
         <span style="font-size:12px;font-weight:800;color:${nonPvzNet>=0?'var(--acc)':'var(--red)'}">${nonPvzNet>=0?'+':''}${fmt(nonPvzNet)}</span>
       </div>`;
-    // По каждому item показываем сумму за месяц (с учётом повторений)
-    const nonPvzItems=[...D.items.filter(i=>i.type==='income'&&!i.pvzAddr&&(Number(i.amount)||0)>0),
-                       ...D.items.filter(i=>i.type==='expense'&&!i.pvzAddr&&(Number(i.amount)||0)>0)];
     nonPvzItems.sort((a,b)=>a.category.localeCompare(b.category));
     nonPvzItems.forEach(i=>{
       const total=Math.round(nonPvzTotals[i.id]||0);
@@ -1462,7 +1467,6 @@ function renderForecast(){
     h+=`</div>`;
   }
 
-  // ── ИТОГ ──
   h+=`<div style="background:var(--s2);border:1px solid ${finalNetReal>=0?'rgba(52,211,153,.3)':'rgba(248,113,113,.3)'};border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;color:var(--t3);margin-bottom:3px">Итог месяца</div>
@@ -1485,8 +1489,7 @@ function renderFeed(){
   const DOWS=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
 
   const isUndone=(ev,day)=>{
-    const item=D.items.find(i=>i.id===ev.id);
-    const dk=ev.id?(item&&item.repeat==='weekly'?weeklyDoneKey(ev.id,day):(ev.doneKey||ev.id)):null;
+    const dk=ev.doneKey||ev.id+'_d'+day;
     return dk&&!svDone[dk];
   };
 
@@ -1498,7 +1501,7 @@ function renderFeed(){
       for(const ev of dd.events.filter(e=>!e.auto)){
         if(isUndone(ev,dd.d)){
           overdueEvts.push({...ev,_ovd:true,_planDay:dd.d});
-          overdueKeys.add((ev.doneKey||ev.id)+'_'+ev.amount);
+          overdueKeys.add(ev.doneKey||ev.id+'_d'+dd.d);
         }
       }
     }
@@ -1524,7 +1527,7 @@ function renderFeed(){
   for(const dd of sorted){
     let evs=dd.events.filter(e=>!e.auto);
     const tod=isCur&&dd.d===cd;
-    if(isCur&&!tod) evs=evs.filter(e=>!overdueKeys.has((e.doneKey||e.id)+'_'+e.amount));
+    if(isCur&&!tod) evs=evs.filter(e=>!overdueKeys.has(e.doneKey||e.id+'_d'+dd.d));
     if(isCur&&tod&&overdueEvts.length) evs=[...overdueEvts,...evs];
     if(!evs.length) continue;any=true;
     const past=isCur&&dd.d<cd;
@@ -1534,11 +1537,10 @@ function renderFeed(){
     h+=`<div id="feed-day-${dd.d}" style="margin-bottom:20px;scroll-margin-top:80px"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--brd)"><div style="font-size:15px;font-weight:700;color:${tod?'var(--acc)':past?'var(--t1)':'var(--t2)'}">${dlbl}</div><div style="font-size:12px;color:${bc};font-weight:600">${fmt(dd.balance)}</div></div>`;
     for(const ev of evs){
       const item=D.items.find(i=>i.id===ev.id);
-      const pvz=item&&item.pvzAddr?PVZ_LIST.find(p=>p.key===item.pvzAddr):null;
-      const isInc=ev.type==='income',col=isInc?'var(--grn)':'var(--red)';
-      const dk=ev.id?(item&&item.repeat==='weekly'?weeklyDoneKey(ev.id,dd.d):(ev.doneKey||ev.id)):null;
+      const isInc=ev.type==='income',isWdr=ev.type==='withdrawal',col=isInc?'var(--grn)':isWdr?'#60a5fa':'var(--red)';
+      const dk=ev.doneKey||ev.id+'_d'+dd.d;
       const done=dk?!!D.done[dk]:false,ovd=ev._ovd||(past&&dk&&!done);
-      const name=(ev.name||'')+(pvz?' — '+pvz.name:'');
+      const name=ev.name||'';
       const tgl=dk?`<label class="tg" onclick="event.stopPropagation()"><input type="checkbox" ${done?'checked':''} onchange="toggleFeedEv('${dk}',${dd.d})"><span class="tg-s"></span></label>`:'';
       h+=`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:${done?'var(--s1)':'var(--s2)'};border:1px solid var(--brd);border-radius:10px;margin-bottom:6px;${done?'opacity:.35':''}${ovd?';box-shadow:inset 3px 0 0 var(--amber)':''}">
         <div style="width:8px;height:8px;border-radius:50%;background:${ev.color||col};flex-shrink:0"></div>
@@ -1577,7 +1579,8 @@ function renderCashflow(msb){
   const dayMap={};
   for(const d of daily){
     const tax=d.events.filter(e=>e.auto).reduce((s,e)=>s+Math.abs(e.amount),0);
-    dayMap[d.d]={inc:d.income,exp:Math.abs(d.expense)+tax,bal:d.balance};
+    const wdr=d.events.filter(e=>e.type==='withdrawal').reduce((s,e)=>s+Math.abs(e.amount),0);
+    dayMap[d.d]={inc:d.income,exp:Math.abs(d.expense)+tax,wdr,bal:d.balance};
   }
   const now=new Date(),isCur=(curYear===now.getFullYear()&&curMonth===now.getMonth());
   const today=isCur?now.getDate():0;
@@ -1587,23 +1590,20 @@ function renderCashflow(msb){
   let h=DOW.map(d=>`<div class="cal-dow">${d}</div>`).join('');
   for(let i=0;i<firstDow;i++) h+=`<div class="cal-empty"></div>`;
   for(let day=1;day<=days;day++){
-    const dm=dayMap[day]||{inc:0,exp:0,bal:0};
+    const dm=dayMap[day]||{inc:0,exp:0,wdr:0,bal:0};
     const isToday=day===today;
     const dEvs=(daily.find(x=>x.d===day)||{events:[]}).events;
     const hasOvd=isCur&&day<today&&dEvs.some(ev=>{
       if(ev.auto)return false;
-      const it=D.items.find(i=>i.id===ev.id);if(!it)return false;
-      const dk=it.repeat==='weekly'?weeklyDoneKey(ev.id,day):ev.id;
-      return !D.done[dk];
+      const dk=ev.doneKey||ev.id+'_d'+day;
+      return dk&&!D.done[dk];
     });
-    const cls=isToday?'today':hasOvd?'overdue-day':dm.bal<0?'negative':'';
-    const balCls=dm.bal<0?'neg':dm.bal<50000?'warn':'pos';
-    const hasTx=dm.inc>0||dm.exp>0;
+    const cls=isToday?'today':hasOvd?'overdue-day':'';
     h+=`<div class="cal-cell ${cls}" onclick="showDayDetail(${day})">
       <div class="cal-day">${day}</div>
-      ${dm.inc>0?`<div class="cal-inc">+${fmt(dm.inc)}</div>`:''}
-      ${dm.exp>0?`<div class="cal-exp">−${fmt(dm.exp)}</div>`:''}
-      ${hasTx?`<div class="cal-bal ${balCls}">${fmt(dm.bal)}</div>`:''}
+      <div class="cal-wdr">${dm.wdr>0?'−'+fmt(dm.wdr):''}</div>
+      <div class="cal-inc">${dm.inc>0?'+'+fmt(dm.inc):''}</div>
+      <div class="cal-exp">${dm.exp>0?'−'+fmt(dm.exp):''}</div>
     </div>`;
   }
   const total=firstDow+days,rem=total%7===0?0:7-(total%7);
@@ -1641,34 +1641,14 @@ function weeklyDates(item,year,month){
 function weeklyDoneKey(itemId,d){return itemId+'_d'+d;}
 
 function isOverdue(item){
-  // Only applies in current month, only if not done
   const now=new Date(), cy=now.getFullYear(), cm=now.getMonth(), cd=now.getDate();
   const isCurMonth=curYear===cy&&curMonth===cm;
   if(!isCurMonth) return false;
-  if(item.repeat==='weekly'){
-    return weeklyDates(item,cy,cm).some(d=>d<=cd&&!D.done[weeklyDoneKey(item.id,d)]);
-  }
-  const dlist=itemDays(item);
-  const key0=item.id,key1=item.id+'_2';
-  if(dlist.length>=2){
-    const d0passed=dlist[0]<=cd,d1passed=dlist[1]<=cd;
-    return (d0passed&&!D.done[key0])||(d1passed&&!D.done[key1]);
-  }
-  return dlist[0]<=cd&&!D.done[key0];
+  if(item._zp) return false;
+  const occur=occDays(item,cy,cm);
+  return occur.some(d=>d<=cd&&!D.done[item.id+'_d'+d]);
 }
 
-function isSvcOverdue(svcItems){
-  return svcItems.some(i=>isOverdue(i));
-}
-function isCatOverdue(catItems){
-  return catItems.some(i=>isOverdue(i));
-}
-function isGroupOverdue(groupPvzKeys, catItems){
-  // Группа просрочена если хотя бы одна строка внутри просрочена
-  return catItems
-    .filter(i=>groupPvzKeys.includes(i.pvzAddr))
-    .some(i=>isOverdue(i));
-}
 
 function buildWeeklySub(item){
   const wdates=weeklyDates(item,curYear,curMonth);
@@ -1686,13 +1666,16 @@ function buildWeeklySub(item){
   return h;
 }
 function saveOpenState(){
-  const state={cats:new Set(), pvzGroups:new Set()};
+  const state={cats:new Set(), pvzGroups:new Set(), tiles:new Set()};
   document.querySelectorAll('.cat-header:not(.collapsed)').forEach(el=>{
     const key=el.dataset.catKey;
     if(key) state.cats.add(key);
   });
   document.querySelectorAll('.pvz-group-body.open').forEach(el=>{
     state.pvzGroups.add(el.id);
+  });
+  document.querySelectorAll('.cat-tile-body.open').forEach(el=>{
+    state.tiles.add(el.id);
   });
   return state;
 }
@@ -1714,6 +1697,14 @@ function restoreOpenState(state){
       if(header) header.classList.add('open');
     }
   });
+  state.tiles.forEach(id=>{
+    const body=document.getElementById(id);
+    if(body){
+      body.classList.add('open');
+      const tile=body.previousElementSibling;
+      if(tile) tile.classList.add('open');
+    }
+  });
 }
 
 function renderSettings(){
@@ -1726,204 +1717,173 @@ function renderSettings(){
       <button class="item-edit" onclick="openItemModal('account','${a.id}')">✎</button>
     </div>`).join('');
 
-  // ── Доходы (категория → ПВЗ) ──
-  const pvzIncItems=D.items.filter(i=>i.type==='income'&&i.pvzAddr);
-  const otherIncItems=D.items.filter(i=>i.type==='income'&&!i.pvzAddr);
+  // ── Доходы (плитки) ──
+  const incItems=D.items.filter(i=>i.type==='income');
   let incHtml='';
+  for(const item of incItems){
+    const total=itemAmount(item);
+    const isComp=item.composite;
+    const subCount=isComp?(item.subItems||[]).length:0;
+    const ovd=isOverdue(item);
+    const tileId='ctile_inc_'+item.id;
+    const dayStr=item.days?item.days.join(', '):(item.day||'—');
+    const repStr=repeatLabel(item.repeat);
 
-  if(pvzIncItems.length){
-    incHtml+=subHead('Доходы по услугам ПВЗ');
-
-    for(const svc of PVZ_SERVICES){
-      const svcItems=pvzIncItems.filter(i=>i.categoryKey===svc.key&&(Number(i.amount)||0)>0);
-      if(!svcItems.length) continue;
-      const svcTotal=svcItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
-      const noGroup=NO_GROUP_CATS.includes(svc.key);
-      const isHm=svc.key==='hm';
-      const groups=isHm?HM_GROUPS:PVZ_GROUPS;
-
-      const svcTglHtml='';
-      const svcOverdue=isSvcOverdue(svcItems);
-      incHtml+=`<div class="cat-header inc${svcOverdue?' overdue-cat':''}" data-cat-key="${svc.key}" style="display:flex;align-items:center" onclick="toggleCat(this)">
-        <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${svc.name}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--grn)">${svcTotal?fmt(svcTotal):'—'}</div>
-        ${svcTglHtml}
+    incHtml+=`<div class="cat-tile inc${ovd?' overdue-tile':''}" onclick="toggleCatTile('${tileId}')">
+      <div class="tile-icon">${item.icon||'💰'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ct-name">${escH(item.category)}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:1px">${dayStr} · ${repStr}${item.taxRate>0?' · УСН '+item.taxRate+'%':''}</div>
       </div>
-      <div class="cat-body collapsed">`;
+      <div class="ct-amount" style="color:var(--grn)">${isComp?(total?fmt(total):'—'):((Number(item.amount)||0)?fmt(item.amount):'—')}</div>
+      <div class="ct-arrow">▾</div>
+    </div>
+    <div class="cat-tile-body" id="${tileId}">`;
 
-      if(noGroup){
-        // Плоский список без групп
-        for(const item of svcItems){
-          const pvz=PVZ_LIST.find(p=>p.key===item.pvzAddr);
-          if(!pvz) continue;
-          const isW=item.repeat==='weekly';
-          incHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:20px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
-            <div class="item-dot item-dot-pvz" style="background:${pvzGroup(item.pvzAddr).color}" onclick="event.stopPropagation();openItemModal('income','${item.id}')"></div>
-            <div class="item-name" style="font-size:12px">${pvz.name}</div>
-            <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-            <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-            ${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,ii)=>doneToggleHtml(item.id,ii)).join(''):doneToggleHtml(item.id,0);})()}
-            <button class="item-edit" onclick="event.stopPropagation();openItemModal('income','${item.id}')">✎</button>
-          </div>${isW?buildWeeklySub(item):''}`;
+    if(isComp){
+      const subs=item.subItems||[];
+      if(subs.length){
+        for(const s of subs){
+          incHtml+=`<div class="item-row" style="padding-left:16px">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0"></div>
+            <div class="item-name" style="font-size:12px;color:var(--t2)">${escH(s.name)}</div>
+            <div class="item-amount inc" style="font-size:12px">${fmt(Number(s.amount)||0)||'—'}</div>
+          </div>`;
         }
       } else {
-        // Группированный список
-        for(const grp of groups){
-          const grpItems=svcItems.filter(i=>grp.pvz.includes(i.pvzAddr));
-          if(!grpItems.length) continue;
-          const grpTotal=grpItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
-          const grpOverdue=isGroupOverdue(grp.pvz,svcItems);
-          const grpId='pvzg_inc_'+svc.key+'_'+grp.key;
-          {
-            incHtml+=`<div class="pvz-group-header ${grpOverdue?'overdue-group':''}" style="border-left-color:${grpOverdue?'var(--amber)':grp.color}">
-              <div onclick="togglePvzGroup('${grpId}')" style="display:flex;align-items:center;gap:8px;flex:1;cursor:pointer">
-                <div style="width:8px;height:8px;border-radius:50%;background:${grp.color};flex-shrink:0;box-shadow:0 0 5px ${grp.color}66"></div>
-                <div class="pvz-group-name">${grp.name}</div>
-                <div class="pvz-group-sum" style="color:var(--grn)">${grpTotal?fmt(grpTotal):'—'}</div>
-                <div class="pvz-group-arrow">▾</div>
-              </div>
-            </div>
-            <div class="pvz-group-body" id="${grpId}">`;
-          }
-
-          for(const pvzKey of grp.pvz){
-            const pvz=PVZ_LIST.find(p=>p.key===pvzKey);
-            const item=grpItems.find(i=>i.pvzAddr===pvzKey);
-            if(!pvz||!item) continue;
-            const isW=item.repeat==='weekly';
-            incHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:24px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
-              <div class="item-dot item-dot-pvz" style="background:${pvzGroup(item.pvzAddr).color}" onclick="event.stopPropagation();openItemModal('income','${item.id}')"></div>
-              <div class="item-name" style="font-size:12px">${pvz.name}</div>
-              <div class="item-amount inc" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-              <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-              ${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,ii)=>doneToggleHtml(item.id,ii)).join(''):doneToggleHtml(item.id,0);})()}
-              <button class="item-edit" onclick="event.stopPropagation();openItemModal('income','${item.id}')">✎</button>
-            </div>${isW?buildWeeklySub(item):''}`;
-          }
-          incHtml+=`</div>`;
-        }
+        incHtml+=`<div style="padding:10px 16px;font-size:11px;color:var(--t3)">Нет подстатей. Откройте для редактирования.</div>`;
       }
-
-      incHtml+=`</div>`;
+      incHtml+=`<div style="padding:6px 16px"><button onclick="event.stopPropagation();openItemModal('income','${item.id}')" style="background:none;border:none;color:var(--acc);font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">✎ Редактировать</button></div>`;
+    } else {
+      incHtml+=`<div style="padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:12px;color:var(--t2)">${escH(item.category)}</div>
+        <div style="flex:1"></div>
+        <div class="item-amount inc" data-id="${item.id}" style="font-size:12px">${fmt(Number(item.amount)||0)||'—'}</div>
+      </div>`;
+      incHtml+=`<div style="padding:6px 16px"><button onclick="event.stopPropagation();openItemModal('income','${item.id}')" style="background:none;border:none;color:var(--acc);font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">✎ Редактировать</button></div>`;
     }
-  }
-
-  if(otherIncItems.length){
-    incHtml+=subHead('Другие источники');
-    incHtml+=otherIncItems.map(i=>itemRowHtml(i,'income')).join('');
+    incHtml+=`</div>`;
   }
   document.getElementById('settingIncome').innerHTML=incHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет доходов</div>';
 
-  // ── Расходы (категория → ПВЗ) ──
-  const pvzExpItems=D.items.filter(i=>i.type==='expense'&&i.pvzAddr);
-  const genExpItems=D.items.filter(i=>i.type==='expense'&&!i.pvzAddr);
+  // ── Расходы (плитки) ──
+  const expItems=D.items.filter(i=>i.type==='expense');
   let expHtml='';
+  for(const item of expItems){
+    const total=itemAmount(item);
+    const isComp=item.composite;
+    const ovd=isOverdue(item);
+    const tileId='ctile_exp_'+item.id;
+    const dayStr=item.days?item.days.join(', '):(item.day||'—');
+    const repStr=repeatLabel(item.repeat);
+    const isZP=item._zp;
 
-  if(pvzExpItems.length){
-    expHtml+=subHead('Расходы');
-
-    for(const cat of EXP_CATS){
-      const catItems=pvzExpItems.filter(i=>i.categoryKey===cat.key);
-      if(!catItems.length) continue;
-      const catTotal=catItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
-
-      const catOverdue = isCatOverdue(catItems);
-      expHtml+=`<div class="cat-header exp${catOverdue?' overdue-cat':''}" data-cat-key="${cat.key}" onclick="toggleCat(this)">
-        <div style="font-size:12px;font-weight:600;color:var(--t2);flex:1">${cat.name}</div>
-        <div style="font-size:12px;font-weight:600;color:var(--red)">${catTotal?fmt(catTotal):'—'}${cat.key==='zp'?' <span style="font-size:9px;color:var(--t3);font-weight:400">/смена</span>':''}</div>
+    expHtml+=`<div class="cat-tile exp${ovd?' overdue-tile':''}" onclick="toggleCatTile('${tileId}')">
+      <div class="tile-icon">${item.icon||'📦'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ct-name">${escH(item.category)}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:1px">${isZP?'аванс/зп':dayStr+' · '+repStr}</div>
       </div>
-      <div class="cat-body">`;
+      <div class="ct-amount" style="color:var(--red)">${isComp?(total?fmt(total):'—'):((Number(item.amount)||0)?fmt(item.amount):'—')}${isZP?' <span style="font-size:9px;color:var(--t3);font-weight:400">/смена</span>':''}</div>
+      <div class="ct-arrow">▾</div>
+    </div>
+    <div class="cat-tile-body" id="${tileId}">`;
 
-      const groupOnly=GROUP_ONLY_EXP.includes(cat.key);
-      for(const grp of PVZ_GROUPS){
-        const grpItems=catItems.filter(i=>grp.pvz.includes(i.pvzAddr));
-        if(!grpItems.length) continue;
-        const grpTotal=grpItems.reduce((s,i)=>s+(Number(i.amount)||0),0);
-        const grpOverdue=isGroupOverdue(grp.pvz,catItems);
-        const grpId='pvzg_exp_'+cat.key+'_'+grp.key;
-
-        if(groupOnly){
-          const grpColors={'A':'#a78bfa','AD':'#38bdf8','YM':'#fbbf24','REST':'#94a3b8'};
-          const dotColor=grpColors[grp.key]||'#94a3b8';
-          const firstItem=grpItems[0];
-          const dl=itemDays(firstItem);
-          const tgls=dl.length>1?dl.map((_,ii)=>doneToggleHtml(firstItem.id,ii)).join(''):doneToggleHtml(firstItem.id,0);
-          const subId='go_'+grpId;
-          // Clickable group header — свёрнут по умолчанию
-          expHtml+=`<div class="pvz-group-header ${grpOverdue?'overdue-group':''}" style="border-left-color:${grpOverdue?'var(--amber)':dotColor}" onclick="togglePvzGroup('${subId}')">
-            <div style="width:8px;height:8px;border-radius:50%;background:${dotColor};flex-shrink:0;box-shadow:0 0 5px ${dotColor}66"></div>
-            <div class="pvz-group-name">${grp.name}</div>
-            <div class="pvz-group-sum" style="color:var(--red)">${grpTotal?fmt(grpTotal):'—'}</div>
-            <div class="item-day-badge" data-id="${firstItem.id}" onclick="event.stopPropagation()">${firstItem.days?firstItem.days.join(', '):(firstItem.day||'—')}</div>
-            <div onclick="event.stopPropagation()">${tgls}</div>
-            <div class="pvz-group-arrow">▾</div>
-          </div>
-          <div class="pvz-group-body" id="${subId}">`;
-          // Editable amount + date per each pvz item inside
-          for(const item of grpItems){
-            const pvz=PVZ_LIST.find(p=>p.key===item.pvzAddr);
-            if(!pvz) continue;
-            const isSal=item.categoryKey==='zp';
-            const dl2=itemDays(item);
-            const tgls2=dl2.length>1?dl2.map((_,ii)=>doneToggleHtml(item.id,ii)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));
-            const isW=item.repeat==='weekly';
-            expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:28px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>`+
-              `<div class="item-dot-pvz" style="background:${dotColor};margin-right:4px"></div>`+
-              `<div class="item-name" style="font-size:12px;color:var(--t2)">${pvz.name}</div>`+
-              `<div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>`+
-              `<div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>`+
-              `${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':tgls2}`+
-              `</div>${isW?buildWeeklySub(item):''}`;
-          }
-          expHtml+=`</div>`;
-        } else {
-          expHtml+=`<div class="pvz-group-header ${grpOverdue?'overdue-group':''}" onclick="togglePvzGroup('${grpId}')" style="border-left-color:${grpOverdue?'var(--amber)':grp.color}">
-            <div style="width:8px;height:8px;border-radius:50%;background:${grp.color};flex-shrink:0;box-shadow:0 0 5px ${grp.color}66"></div>
-            <div class="pvz-group-name">${grp.name}</div>
-            <div class="pvz-group-sum" style="color:var(--red)">${grpTotal?fmt(grpTotal):'—'}</div>
-            <div class="pvz-group-arrow">▾</div>
-          </div>
-          <div class="pvz-group-body" id="${grpId}">`;
-          for(const pvzKey of grp.pvz){
-            const pvz=PVZ_LIST.find(p=>p.key===pvzKey);
-            const item=grpItems.find(i=>i.pvzAddr===pvzKey);
-            if(!pvz||!item) continue;
-            const isSal=item.categoryKey==='zp';
-            const isW=item.repeat==='weekly';
-            expHtml+=`<div class="item-row ${isOverdue(item)?'overdue':''}" style="padding-left:24px${isW?';cursor:pointer':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')"`:''}>
-              <div class="item-dot item-dot-pvz" style="background:${pvzGroup(item.pvzAddr).color}" onclick="event.stopPropagation();openItemModal('expense','${item.id}')"></div>
-              <div class="item-name" style="font-size:12px">${pvz.name}</div>
-              <div class="item-amount exp" data-id="${item.id}">${fmt(item.amount)||'—'}</div>
-              <div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>
-              ${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':(()=>{const dl=itemDays(item);return dl.length>1?dl.map((_,ii)=>doneToggleHtml(item.id,ii)).join(''):(isSal?doneToggleHtml(item.id,0)+doneToggleHtml(item.id,1):doneToggleHtml(item.id,0));})()}
-              <button class="item-edit" onclick="event.stopPropagation();openItemModal('expense','${item.id}')">✎</button>
-            </div>${isW?buildWeeklySub(item):''}`;
-          }
-          expHtml+=`</div>`;
+    if(isComp){
+      const subs=item.subItems||[];
+      if(subs.length){
+        for(const s of subs){
+          expHtml+=`<div class="item-row" style="padding-left:16px">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0"></div>
+            <div class="item-name" style="font-size:12px;color:var(--t2)">${escH(s.name)}</div>
+            <div class="item-amount exp" style="font-size:12px">${fmt(Number(s.amount)||0)||'—'}</div>
+          </div>`;
         }
+      } else {
+        expHtml+=`<div style="padding:10px 16px;font-size:11px;color:var(--t3)">Нет подстатей. Откройте для редактирования.</div>`;
       }
-
-      expHtml+=`</div>`;
+      expHtml+=`<div style="padding:6px 16px"><button onclick="event.stopPropagation();openItemModal('expense','${item.id}')" style="background:none;border:none;color:var(--acc);font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">✎ Редактировать</button></div>`;
+    } else {
+      expHtml+=`<div style="padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:12px;color:var(--t2)">${escH(item.category)}</div>
+        <div style="flex:1"></div>
+        <div class="item-amount exp" data-id="${item.id}" style="font-size:12px">${fmt(Number(item.amount)||0)||'—'}</div>
+      </div>`;
+      expHtml+=`<div style="padding:6px 16px"><button onclick="event.stopPropagation();openItemModal('expense','${item.id}')" style="background:none;border:none;color:var(--acc);font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">✎ Редактировать</button></div>`;
     }
+    expHtml+=`</div>`;
   }
-
-  if(genExpItems.length){
-    expHtml+=subHead('Общие расходы');
-    expHtml+=genExpItems.map(i=>itemRowHtml(i,'expense')).join('');
-  }
-
   document.getElementById('settingExpenses').innerHTML=expHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет расходов</div>';
-  ['inc','exp','acc'].forEach(t=>{
+
+  // ── Вывод в личное (плитки) ──
+  const wdrItems=D.items.filter(i=>i.type==='withdrawal');
+  let wdrHtml='';
+  for(const item of wdrItems){
+    const total=itemAmount(item);
+    const isComp=item.composite;
+    const ovd=isOverdue(item);
+    const tileId='ctile_wdr_'+item.id;
+    const dayStr=item.days?item.days.join(', '):(item.day||'—');
+    const repStr=repeatLabel(item.repeat);
+
+    wdrHtml+=`<div class="cat-tile" style="border-left-color:#60a5fa;${ovd?'box-shadow:inset 3px 0 0 var(--amber);background:rgba(251,191,36,0.06)':''}" onclick="toggleCatTile('${tileId}')">
+      <div class="tile-icon">${item.icon||'💸'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ct-name">${escH(item.category)}</div>
+        <div style="font-size:10px;color:var(--t3);margin-top:1px">${dayStr} · ${repStr}</div>
+      </div>
+      <div class="ct-amount" style="color:#60a5fa">${isComp?(total?fmt(total):'—'):((Number(item.amount)||0)?fmt(item.amount):'—')}</div>
+      <div class="ct-arrow">▾</div>
+    </div>
+    <div class="cat-tile-body" id="${tileId}">`;
+
+    if(isComp){
+      const subs=item.subItems||[];
+      if(subs.length){
+        for(const s of subs){
+          wdrHtml+=`<div class="item-row" style="padding-left:16px">
+            <div style="width:6px;height:6px;border-radius:50%;background:var(--t3);flex-shrink:0"></div>
+            <div class="item-name" style="font-size:12px;color:var(--t2)">${escH(s.name)}</div>
+            <div class="item-amount" style="font-size:12px;color:#60a5fa">${fmt(Number(s.amount)||0)||'—'}</div>
+          </div>`;
+        }
+      } else {
+        wdrHtml+=`<div style="padding:10px 16px;font-size:11px;color:var(--t3)">Нет подстатей. Откройте для редактирования.</div>`;
+      }
+      wdrHtml+=`<div style="padding:6px 16px"><button onclick="event.stopPropagation();openItemModal('withdrawal','${item.id}')" style="background:none;border:none;color:var(--acc);font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">✎ Редактировать</button></div>`;
+    } else {
+      wdrHtml+=`<div style="padding:10px 16px;display:flex;align-items:center;gap:8px">
+        <div style="font-size:12px;color:var(--t2)">${escH(item.category)}</div>
+        <div style="flex:1"></div>
+        <div class="item-amount" data-id="${item.id}" style="font-size:12px;color:#60a5fa">${fmt(Number(item.amount)||0)||'—'}</div>
+      </div>`;
+      wdrHtml+=`<div style="padding:6px 16px"><button onclick="event.stopPropagation();openItemModal('withdrawal','${item.id}')" style="background:none;border:none;color:var(--acc);font-size:11px;font-weight:600;cursor:pointer;padding:4px 0">✎ Редактировать</button></div>`;
+    }
+    wdrHtml+=`</div>`;
+  }
+  document.getElementById('settingWithdrawals').innerHTML=wdrHtml||'<div style="padding:16px;color:var(--t3);font-size:13px">Нет выводов</div>';
+
+  ['inc','exp','wdr','acc'].forEach(t=>{
     const el=document.getElementById('stab-section-'+t);
     if(el) el.style.display=(t===_curSettingsTab)?'block':'none';
   });
 }
 
 function toggleSvcDone(svcKey){
-  // Toggle all items of a service category
-  const ids = D.items.filter(i=>i.categoryKey===svcKey&&i.type==='income'&&(Number(i.amount)||0)>0).map(i=>i.id);
-  const allDone = ids.every(id=>D.done[id]);
-  ids.forEach(id=>{ if(allDone) delete D.done[id]; else D.done[id]=true; });
+  const catItems=D.items.filter(i=>i.categoryKey===svcKey&&i.type==='income');
+  const now=new Date(),cy=now.getFullYear(),cm=now.getMonth();
+  let allDone=true;
+  for(const item of catItems){
+    const occur=occDays(item,cy,cm);
+    if(!occur.every(d=>D.done[item.id+'_d'+d])){allDone=false;break;}
+  }
+  for(const item of catItems){
+    const occur=occDays(item,cy,cm);
+    for(const d of occur){
+      const dk=item.id+'_d'+d;
+      if(allDone) delete D.done[dk]; else D.done[dk]=true;
+    }
+  }
   pushData(); const _st=saveOpenState(); renderSettings(); restoreOpenState(_st);
   const msb=getMonthStartBalance(curYear,curMonth);
   renderCashflow(msb); renderKPI(msb);
@@ -1944,13 +1904,20 @@ function switchSettingsTab(tab){
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
   const tb=document.getElementById('stab-'+tab);
   if(tb) tb.classList.add('active');
-  ['inc','exp','acc'].forEach(t=>{
+  ['inc','exp','wdr','acc'].forEach(t=>{
     const el=document.getElementById('stab-section-'+t);
     if(el) el.style.display=(t===tab)?'block':'none';
   });
   const sy=document.documentElement.scrollTop;
   renderSettings();
   document.documentElement.scrollTop=sy;
+}
+function toggleCatTile(id){
+  const body=document.getElementById(id);
+  if(!body) return;
+  const tile=body.previousElementSibling;
+  body.classList.toggle('open');
+  if(tile) tile.classList.toggle('open');
 }
 function toggleCat(el){
   const body=el.nextElementSibling;
@@ -1965,7 +1932,7 @@ document.addEventListener('click',function(e){
     const id=amt.dataset.id, isAcct=amt.dataset.acct!==undefined;
     const item=isAcct?D.accounts.find(x=>x.id===id):D.items.find(x=>x.id===id);
     if(!item) return;
-    const val=isAcct?item.balance:item.amount;
+    const val=isAcct?item.balance:itemAmount(item);
     amt.innerHTML=`<input class="ie-amt" type="number" value="${val||0}" step="${isAcct?'1000':'100'}">`;
     const inp=amt.querySelector('input');
     inp.focus(); inp.select();
@@ -1993,7 +1960,7 @@ document.addEventListener('click',function(e){
     const id=rep.dataset.id, item=D.items.find(x=>x.id===id);
     if(!item) return;
     const sel=document.createElement('select'); sel.className='ie-rep';
-    ['monthly','weekly','quarterly','once'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
+    ['once','monthly','weekly','quarterly','daily','yearly','lastDay'].forEach(o=>{ const opt=document.createElement('option'); opt.value=o; opt.textContent=repeatLabel(o); if(item.repeat===o) opt.selected=true; sel.appendChild(opt); });
     rep.innerHTML=''; rep.appendChild(sel); sel.focus();
     sel.addEventListener('change',()=>{ item.repeat=sel.value; if(item.repeat==='weekly'){item._refYear=curYear;item._refMonth=curMonth;}else{delete item._refYear;delete item._refMonth;} pushData(); const _st=saveOpenState(), _sy=window.scrollY; renderAll(); restoreOpenState(_st); requestAnimationFrame(()=>window.scrollTo(0,_sy)); });
     return;
@@ -2103,7 +2070,7 @@ document.addEventListener('click', function(ev){
   }
 }, true);
 
-function repeatLabel(r){return {monthly:'Мес.',weekly:'Нед.',quarterly:'Кв.',once:'Один'}[r||'monthly']||'Мес.'}
+function repeatLabel(r){return {monthly:'Мес.',weekly:'Нед.',quarterly:'Кв.',once:'Один',daily:'День',yearly:'Год',lastDay:'Посл.дн.'}[r||'monthly']||'Мес.'}
 
 // ── DONE TOGGLES ──
 
@@ -2111,8 +2078,8 @@ function toggleWeeklySub(id){
   const el=document.getElementById(id);
   if(el) el.classList.toggle('open');
 }
-function toggleDone(itemId, dateIdx){
-  const key = dateIdx===1 ? itemId+'_2' : itemId;
+function toggleDone(itemId, day){
+  const key=itemId+'_d'+day;
   if(D.done[key]) delete D.done[key]; else D.done[key]=true;
   pushData(); const _s=saveOpenState(); renderSettings(); restoreOpenState(_s); renderCashflow(getMonthStartBalance(curYear,curMonth));
   // update KPI too
@@ -2144,8 +2111,8 @@ function itemRowHtml(item,type){
   const isW=item.repeat==='weekly';
   return (`<div class="item-row ${isOverdue(item)?'overdue':''}" ${isW?`onclick="toggleWeeklySub('wsub_${item.id}')" style="cursor:pointer"`:''}>`+
     `<div class="item-dot" style="background:${item.color}" onclick="event.stopPropagation();openItemModal('${type}','${item.id}')"></div>`+
-    `<div class="item-name">${item.category||item.id}${item.taxable?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>`+
-    `<div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(item.amount)||'—'}</div>`+
+    `<div class="item-name">${item.category||item.id}${(item.taxRate||0)>0?'<span style="font-size:9px;color:var(--amber);margin-left:6px">УСН</span>':''}</div>`+
+    `<div class="item-amount ${amtCls}" data-id="${item.id}">${fmt(itemAmount(item))||'—'}</div>`+
     `<div class="item-day-badge" data-id="${item.id}">${item.days?item.days.join(', '):(item.day||'—')}</div>`+
     `${isW?'<span style="font-size:10px;color:var(--t3);margin-left:4px">▾</span>':tgls}`+
     `<button class="item-edit" onclick="event.stopPropagation();openItemModal('${type}','${item.id}')">✎</button>`+
@@ -2166,13 +2133,10 @@ function showDayDetail(day){
   const balCls=d.balance<0?'var(--red)':d.balance<50000?'var(--amber)':'var(--acc)';
   let evHtml='';
   [...d.events.filter(e=>!e.auto),...d.events.filter(e=>e.auto)].forEach(ev=>{
-    const isInc=ev.type==='income',isTax=ev.auto;
-    const col=isTax?'var(--amber)':isInc?'var(--grn)':'var(--red)';
-    const item=D.items.find(i=>i.id===ev.id);
-    const pvz=item&&item.pvzAddr?PVZ_LIST.find(p=>p.key===item.pvzAddr):null;
-    const name=isTax?`Налог УСН ${D.settings.taxRate||7}%`:(ev.name+(pvz?' — '+pvz.name:''));
-    let doneKey=null;
-    if(!isTax&&ev.id) doneKey=ev.doneKey||(item&&item.repeat==='weekly'?weeklyDoneKey(ev.id,day):ev.id);
+    const isInc=ev.type==='income',isTax=ev.auto,isWdr=ev.type==='withdrawal';
+    const col=isTax?'var(--amber)':isInc?'var(--grn)':isWdr?'#60a5fa':'var(--red)';
+    const name=isTax?`Налог УСН ${D.settings.taxRate||7}%`:ev.name;
+    const doneKey=ev.doneKey||ev.id+'_d'+day;
     const isDone=doneKey?!!D.done[doneKey]:false;
     const doneBtn=doneKey?`<label class="tg" onclick="event.stopPropagation()"><input type="checkbox" ${isDone?'checked':''} onchange="toggleDayEv('${doneKey}',${day})"><span class="tg-s"></span></label>`:'';
     evHtml+=`<div class="day-ev" style="${isDone?'opacity:.4':''}">
@@ -2233,11 +2197,13 @@ function editBalance(id){
 // ══════════════════════════════════
 // MODAL
 // ══════════════════════════════════
+let _modalSubItems=[];
+let _modalIcon='💰';
+
 function openItemModal(type,id){
   modalType=type; editingId=id||null;
   const isEdit=!!id;
   const mo=type==='account'?D.accounts.find(x=>x.id===id):D.items.find(x=>x.id===id);
-  selColor=mo?mo.color:COLORS[Math.floor(Math.random()*COLORS.length)];
 
   let titleTxt='', body='', btns='';
 
@@ -2247,9 +2213,7 @@ function openItemModal(type,id){
       <div class="frow"><label class="flabel">Название</label>
         <input class="finput" id="mName" value="${isEdit?mo.name:''}" placeholder="Название счёта"></div>
       <div class="frow"><label class="flabel">Текущий остаток, ₽</label>
-        <input class="finput" id="mBalance" type="number" value="${isEdit?mo.balance:''}" placeholder="0"></div>
-      <div class="frow"><label class="flabel">Цвет</label>
-        <div class="cswatches" id="cpicker"></div></div>`;
+        <input class="finput" id="mBalance" type="number" value="${isEdit?mo.balance:''}" placeholder="0"></div>`;
     btns=isEdit?
       `<button class="mbtn danger" onclick="delItem('account','${id}')">Удалить</button>
        <button class="mbtn" onclick="closeModal()">Отмена</button>
@@ -2257,42 +2221,49 @@ function openItemModal(type,id){
       `<button class="mbtn" onclick="closeModal()">Отмена</button>
        <button class="mbtn ok" onclick="saveAccount()">Добавить</button>`;
   } else {
-    titleTxt=isEdit?`Редактировать`:(type==='income'?'Новый доход':'Новый расход');
+    titleTxt=isEdit?(mo.category||'Редактировать'):(type==='income'?'Новый доход':type==='withdrawal'?'Новый вывод':'Новый расход');
     const isIncome=type==='income'||(isEdit&&mo&&mo.type==='income');
+    const isComposite=isEdit&&mo?!!mo.composite:false;
+    const repeatOpts=REPEAT_OPTIONS.map(r=>`<option value="${r.key}" ${isEdit&&mo&&mo.repeat===r.key?'selected':''}>${r.label}</option>`).join('');
+
+    _modalSubItems=(isEdit&&mo&&mo.subItems)?mo.subItems.map(s=>({name:s.name||'',amount:Number(s.amount)||0})):[];
+    _modalIcon=(isEdit&&mo&&mo.icon)?mo.icon:(type==='withdrawal'?'💸':'💰');
+    const subItemsHtml=renderModalSubItems();
+    const iconGridHtml=ICON_PRESETS.map(ic=>`<div class="icon-opt${_modalIcon===ic?' sel':''}" onclick="pickIcon('${ic}')">${ic}</div>`).join('');
+
     body=`
-      <div class="frow"><label class="flabel">Категория</label>
-        <select class="fselect" id="mCategory">
-          ${(isIncome?PVZ_SERVICES:EXP_CATS).map(c=>`<option value="${c.key}" ${isEdit&&mo.categoryKey===c.key?'selected':''}>${c.name}</option>`).join('')}
-          <option value="__other__" ${isEdit&&!PVZ_SERVICES.some(s=>s.key===mo.categoryKey)&&!EXP_CATS.some(c=>c.key===mo.categoryKey)?'selected':''}>Другое…</option>
+      <div class="frow"><label class="flabel">Название</label>
+        <input class="finput" id="mName" value="${isEdit?(mo.category||''):''}" placeholder="Название операции"></div>
+      <div class="frow"><label class="flabel">Иконка</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div id="mIconPreview" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:var(--rsm);background:var(--s3);font-size:22px;border:1.5px solid var(--brd)">${_modalIcon}</div>
+          <input class="finput" id="mIconInput" style="width:60px;text-align:center;font-size:20px" maxlength="4" value="${_modalIcon}" onchange="pickIcon(this.value)">
+        </div>
+        <div class="icon-grid" id="mIconGrid">${iconGridHtml}</div></div>
+      <div class="frow"><label class="flabel">Тип</label>
+        <select class="fselect" id="mComposite">
+          <option value="0" ${!isComposite?'selected':''}>Цельный</option>
+          <option value="1" ${isComposite?'selected':''}>Составной</option>
         </select></div>
-      <div class="frow" id="mOtherCatRow" style="display:${isEdit&&!PVZ_SERVICES.some(s=>s.key===mo.categoryKey)&&!EXP_CATS.some(c=>c.key===mo.categoryKey)?'flex':'none'}"><label class="flabel">Своя категория</label>
-        <input class="finput" id="mOtherCat" value="${isEdit?mo.category:''}" placeholder="Название"></div>
-      <div class="frow"><label class="flabel">ПВЗ</label>
-        <select class="fselect" id="mPvzAddr">
-          <option value="">Не привязан к ПВЗ</option>
-          ${PVZ_LIST.map(p=>`<option value="${p.key}" ${isEdit&&mo.pvzAddr===p.key?'selected':''}>${p.name}</option>`).join('')}
-        </select></div>
-      <div class="frow-grid">
-        <div class="frow"><label class="flabel" id="mAmtLabel">${isEdit&&mo.categoryKey==='zp'?'Стоимость смены, ₽':'Сумма, ₽'}</label>
-          <input class="finput" id="mAmount" type="number" value="${isEdit?(mo.amount||''):''}" placeholder="0"></div>
-        <div class="frow" id="mDayRow" style="display:${isEdit&&mo.categoryKey==='zp'?'none':'block'}"><label class="flabel">Дни месяца</label>
-          <input class="finput" id="mDay" type="text" value="${isEdit?(mo.days?mo.days.join(', '):(mo.day||'1')):'1'}" placeholder="1, 15, 20"></div>
+      <div id="mSimpleFields" style="display:${isComposite?'none':'block'}">
+        <div class="frow"><label class="flabel">Сумма, ₽</label>
+          <input class="finput" id="mAmount" type="number" value="${isEdit&&!isComposite?(itemAmount(mo)||''):''}" placeholder="0"></div>
       </div>
-      <div class="frow" id="mRepeatRow" style="display:${isEdit&&mo.categoryKey==='zp'?'none':'block'}"><label class="flabel">Повторение</label>
-        <select class="fselect" id="mRepeat">
-          <option value="monthly" ${(!isEdit||mo.repeat==='monthly')?'selected':''}>Каждый месяц</option>
-          <option value="weekly" ${isEdit&&mo.repeat==='weekly'?'selected':''}>Каждую неделю</option>
-          <option value="quarterly" ${isEdit&&mo.repeat==='quarterly'?'selected':''}>Каждый квартал</option>
-           <option value="once" ${isEdit&&mo.repeat==='once'?'selected':''}>Один</option>
-        </select></div>
+      <div id="mCompositeFields" style="display:${isComposite?'block':'none'}">
+        <div id="mSubItemsList">${subItemsHtml}</div>
+        <div style="padding:6px 0">
+          <button onclick="addModalSubItem()" style="background:var(--s3);border:1px dashed var(--brd2);border-radius:var(--rsm);padding:7px 14px;color:var(--acc);font-family:var(--f);font-size:12px;font-weight:600;cursor:pointer;width:100%">+ Добавить подстатью</button>
+        </div>
+      </div>
+      <div class="frow-grid">
+        <div class="frow"><label class="flabel">Дни месяца</label>
+          <input class="finput" id="mDay" type="text" value="${isEdit&&mo?(mo.days?mo.days.join(', '):(mo.day||'1')):'1'}" placeholder="1, 15, 20"></div>
+        <div class="frow"><label class="flabel">Повторение</label>
+          <select class="fselect" id="mRepeat">${repeatOpts}</select></div>
+      </div>
       ${isIncome?`
-      <div class="frow"><label class="flabel">Налогооблагаемый доход (УСН)</label>
-        <select class="fselect" id="mTaxable">
-          <option value="1" ${(!isEdit||mo.taxable)?'selected':''}>Да</option>
-          <option value="0" ${isEdit&&!mo.taxable?'selected':''}>Нет</option>
-        </select></div>`:''}
-      <div class="frow"><label class="flabel">Цвет</label>
-        <div class="cswatches" id="cpicker"></div></div>`;
+      <div class="frow"><label class="flabel">Налог УСН, %</label>
+        <input class="finput" id="mTaxRate" type="number" value="${isEdit&&mo?(mo.taxRate||0):7}" placeholder="7" step="0.5"></div>`:''}`;
     btns=isEdit?
       `<button class="mbtn danger" onclick="delItem('item','${id}')">Удалить</button>
        <button class="mbtn" onclick="closeModal()">Отмена</button>
@@ -2304,37 +2275,54 @@ function openItemModal(type,id){
   document.getElementById('iModalTitle').textContent=titleTxt;
   document.getElementById('iModalBody').innerHTML=body;
   document.getElementById('iModalBtns').innerHTML=btns;
-  buildCP();
-  const catSel=document.getElementById('mCategory');
-  if(catSel){
-    catSel.onchange=()=>{
-      const row=document.getElementById('mOtherCatRow');
-      if(row) row.style.display=catSel.value==='__other__'?'flex':'none';
-      const isZP=catSel.value==='zp';
-      const dr=document.getElementById('mDayRow');
-      const rr=document.getElementById('mRepeatRow');
-      const al=document.getElementById('mAmtLabel');
-      if(dr) dr.style.display=isZP?'none':'block';
-      if(rr) rr.style.display=isZP?'none':'block';
-      if(al) al.textContent=isZP?'Стоимость смены, ₽':'Сумма, ₽';
+
+  const compSel=document.getElementById('mComposite');
+  if(compSel){
+    compSel.onchange=()=>{
+      const sf=document.getElementById('mSimpleFields');
+      const cf=document.getElementById('mCompositeFields');
+      if(sf) sf.style.display=compSel.value==='0'?'block':'none';
+      if(cf) cf.style.display=compSel.value==='1'?'block':'none';
     };
   }
   document.getElementById('itemModal').classList.add('open');
   setTimeout(()=>{
-    const firstInput=document.getElementById('mOtherCat')||catSel;
-    if(firstInput) firstInput.focus();
-
+    const nameInput=document.getElementById('mName');
+    if(nameInput) nameInput.focus();
   },80);
 }
 
-function buildCP(){
-  const el=document.getElementById('cpicker'); if(!el)return;
-  el.innerHTML=COLORS.map(c=>`<div class="csw ${c===selColor?'sel':''}" style="background:${c}" onclick="pickC('${c}')"></div>`).join('');
+function pickIcon(ic){
+  _modalIcon=ic;
+  const preview=document.getElementById('mIconPreview');
+  const input=document.getElementById('mIconInput');
+  if(preview) preview.textContent=ic;
+  if(input) input.value=ic;
+  document.querySelectorAll('#mIconGrid .icon-opt').forEach(el=>{
+    el.classList.toggle('sel',el.textContent===ic);
+  });
 }
-function pickC(c){
-  selColor=c;
-  document.querySelectorAll('#cpicker .csw').forEach(s=>s.classList.toggle('sel',s.style.background===c||s.style.backgroundColor===c));
+
+function renderModalSubItems(){
+  return _modalSubItems.map((s,i)=>`
+    <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
+      <input class="finput" style="flex:1;font-size:12px;padding:6px 8px" placeholder="Название" value="${escH(s.name||'')}" oninput="_modalSubItems[${i}].name=this.value">
+      <input class="finput" style="width:100px;font-size:12px;padding:6px 8px" type="number" placeholder="0" value="${s.amount||''}" oninput="_modalSubItems[${i}].amount=parseFloat(this.value)||0">
+      <button onclick="_modalSubItems.splice(${i},1);refreshModalSubItems()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
+    </div>`).join('');
 }
+
+function addModalSubItem(){
+  _modalSubItems.push({name:'',amount:0});
+  refreshModalSubItems();
+}
+
+function refreshModalSubItems(){
+  const el=document.getElementById('mSubItemsList');
+  if(el) el.innerHTML=renderModalSubItems();
+}
+
+function escH(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
 function saveAccount(){
   const name=document.getElementById('mName').value.trim();
@@ -2342,44 +2330,48 @@ function saveAccount(){
   if(!name){showToast('Введите название');return;}
   if(editingId){
     const a=D.accounts.find(x=>x.id===editingId);
-    if(a){a.name=name;a.balance=balance;a.color=selColor;}
+    if(a){a.name=name;a.balance=balance;}
   } else {
-    D.accounts.push({id:uid(),name,balance,color:selColor});
+    D.accounts.push({id:uid(),name,balance,color:'#94a3b8'});
   }
   closeModal(); pushData(); rerender(); showToast('✓ Сохранено');
 }
 
 function saveItem(){
-  const categoryKey=document.getElementById('mCategory').value;
-  const otherCat=document.getElementById('mOtherCat')?.value.trim();
-  const pvzAddr=document.getElementById('mPvzAddr').value||null;
-  const amount=parseFloat(document.getElementById('mAmount').value)||0;
+  const name=document.getElementById('mName').value.trim();
+  if(!name){showToast('Введите название');return;}
+  const isComposite=document.getElementById('mComposite').value==='1';
   const daysRaw=document.getElementById('mDay').value.trim();
-  const days=categoryKey==='zp'?null:daysRaw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
+  const days=daysRaw.split(',').map(s=>parseInt(s.trim())).filter(n=>!isNaN(n)&&n>=1&&n<=31);
   const repeat=document.getElementById('mRepeat').value;
-  const taxableEl=document.getElementById('mTaxable');
-  const taxable=taxableEl?taxableEl.value==='1':false;
+  const taxRateEl=document.getElementById('mTaxRate');
+  const taxRate=taxRateEl?parseFloat(taxRateEl.value)||0:0;
 
-  let catName='', catKey='';
-  if(categoryKey==='__other__'){
-    if(!otherCat){showToast('Введите категорию');return;}
-    catName=otherCat; catKey=otherCat.toLowerCase().replace(/[^a-zа-яё0-9]/g,'_');
+  const catKey=name.toLowerCase().replace(/[^a-zа-яё0-9]/g,'_');
+
+  const itemData={category:name,categoryKey:catKey,icon:_modalIcon,taxRate};
+  if(days&&days.length) itemData.days=days;
+
+  if(isComposite){
+    itemData.composite=true;
+    itemData.amount=0;
+    itemData.repeat=repeat;
+    itemData.subItems=_modalSubItems.filter(s=>s.name.trim());
   } else {
-    const tp=modalType||'income';
-    const list=tp==='income'?PVZ_SERVICES:EXP_CATS;
-    const found=list.find(c=>c.key===categoryKey);
-    if(found){catName=found.name;catKey=found.key;}
-    else{catName=categoryKey;catKey=categoryKey;}
+    const amount=parseFloat(document.getElementById('mAmount').value)||0;
+    itemData.composite=false;
+    itemData.amount=amount;
+    itemData.repeat=repeat;
+    itemData.subItems=[];
   }
-
-  const itemData={category:catName,categoryKey:catKey,pvzAddr,amount,repeat,taxable,color:selColor};
-  if(categoryKey==='zp'){itemData.days=null;itemData.day=null;}
-  else if(days&&days.length) itemData.days=days;
 
   const tp=editingId?(D.items.find(x=>x.id===editingId)?.type||modalType):modalType;
   if(editingId){
     const it=D.items.find(x=>x.id===editingId);
-    if(it){Object.assign(it,itemData); if(repeat==='weekly'){it._refYear=curYear;it._refMonth=curMonth;}else{delete it._refYear;delete it._refMonth;}}
+    if(it){
+      Object.assign(it,itemData);
+      if(repeat==='weekly'){it._refYear=curYear;it._refMonth=curMonth;}else{delete it._refYear;delete it._refMonth;}
+    }
   } else {
     const newItem={id:uid(),type:tp,...itemData};
     if(repeat==='weekly'){newItem._refYear=curYear;newItem._refMonth=curMonth;}
@@ -2399,11 +2391,9 @@ function rerender(){
   const _st=saveOpenState(), _sy=window.scrollY;
   renderAll();
   restoreOpenState(_st);
-  // disable CSS transitions on restored groups so height is immediate
-  document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed)').forEach(el=>{el.style.transition='none';});
+  document.querySelectorAll('.pvz-group-body.open, .cat-body:not(.collapsed), .cat-tile-body.open').forEach(el=>{el.style.transition='none';});
   window.scrollTo(0,_sy);
-  // re-enable transitions after layout settles
-  requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body').forEach(el=>{el.style.transition='';});});
+  requestAnimationFrame(()=>{document.querySelectorAll('.pvz-group-body, .cat-body, .cat-tile-body').forEach(el=>{el.style.transition='';});});
 }
 function closeModal(){document.getElementById('itemModal').classList.remove('open');}
 document.getElementById('itemModal').addEventListener('click',e=>{if(e.target===document.getElementById('itemModal'))closeModal();});
