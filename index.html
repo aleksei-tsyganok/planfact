@@ -54,7 +54,7 @@ body{
 .sync-dot.ok{background:var(--grn)}
 .sync-dot.sync{background:var(--amber);animation:blink .9s ease-in-out infinite}
 .sync-dot.err{background:var(--red)}
-.tab-bar{display:none}
+@media(min-width:769px){.tab-bar{display:none}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 
 
@@ -1598,12 +1598,15 @@ function renderCashflow(msb){
       const dk=ev.doneKey||ev.id+'_d'+day;
       return dk&&!D.done[dk];
     });
-    const cls=isToday?'today':hasOvd?'overdue-day':'';
+    const cls=isToday?'today':hasOvd?'overdue-day':dm.bal<0?'negative':'';
+    const balCls=dm.bal<0?'neg':dm.bal<50000?'warn':'pos';
+    const hasOps=dm.wdr>0||dm.inc>0||dm.exp>0;
     h+=`<div class="cal-cell ${cls}" onclick="showDayDetail(${day})">
       <div class="cal-day">${day}</div>
       <div class="cal-wdr">${dm.wdr>0?'−'+fmt(dm.wdr):''}</div>
       <div class="cal-inc">${dm.inc>0?'+'+fmt(dm.inc):''}</div>
       <div class="cal-exp">${dm.exp>0?'−'+fmt(dm.exp):''}</div>
+      ${hasOps?`<div class="cal-bal ${balCls}">${fmt(dm.bal)}</div>`:''}
     </div>`;
   }
   const total=firstDow+days,rem=total%7===0?0:7-(total%7);
