@@ -2176,7 +2176,7 @@ function inlineEditBalance(e,id){
     valEl.innerHTML=fmt(v)||'0₽';
     pushData();
     const msb=getMonthStartBalance(curYear,curMonth);
-    renderKPI(msb);renderAccounts();renderCashflow(msb);renderOverdueDash();renderForecast();
+    renderKPI(msb);renderAccounts();renderCashflow(msb);renderOverdueDash();renderFreeMoneyBar(msb);
     const totEl=document.querySelector('.acct-val[style*="acc"]');
     if(totEl){const t=D.accounts.reduce((s,ac)=>s+(Number(ac.balance)||0),0);totEl.textContent=fmt(t)||'0₽';}
   };
