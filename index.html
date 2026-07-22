@@ -660,33 +660,6 @@ async function initApp(){
   }
   // migrate: rename ar category
   D.items.forEach(i=>{ if(i.categoryKey==='ar'&&i.category==='Аренда + коммуналка'){ i.category='Аренда'; } });
-  // migrate: add Коммунальные платежи items if missing
-  const hasKom=D.items.some(i=>i.categoryKey==='kom');
-  if(!hasKom){
-    const komItems=PVZ_LIST.map(p=>({
-      id:'e_kom_'+p.key, type:'expense',
-      categoryKey:'kom', category:'Коммунальные платежи',
-      pvzAddr:p.key, amount:0, day:5,
-      repeat:'monthly', taxable:false, color:p.color,
-    }));
-    // Insert after last ar item
-    const lastArIdx=D.items.reduce((acc,it,i)=>it.categoryKey==='ar'?i:acc,-1);
-    if(lastArIdx>=0) D.items.splice(lastArIdx+1,0,...komItems);
-    else D.items.push(...komItems);
-  }
-  // migrate: add Управление items if missing
-  const hasMgmt=D.items.some(i=>i.categoryKey==='mgmt');
-  if(!hasMgmt){
-    const mgmtItems=PVZ_LIST.map(p=>({
-      id:'e_mgmt_'+p.key, type:'expense',
-      categoryKey:'mgmt', category:'Управление',
-      pvzAddr:p.key, amount:0, day:5,
-      repeat:'monthly', taxable:false, color:p.color,
-    }));
-    const lastZpIdx=D.items.reduce((acc,it,i)=>it.categoryKey==='zp'?i:acc,-1);
-    if(lastZpIdx>=0) D.items.splice(lastZpIdx+1,0,...mgmtItems);
-    else D.items.push(...mgmtItems);
-  }
   // migrate v2: old model (pvzAddr per item) → new model (composite operations)
   if(D.items.length && D.items[0].pvzAddr!==undefined && D.items[0].composite===undefined){
     const oldItems=D.items;
@@ -729,7 +702,7 @@ async function initApp(){
   D.settings=D.settings||{taxRate:7,taxBase:'all'};
   saveL();
   // Пишем в Supabase ТОЛЬКО если были миграции (новые категории)
-  const needsWrite=!hasKom||!hasMgmt||oldIdx>=0;
+  const needsWrite=oldIdx>=0;
   if(dbOk&&needsWrite){try{await sUp('kp_data',[{key:'main',data:D}]);}catch(e){}}
 
   hideLoader(); renderAll();
@@ -1161,7 +1134,7 @@ function renderAll(){
   renderFreeMoneyBar(msb);
   renderFeed();
   // restore tax settings inputs
-  document.getElementById('taxRate').value=D.settings.taxRate||7;
+  const _trEl=document.getElementById('taxRate');if(_trEl)_trEl.value=D.settings.taxRate||7;
   document.getElementById('taxBase').value=D.settings.taxBase||'all';
 
 }
@@ -1295,6 +1268,10 @@ function renderFeed(){
   const isCur=curYear===cy&&curMonth===cm;
   // Build CF with empty done to get ALL planned occurrences
   const svDone=Object.assign({},D.done);
+  const now3=new Date(),cy3=now3.getFullYear(),cm3=now3.getMonth();
+  const isFutureMon=(curYear>cy3)||(curYear===cy3&&curMonth>cm3);
+  // For future months: build with empty done (nothing is done yet)
+  // For past/current: build with empty done to see ALL ops, then check real done
   D.done={};
   const {daily}=buildDailyCF(curYear,curMonth,getMonthStartBalance(curYear,curMonth));
   D.done=svDone;
@@ -1345,7 +1322,7 @@ function renderFeed(){
       const item=D.items.find(i=>i.id===ev.id);
       const isInc=ev.type==='income',isWdr=ev.type==='withdrawal',col=isInc?'var(--grn)':isWdr?'#60a5fa':'var(--red)';
       const dk=ev.doneKey||ev.id+'_d'+dd.d;
-      const done=dk?!!svDone[dk]:false,ovd=ev._ovd||(past&&dk&&!done);
+      const done=(!isFutureMon&&dk)?!!svDone[dk]:false,ovd=ev._ovd||(!isFutureMon&&past&&dk&&!done);
       const name=ev.name||'';
       const tgl=dk?`<label class="tg" onclick="event.stopPropagation()"><input type="checkbox" ${done?'checked':''} onchange="toggleFeedEv('${dk}',${dd.d})"><span class="tg-s"></span></label>`:'';
       const _isWithdr=ev.type==='withdrawal';
@@ -2247,10 +2224,12 @@ function openItemModal(type,id){
   } else {
     titleTxt=isEdit?(mo.category||'Редактировать'):(type==='income'?'Новый доход':type==='withdrawal'?'Новый вывод':'Новый расход');
     const isIncome=type==='income'||(isEdit&&mo&&mo.type==='income');
-    const isComposite=isEdit&&mo?!!mo.composite:false;
+    const isComposite=true;
     const repeatOpts=REPEAT_OPTIONS.map(r=>`<option value="${r.key}" ${isEdit&&mo&&mo.repeat===r.key?'selected':''}>${r.label}</option>`).join('');
 
-    _modalSubItems=(isEdit&&mo&&mo.subItems)?mo.subItems.map(s=>({name:s.name||'',amount:Number(s.amount)||0})):[];
+    _modalSubItems=(isEdit&&mo&&mo.subItems&&mo.subItems.length)
+      ?mo.subItems.map(s=>({...s,name:s.name||'',amount:Number(s.amount)||0,comment:s.comment||'',sharePercent:s.sharePercent||null}))
+      :(isEdit&&mo&&Number(mo.amount)>0?[{name:mo.category||'',amount:Number(mo.amount)||0,comment:'',sharePercent:null}]:[{name:'',amount:0,comment:'',sharePercent:null}]);
     _modalIcon=(isEdit&&mo&&mo.icon)?mo.icon:(type==='withdrawal'?'💸':'💰');
     const subItemsHtml=renderModalSubItems();
 
@@ -2283,16 +2262,10 @@ function openItemModal(type,id){
           <input class="finput" id="mIconUrl" style="flex:1;font-size:12px;padding:8px 10px" placeholder="https://example.com/icon.png" value="${isEdit&&mo&&mo.iconUrl?escH(mo.iconUrl):''}" oninput="updateIconPreview(this.value)">
 
         </div></div>
-      <div class="frow"><label class="flabel">Тип</label>
-        <select class="fselect" id="mComposite">
-          <option value="0" ${!isComposite?'selected':''}>Цельный</option>
-          <option value="1" ${isComposite?'selected':''}>Составной</option>
-        </select></div>
-      <div id="mSimpleFields" style="display:${isComposite?'none':'block'}">
-        <div class="frow"><label class="flabel">Сумма, ₽</label>
-          <input class="finput" id="mAmount" type="number" value="${isEdit&&!isComposite?(itemAmount(mo)||''):''}" placeholder="0"></div>
+      
+      <div 
       </div>
-      <div id="mCompositeFields" style="display:${isComposite?'block':'none'}">
+      <div id="mCompositeFields">
         <div id="mSubItemsList">${subItemsHtml}</div>
         <div style="padding:6px 0">
           <button onclick="addModalSubItem()" style="background:var(--s3);border:1px dashed var(--brd2);border-radius:var(--rsm);padding:7px 14px;color:var(--acc);font-family:var(--f);font-size:12px;font-weight:600;cursor:pointer;width:100%">+ Добавить подстатью</button>
@@ -2396,25 +2369,38 @@ function renderModalSubItems(){
   return _modalSubItems.map((s,i)=>`
     <div style="margin-bottom:8px;background:var(--s3);border-radius:8px;padding:8px">
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px">
-        <input class="finput" style="flex:1;font-size:12px;padding:6px 8px" placeholder="Название" value="${escH(s.name||'')}" oninput="_modalSubItems[${i}].name=this.value">
-        <input class="finput" style="width:90px;font-size:12px;padding:6px 8px" type="number" placeholder="0" value="${s.amount||''}" oninput="_modalSubItems[${i}].amount=parseFloat(this.value)||0">
+        <input id="ms_name_${i}" class="finput" style="flex:1;font-size:12px;padding:6px 8px" placeholder="Название" value="${escH(s.name||'')}" oninput="_modalSubItems[${i}].name=this.value">
+        <input id="ms_amt_${i}" class="finput" style="width:90px;font-size:12px;padding:6px 8px" type="number" placeholder="0" value="${s.amount||''}" oninput="_modalSubItems[${i}].amount=parseFloat(this.value)||0">
         <button onclick="_modalSubItems.splice(${i},1);refreshModalSubItems()" style="background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0 4px;flex-shrink:0">✕</button>
       </div>
       ${_isShared?`<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
         <span style="font-size:10px;color:var(--t2)">Моя доля</span>
-        <input class="finput" style="width:70px;font-size:12px;padding:4px 8px" type="number" min="1" max="99" placeholder="50" value="${s.sharePercent||50}" oninput="_modalSubItems[${i}].sharePercent=parseFloat(this.value)||50">
+        <input id="ms_sp_${i}" class="finput" style="width:70px;font-size:12px;padding:4px 8px" type="number" min="1" max="99" placeholder="50" value="${s.sharePercent||50}" oninput="_modalSubItems[${i}].sharePercent=parseFloat(this.value)||50">
         <span style="font-size:10px;color:var(--t2)">%</span>
       </div>`:''}
-      <input class="finput" style="width:100%;font-size:11px;padding:5px 8px;color:var(--t2)" placeholder="Комментарий (необязательно)" value="${escH(s.comment||'')}" oninput="_modalSubItems[${i}].comment=this.value">
+      <input id="ms_cmt_${i}" class="finput" style="width:100%;font-size:11px;padding:5px 8px;color:var(--t2)" placeholder="Комментарий (необязательно)" value="${escH(s.comment||'')}" oninput="_modalSubItems[${i}].comment=this.value">
     </div>`).join('');
 }
 
 function addModalSubItem(){
-  _modalSubItems.push({name:'',amount:0});
+  // Save current values first
+  refreshModalSubItems();
+  _modalSubItems.push({name:'',amount:0,comment:'',sharePercent:null});
   refreshModalSubItems();
 }
 
 function refreshModalSubItems(){
+  // Save current DOM values before re-render
+  _modalSubItems.forEach((s,i)=>{
+    const n=document.getElementById('ms_name_'+i);
+    const a=document.getElementById('ms_amt_'+i);
+    const cm=document.getElementById('ms_cmt_'+i);
+    const sp=document.getElementById('ms_sp_'+i);
+    if(n) s.name=n.value;
+    if(a) s.amount=parseFloat(a.value)||0;
+    if(cm) s.comment=cm.value;
+    if(sp) s.sharePercent=parseFloat(sp.value)||null;
+  });
   const el=document.getElementById('mSubItemsList');
   if(el) el.innerHTML=renderModalSubItems();
 }
@@ -2438,7 +2424,7 @@ function saveAccount(){
 function saveItem(){
   const name=document.getElementById('mName').value.trim();
   if(!name){showToast('Введите название');return;}
-  const isComposite=document.getElementById('mComposite').value==='1';
+  const isComposite=true;
   const repeat=document.getElementById('mRepeat')?.value||'monthly';
   let days=[];
   if(repeat==='lastDay'){
@@ -2470,6 +2456,17 @@ function saveItem(){
     itemData.composite=true;
     itemData.amount=0;
     itemData.repeat=repeat;
+    // Flush DOM values into _modalSubItems before saving
+    _modalSubItems.forEach((s,i)=>{
+      const n=document.getElementById('ms_name_'+i);
+      const a=document.getElementById('ms_amt_'+i);
+      const cm=document.getElementById('ms_cmt_'+i);
+      const sp=document.getElementById('ms_sp_'+i);
+      if(n) s.name=n.value;
+      if(a) s.amount=parseFloat(a.value)||0;
+      if(cm) s.comment=cm.value;
+      if(sp&&sp.value) s.sharePercent=parseFloat(sp.value)||null;
+    });
     itemData.subItems=_modalSubItems.filter(s=>s.name.trim());
   } else {
     const amount=parseFloat(document.getElementById('mAmount').value)||0;
